@@ -1,0 +1,20 @@
+# IDE specific files
+.idea/
+.vscode/
+
+# Cache and language server files
+.cache/
+.clangd/
+
+# Build artifacts
+build/
+cmake-build-*/
+*.o
+*.a
+*.so
+*.dll
+*.exe
+
+# Other common files
+compile_commands.json
+*.user
