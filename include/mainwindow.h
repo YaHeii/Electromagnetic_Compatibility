@@ -2,7 +2,30 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include "../include/utils/data_get.h"
+#include "../include/core/ship.h"
+#include "../include/core/equipment.h" // Antenna.h is included by Equipment.h
+#include "../include/utils/point_2D.h"
+#include "../include/models/shortlist.h"
+#include "../include/utils/data_get.h"
+#include "../include/utils/conversions.h"
+#include "../include/models/PropagationModle.h"
+#include "../include/core/fleet.h"
+#include "../include/core/EMC_Engine.h"
+#include "../include/models/Path.h"
+#include "../include/models/move.h"
 
+using namespace Electromagnetic_compatibility::core;
+using namespace Electromagnetic_compatibility::models;
+using namespace Electromagnetic_compatibility::utils;
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 // 前向声明所有需要的Qt类，可以减少头文件依赖
 class QTreeWidget;
 class QTableWidget;
@@ -15,44 +38,12 @@ class QTreeWidgetItem;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
+    // 析构函数
     ~MainWindow();
-
-private slots:
-    // 槽函数声明保持不变
-    void onElementTreeItemClicked(QTreeWidgetItem *item, int column);
-    void onActionNewTriggered();
-    void onActionOpenTriggered();
-    void onActionSaveTriggered();
-    void onActionStartAnalysisTriggered();
-
+    void init_Data();
 private:
-    // 核心的UI创建函数
-    void setupUI();
-    
-    // 创建菜单和工具栏
-    void createActionsAndMenus();
-    
-    // 填充假数据的函数保持不变
-    void populateSceneTree();
-    void populateInterferenceMatrix();
-    void updateParameterPanel(QTreeWidgetItem *item);
-
-    // --- UI控件指针 ---
-    // 左侧
-    QTreeWidget* elementTreeWidget;
-    QStackedWidget* parameterStackedWidget;
-
-    // 右侧
-    QTableWidget* interferenceMatrixTable;
-
-    // 中央
-    QGraphicsView* sceneGraphicsView;
-
-    // 底部
-    QSlider* timelineSlider;
-    QLabel* statusLabel; // 用于替代statusbar的临时标签
+    Ui::MainWindow *ui;
 };
 #endif // MAINWINDOW_H

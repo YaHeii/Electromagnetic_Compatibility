@@ -23,7 +23,7 @@ namespace core {
                 }
             }
         }
-        //--------------------------------------------------受害船处理------------------------------------------
+        //--- 受害船处理 ---
         // 迭代每个接收机
         for (const auto& rx_pair : all_receivers) {
             core::Receiver* victim_rx = rx_pair.first;

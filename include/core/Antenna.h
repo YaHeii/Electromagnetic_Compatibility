@@ -23,7 +23,7 @@ protected:
     double m_orientation_deg; // 天线自身相对于安装平台的朝向
 };
 
-// 先来一个简单的全向天线
+// 一个简单的全向天线
 class OmniAntenna : public Antenna {
 public:
     OmniAntenna(const std::string& id, double gain_dbi = 0.0)
