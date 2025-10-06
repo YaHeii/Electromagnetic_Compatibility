@@ -28127,7 +28127,7 @@ public:
 private:
 
 	friend class PathFlatteningIterator;
-	friend class Path::Iterator;
+	friend class Iterator;
 	ArrayAllocationBase <float, DummyCriticalSection> data;
 	size_t numElements;
 	float pathXMin, pathXMax, pathYMin, pathYMax;
@@ -28659,14 +28659,14 @@ public:
 
 	/** Uses the current colour or brush to fill a rectangle with rounded corners.
 
-		@see drawRoundedRectangle, Path::addRoundedRectangle
+		@see drawRoundedRectangle, addRoundedRectangle
 	*/
 	void fillRoundedRectangle (float x, float y, float width, float height,
 							   float cornerSize) const;
 
 	/** Uses the current colour or brush to fill a rectangle with rounded corners.
 
-		@see drawRoundedRectangle, Path::addRoundedRectangle
+		@see drawRoundedRectangle, addRoundedRectangle
 	*/
 	void fillRoundedRectangle (const Rectangle<float>& rectangle,
 							   float cornerSize) const;
@@ -28709,14 +28709,14 @@ public:
 
 	/** Uses the current colour or brush to draw the outline of a rectangle with rounded corners.
 
-		@see fillRoundedRectangle, Path::addRoundedRectangle
+		@see fillRoundedRectangle, addRoundedRectangle
 	*/
 	void drawRoundedRectangle (float x, float y, float width, float height,
 							   float cornerSize, float lineThickness) const;
 
 	/** Uses the current colour or brush to draw the outline of a rectangle with rounded corners.
 
-		@see fillRoundedRectangle, Path::addRoundedRectangle
+		@see fillRoundedRectangle, addRoundedRectangle
 	*/
 	void drawRoundedRectangle (const Rectangle<float>& rectangle,
 							   float cornerSize, float lineThickness) const;
@@ -28750,13 +28750,13 @@ public:
 
 		The ellipse is drawn to fit inside the given rectangle.
 
-		@see drawEllipse, Path::addEllipse
+		@see drawEllipse, addEllipse
 	*/
 	void fillEllipse (float x, float y, float width, float height) const;
 
 	/** Draws an elliptical stroke using the current colour or brush.
 
-		@see fillEllipse, Path::addEllipse
+		@see fillEllipse, addEllipse
 	*/
 	void drawEllipse (float x, float y, float width, float height,
 					  float lineThickness) const;
@@ -28769,7 +28769,7 @@ public:
 
 	/** Draws a line between two points with a given thickness.
 
-		@see Path::addLineSegment
+		@see addLineSegment
 	*/
 	void drawLine (float startX, float startY, float endX, float endY,
 				   float lineThickness) const;
@@ -28782,7 +28782,7 @@ public:
 
 	/** Draws a line between two points with a given thickness.
 
-		@see Path::addLineSegment
+		@see addLineSegment
 	*/
 	void drawLine (const Line<float>& line, float lineThickness) const;
 
@@ -29588,7 +29588,7 @@ public:
 	This is used by the Graphics and DrawablePath classes as a way to encapsulate
 	a brush type. It can either be a solid colour, a gradient, or a tiled image.
 
-	@see Graphics::setFillType, DrawablePath::setFill
+	@see Graphics::setFillType, DrawablesetFill
 */
 class JUCE_API  FillType
 {
@@ -34325,13 +34325,13 @@ namespace PathHelpers
 	}
 }
 
-const float Path::lineMarker           = 100001.0f;
-const float Path::moveMarker           = 100002.0f;
-const float Path::quadMarker           = 100003.0f;
-const float Path::cubicMarker          = 100004.0f;
-const float Path::closeSubPathMarker   = 100005.0f;
+const float lineMarker           = 100001.0f;
+const float moveMarker           = 100002.0f;
+const float quadMarker           = 100003.0f;
+const float cubicMarker          = 100004.0f;
+const float closeSubPathMarker   = 100005.0f;
 
-Path::Path()
+Path()
 	: numElements (0),
 	  pathXMin (0),
 	  pathXMax (0),
@@ -34341,11 +34341,11 @@ Path::Path()
 {
 }
 
-Path::~Path()
+~Path()
 {
 }
 
-Path::Path (const Path& other)
+Path (const Path& other)
 	: numElements (other.numElements),
 	  pathXMin (other.pathXMin),
 	  pathXMax (other.pathXMax),
@@ -34360,7 +34360,7 @@ Path::Path (const Path& other)
 	}
 }
 
-Path& Path::operator= (const Path& other)
+Path& operator= (const Path& other)
 {
 	if (this != &other)
 	{
@@ -34381,7 +34381,7 @@ Path& Path::operator= (const Path& other)
 }
 
 #if JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS
-Path::Path (Path&& other) noexcept
+Path (Path&& other) noexcept
 	: data (static_cast <ArrayAllocationBase <float, DummyCriticalSection>&&> (other.data)),
 	  numElements (other.numElements),
 	  pathXMin (other.pathXMin),
@@ -34392,7 +34392,7 @@ Path::Path (Path&& other) noexcept
 {
 }
 
-Path& Path::operator= (Path&& other) noexcept
+Path& operator= (Path&& other) noexcept
 {
 	data = static_cast <ArrayAllocationBase <float, DummyCriticalSection>&&> (other.data);
 	numElements = other.numElements;
@@ -34405,12 +34405,12 @@ Path& Path::operator= (Path&& other) noexcept
 }
 #endif
 
-bool Path::operator== (const Path& other) const noexcept
+bool operator== (const Path& other) const noexcept
 {
 	return ! operator!= (other);
 }
 
-bool Path::operator!= (const Path& other) const noexcept
+bool operator!= (const Path& other) const noexcept
 {
 	if (numElements != other.numElements || useNonZeroWinding != other.useNonZeroWinding)
 		return true;
@@ -34422,7 +34422,7 @@ bool Path::operator!= (const Path& other) const noexcept
 	return false;
 }
 
-void Path::clear() noexcept
+void clear() noexcept
 {
 	numElements = 0;
 	pathXMin = 0;
@@ -34431,7 +34431,7 @@ void Path::clear() noexcept
 	pathXMax = 0;
 }
 
-void Path::swapWithPath (Path& other) noexcept
+void swapWithPath (Path& other) noexcept
 {
 	data.swapWith (other.data);
 	std::swap (numElements, other.numElements);
@@ -34442,18 +34442,18 @@ void Path::swapWithPath (Path& other) noexcept
 	std::swap (useNonZeroWinding, other.useNonZeroWinding);
 }
 
-void Path::setUsingNonZeroWinding (const bool isNonZero) noexcept
+void setUsingNonZeroWinding (const bool isNonZero) noexcept
 {
 	useNonZeroWinding = isNonZero;
 }
 
-void Path::scaleToFit (const float x, const float y, const float w, const float h,
+void scaleToFit (const float x, const float y, const float w, const float h,
 					   const bool preserveProportions) noexcept
 {
 	applyTransform (getTransformToScaleToFit (x, y, w, h, preserveProportions));
 }
 
-bool Path::isEmpty() const noexcept
+bool isEmpty() const noexcept
 {
 	size_t i = 0;
 
@@ -34476,19 +34476,19 @@ bool Path::isEmpty() const noexcept
 	return true;
 }
 
-Rectangle<float> Path::getBounds() const noexcept
+Rectangle<float> getBounds() const noexcept
 {
 	return Rectangle<float> (pathXMin, pathYMin,
 							 pathXMax - pathXMin,
 							 pathYMax - pathYMin);
 }
 
-Rectangle<float> Path::getBoundsTransformed (const AffineTransform& transform) const noexcept
+Rectangle<float> getBoundsTransformed (const AffineTransform& transform) const noexcept
 {
 	return getBounds().transformed (transform);
 }
 
-void Path::startNewSubPath (const float x, const float y)
+void startNewSubPath (const float x, const float y)
 {
 	JUCE_CHECK_COORDS_ARE_VALID (x, y);
 
@@ -34512,12 +34512,12 @@ void Path::startNewSubPath (const float x, const float y)
 	data.elements [numElements++] = y;
 }
 
-void Path::startNewSubPath (const Point<float>& start)
+void startNewSubPath (const Point<float>& start)
 {
 	startNewSubPath (start.x, start.y);
 }
 
-void Path::lineTo (const float x, const float y)
+void lineTo (const float x, const float y)
 {
 	JUCE_CHECK_COORDS_ARE_VALID (x, y);
 
@@ -34536,12 +34536,12 @@ void Path::lineTo (const float x, const float y)
 	pathYMax = jmax (pathYMax, y);
 }
 
-void Path::lineTo (const Point<float>& end)
+void lineTo (const Point<float>& end)
 {
 	lineTo (end.x, end.y);
 }
 
-void Path::quadraticTo (const float x1, const float y1,
+void quadraticTo (const float x1, const float y1,
 						const float x2, const float y2)
 {
 	JUCE_CHECK_COORDS_ARE_VALID (x1, y1);
@@ -34564,14 +34564,14 @@ void Path::quadraticTo (const float x1, const float y1,
 	pathYMax = jmax (pathYMax, y1, y2);
 }
 
-void Path::quadraticTo (const Point<float>& controlPoint,
+void quadraticTo (const Point<float>& controlPoint,
 						const Point<float>& endPoint)
 {
 	quadraticTo (controlPoint.x, controlPoint.y,
 				 endPoint.x, endPoint.y);
 }
 
-void Path::cubicTo (const float x1, const float y1,
+void cubicTo (const float x1, const float y1,
 					const float x2, const float y2,
 					const float x3, const float y3)
 {
@@ -34598,7 +34598,7 @@ void Path::cubicTo (const float x1, const float y1,
 	pathYMax = jmax (pathYMax, y1, y2, y3);
 }
 
-void Path::cubicTo (const Point<float>& controlPoint1,
+void cubicTo (const Point<float>& controlPoint1,
 					const Point<float>& controlPoint2,
 					const Point<float>& endPoint)
 {
@@ -34607,7 +34607,7 @@ void Path::cubicTo (const Point<float>& controlPoint1,
 			 endPoint.x, endPoint.y);
 }
 
-void Path::closeSubPath()
+void closeSubPath()
 {
 	if (numElements > 0
 		 && data.elements [numElements - 1] != closeSubPathMarker)
@@ -34617,7 +34617,7 @@ void Path::closeSubPath()
 	}
 }
 
-Point<float> Path::getCurrentPosition() const
+Point<float> getCurrentPosition() const
 {
 	int i = (int) numElements - 1;
 
@@ -34641,7 +34641,7 @@ Point<float> Path::getCurrentPosition() const
 	return Point<float>();
 }
 
-void Path::addRectangle (const float x, const float y,
+void addRectangle (const float x, const float y,
 						 const float w, const float h)
 {
 	float x1 = x, y1 = y, x2 = x + w, y2 = y + h;
@@ -34681,7 +34681,7 @@ void Path::addRectangle (const float x, const float y,
 	data.elements [numElements++] = closeSubPathMarker;
 }
 
-void Path::addRoundedRectangle (const float x, const float y,
+void addRoundedRectangle (const float x, const float y,
 								const float w, const float h,
 								float csx,
 								float csy)
@@ -34705,14 +34705,14 @@ void Path::addRoundedRectangle (const float x, const float y,
 	closeSubPath();
 }
 
-void Path::addRoundedRectangle (const float x, const float y,
+void addRoundedRectangle (const float x, const float y,
 								const float w, const float h,
 								float cs)
 {
 	addRoundedRectangle (x, y, w, h, cs, cs);
 }
 
-void Path::addTriangle (const float x1, const float y1,
+void addTriangle (const float x1, const float y1,
 						const float x2, const float y2,
 						const float x3, const float y3)
 {
@@ -34722,7 +34722,7 @@ void Path::addTriangle (const float x1, const float y1,
 	closeSubPath();
 }
 
-void Path::addQuadrilateral (const float x1, const float y1,
+void addQuadrilateral (const float x1, const float y1,
 							 const float x2, const float y2,
 							 const float x3, const float y3,
 							 const float x4, const float y4)
@@ -34734,7 +34734,7 @@ void Path::addQuadrilateral (const float x1, const float y1,
 	closeSubPath();
 }
 
-void Path::addEllipse (const float x, const float y,
+void addEllipse (const float x, const float y,
 					   const float w, const float h)
 {
 	const float hw = w * 0.5f;
@@ -34752,7 +34752,7 @@ void Path::addEllipse (const float x, const float y,
 	closeSubPath();
 }
 
-void Path::addArc (const float x, const float y,
+void addArc (const float x, const float y,
 				   const float w, const float h,
 				   const float fromRadians,
 				   const float toRadians,
@@ -34769,7 +34769,7 @@ void Path::addArc (const float x, const float y,
 				   startAsNewSubPath);
 }
 
-void Path::addCentredArc (const float centreX, const float centreY,
+void addCentredArc (const float centreX, const float centreY,
 						  const float radiusX, const float radiusY,
 						  const float rotationOfEllipse,
 						  const float fromRadians,
@@ -34812,7 +34812,7 @@ void Path::addCentredArc (const float centreX, const float centreY,
 	}
 }
 
-void Path::addPieSegment (const float x, const float y,
+void addPieSegment (const float x, const float y,
 						  const float width, const float height,
 						  const float fromRadians,
 						  const float toRadians,
@@ -34856,7 +34856,7 @@ void Path::addPieSegment (const float x, const float y,
 	closeSubPath();
 }
 
-void Path::addLineSegment (const Line<float>& line, float lineThickness)
+void addLineSegment (const Line<float>& line, float lineThickness)
 {
 	const Line<float> reversed (line.reversed());
 	lineThickness *= 0.5f;
@@ -34868,7 +34868,7 @@ void Path::addLineSegment (const Line<float>& line, float lineThickness)
 	closeSubPath();
 }
 
-void Path::addArrow (const Line<float>& line, float lineThickness,
+void addArrow (const Line<float>& line, float lineThickness,
 					 float arrowheadWidth, float arrowheadLength)
 {
 	const Line<float> reversed (line.reversed());
@@ -34886,7 +34886,7 @@ void Path::addArrow (const Line<float>& line, float lineThickness,
 	closeSubPath();
 }
 
-void Path::addPolygon (const Point<float>& centre, const int numberOfSides,
+void addPolygon (const Point<float>& centre, const int numberOfSides,
 					   const float radius, const float startAngle)
 {
 	jassert (numberOfSides > 1); // this would be silly.
@@ -34910,7 +34910,7 @@ void Path::addPolygon (const Point<float>& centre, const int numberOfSides,
 	}
 }
 
-void Path::addStar (const Point<float>& centre, const int numberOfPoints,
+void addStar (const Point<float>& centre, const int numberOfPoints,
 					const float innerRadius, const float outerRadius, const float startAngle)
 {
 	jassert (numberOfPoints > 1); // this would be silly.
@@ -34936,7 +34936,7 @@ void Path::addStar (const Point<float>& centre, const int numberOfPoints,
 	}
 }
 
-void Path::addBubble (float x, float y,
+void addBubble (float x, float y,
 					  float w, float h,
 					  float cs,
 					  float tipX,
@@ -35012,7 +35012,7 @@ void Path::addBubble (float x, float y,
 	}
 }
 
-void Path::addPath (const Path& other)
+void addPath (const Path& other)
 {
 	size_t i = 0;
 
@@ -35065,7 +35065,7 @@ void Path::addPath (const Path& other)
 	}
 }
 
-void Path::addPath (const Path& other,
+void addPath (const Path& other,
 					const AffineTransform& transformToApply)
 {
 	size_t i = 0;
@@ -35119,7 +35119,7 @@ void Path::addPath (const Path& other,
 	}
 }
 
-void Path::applyTransform (const AffineTransform& transform) noexcept
+void applyTransform (const AffineTransform& transform) noexcept
 {
 	size_t i = 0;
 	pathYMin = pathXMin = 0;
@@ -35189,7 +35189,7 @@ void Path::applyTransform (const AffineTransform& transform) noexcept
 	}
 }
 
-AffineTransform Path::getTransformToScaleToFit (const float x, const float y,
+AffineTransform getTransformToScaleToFit (const float x, const float y,
 												const float w, const float h,
 												const bool preserveProportions,
 												const Justification& justification) const
@@ -35241,7 +35241,7 @@ AffineTransform Path::getTransformToScaleToFit (const float x, const float y,
 	}
 }
 
-bool Path::contains (const float x, const float y, const float tolerance) const
+bool contains (const float x, const float y, const float tolerance) const
 {
 	if (x <= pathXMin || x >= pathXMax
 		 || y <= pathYMin || y >= pathYMax)
@@ -35272,12 +35272,12 @@ bool Path::contains (const float x, const float y, const float tolerance) const
 							 : ((negativeCrossings + positiveCrossings) & 1) != 0;
 }
 
-bool Path::contains (const Point<float>& point, const float tolerance) const
+bool contains (const Point<float>& point, const float tolerance) const
 {
 	return contains (point.x, point.y, tolerance);
 }
 
-bool Path::intersectsLine (const Line<float>& line, const float tolerance)
+bool intersectsLine (const Line<float>& line, const float tolerance)
 {
 	PathFlatteningIterator i (*this, AffineTransform::identity, tolerance);
 	Point<float> intersection;
@@ -35289,7 +35289,7 @@ bool Path::intersectsLine (const Line<float>& line, const float tolerance)
 	return false;
 }
 
-Line<float> Path::getClippedLine (const Line<float>& line, const bool keepSectionOutsidePath) const
+Line<float> getClippedLine (const Line<float>& line, const bool keepSectionOutsidePath) const
 {
 	Line<float> result (line);
 	const bool startInside = contains (line.getStart());
@@ -35320,7 +35320,7 @@ Line<float> Path::getClippedLine (const Line<float>& line, const bool keepSectio
 	return result;
 }
 
-float Path::getLength (const AffineTransform& transform) const
+float getLength (const AffineTransform& transform) const
 {
 	float length = 0;
 	PathFlatteningIterator i (*this, transform);
@@ -35331,7 +35331,7 @@ float Path::getLength (const AffineTransform& transform) const
 	return length;
 }
 
-Point<float> Path::getPointAlongPath (float distanceFromStart, const AffineTransform& transform) const
+Point<float> getPointAlongPath (float distanceFromStart, const AffineTransform& transform) const
 {
 	PathFlatteningIterator i (*this, transform);
 
@@ -35349,7 +35349,7 @@ Point<float> Path::getPointAlongPath (float distanceFromStart, const AffineTrans
 	return Point<float> (i.x2, i.y2);
 }
 
-float Path::getNearestPoint (const Point<float>& targetPoint, Point<float>& pointOnPath,
+float getNearestPoint (const Point<float>& targetPoint, Point<float>& pointOnPath,
 							 const AffineTransform& transform) const
 {
 	PathFlatteningIterator i (*this, transform);
@@ -35375,7 +35375,7 @@ float Path::getNearestPoint (const Point<float>& targetPoint, Point<float>& poin
 	return bestPosition;
 }
 
-Path Path::createPathWithRoundedCorners (const float cornerRadius) const
+Path createPathWithRoundedCorners (const float cornerRadius) const
 {
 	if (cornerRadius <= 0.01f)
 		return *this;
@@ -35526,7 +35526,7 @@ Path Path::createPathWithRoundedCorners (const float cornerRadius) const
 	return p;
 }
 
-void Path::loadPathFromStream (InputStream& source)
+void loadPathFromStream (InputStream& source)
 {
 	while (! source.isExhausted())
 	{
@@ -35592,13 +35592,13 @@ void Path::loadPathFromStream (InputStream& source)
 	}
 }
 
-void Path::loadPathFromData (const void* const pathData, const size_t numberOfBytes)
+void loadPathFromData (const void* const pathData, const size_t numberOfBytes)
 {
 	MemoryInputStream in (pathData, numberOfBytes, false);
 	loadPathFromStream (in);
 }
 
-void Path::writePathToStream (OutputStream& dest) const
+void writePathToStream (OutputStream& dest) const
 {
 	dest.writeByte (useNonZeroWinding ? 'n' : 'z');
 
@@ -35646,7 +35646,7 @@ void Path::writePathToStream (OutputStream& dest) const
 	dest.writeByte ('e'); // marks the end-of-path
 }
 
-String Path::toString() const
+String toString() const
 {
 	MemoryOutputStream s (2048);
 	if (! useNonZeroWinding)
@@ -35716,7 +35716,7 @@ String Path::toString() const
 	return s.toUTF8();
 }
 
-void Path::restoreFromString (const String& stringVersion)
+void restoreFromString (const String& stringVersion)
 {
 	clear();
 	setUsingNonZeroWinding (true);
@@ -35781,17 +35781,17 @@ void Path::restoreFromString (const String& stringVersion)
 	}
 }
 
-Path::Iterator::Iterator (const Path& path_)
+Iterator::Iterator (const Path& path_)
 	: path (path_),
 	  index (0)
 {
 }
 
-Path::Iterator::~Iterator()
+Iterator::~Iterator()
 {
 }
 
-bool Path::Iterator::next()
+bool Iterator::next()
 {
 	const float* const elements = path.data.elements;
 
@@ -35880,7 +35880,7 @@ PathFlatteningIterator::~PathFlatteningIterator()
 bool PathFlatteningIterator::isLastInSubpath() const noexcept
 {
 	return stackPos == stackBase.getData()
-			 && (index >= path.numElements || points [index] == Path::moveMarker);
+			 && (index >= path.numElements || points [index] == moveMarker);
 }
 
 bool PathFlatteningIterator::next()
@@ -35906,12 +35906,12 @@ bool PathFlatteningIterator::next()
 			{
 				type = points [index++];
 
-				if (type != Path::closeSubPathMarker)
+				if (type != closeSubPathMarker)
 				{
 					x2 = points [index++];
 					y2 = points [index++];
 
-					if (type == Path::quadMarker)
+					if (type == quadMarker)
 					{
 						x3 = points [index++];
 						y3 = points [index++];
@@ -35919,7 +35919,7 @@ bool PathFlatteningIterator::next()
 						if (! isIdentityTransform)
 							transform.transformPoints (x2, y2, x3, y3);
 					}
-					else if (type == Path::cubicMarker)
+					else if (type == cubicMarker)
 					{
 						x3 = points [index++];
 						y3 = points [index++];
@@ -35941,17 +35941,17 @@ bool PathFlatteningIterator::next()
 		{
 			type = *--stackPos;
 
-			if (type != Path::closeSubPathMarker)
+			if (type != closeSubPathMarker)
 			{
 				x2 = *--stackPos;
 				y2 = *--stackPos;
 
-				if (type == Path::quadMarker)
+				if (type == quadMarker)
 				{
 					x3 = *--stackPos;
 					y3 = *--stackPos;
 				}
-				else if (type == Path::cubicMarker)
+				else if (type == cubicMarker)
 				{
 					x3 = *--stackPos;
 					y3 = *--stackPos;
@@ -35961,19 +35961,19 @@ bool PathFlatteningIterator::next()
 			}
 		}
 
-		if (type == Path::lineMarker)
+		if (type == lineMarker)
 		{
 			++subPathIndex;
 
 			closesSubPath = (stackPos == stackBase)
 							 && (index < path.numElements)
-							 && (points [index] == Path::closeSubPathMarker)
+							 && (points [index] == closeSubPathMarker)
 							 && x2 == subPathCloseX
 							 && y2 == subPathCloseY;
 
 			return true;
 		}
-		else if (type == Path::quadMarker)
+		else if (type == quadMarker)
 		{
 			const size_t offset = (size_t) (stackPos - stackBase);
 
@@ -36000,28 +36000,28 @@ bool PathFlatteningIterator::next()
 				*stackPos++ = x3;
 				*stackPos++ = m2y;
 				*stackPos++ = m2x;
-				*stackPos++ = Path::quadMarker;
+				*stackPos++ = quadMarker;
 
 				*stackPos++ = m3y;
 				*stackPos++ = m3x;
 				*stackPos++ = m1y;
 				*stackPos++ = m1x;
-				*stackPos++ = Path::quadMarker;
+				*stackPos++ = quadMarker;
 			}
 			else
 			{
 				*stackPos++ = y3;
 				*stackPos++ = x3;
-				*stackPos++ = Path::lineMarker;
+				*stackPos++ = lineMarker;
 
 				*stackPos++ = m3y;
 				*stackPos++ = m3x;
-				*stackPos++ = Path::lineMarker;
+				*stackPos++ = lineMarker;
 			}
 
 			jassert (stackPos < stackBase + stackSize);
 		}
-		else if (type == Path::cubicMarker)
+		else if (type == cubicMarker)
 		{
 			const size_t offset = (size_t) (stackPos - stackBase);
 
@@ -36057,7 +36057,7 @@ bool PathFlatteningIterator::next()
 				*stackPos++ = m3x;
 				*stackPos++ = m5y;
 				*stackPos++ = m5x;
-				*stackPos++ = Path::cubicMarker;
+				*stackPos++ = cubicMarker;
 
 				*stackPos++ = (m4y + m5y) * 0.5f;
 				*stackPos++ = (m4x + m5x) * 0.5f;
@@ -36065,24 +36065,24 @@ bool PathFlatteningIterator::next()
 				*stackPos++ = m4x;
 				*stackPos++ = m1y;
 				*stackPos++ = m1x;
-				*stackPos++ = Path::cubicMarker;
+				*stackPos++ = cubicMarker;
 			}
 			else
 			{
 				*stackPos++ = y4;
 				*stackPos++ = x4;
-				*stackPos++ = Path::lineMarker;
+				*stackPos++ = lineMarker;
 
 				*stackPos++ = m5y;
 				*stackPos++ = m5x;
-				*stackPos++ = Path::lineMarker;
+				*stackPos++ = lineMarker;
 
 				*stackPos++ = m4y;
 				*stackPos++ = m4x;
-				*stackPos++ = Path::lineMarker;
+				*stackPos++ = lineMarker;
 			}
 		}
-		else if (type == Path::closeSubPathMarker)
+		else if (type == closeSubPathMarker)
 		{
 			if (x2 != subPathCloseX || y2 != subPathCloseY)
 			{
@@ -36097,7 +36097,7 @@ bool PathFlatteningIterator::next()
 		}
 		else
 		{
-			jassert (type == Path::moveMarker);
+			jassert (type == moveMarker);
 
 			subPathIndex = -1;
 			subPathCloseX = x1 = x2;
@@ -38395,7 +38395,7 @@ void LowLevelGraphicsPostScriptRenderer::writePath (const Path& path) const
 	float lastY = 0.0f;
 	int itemsOnLine = 0;
 
-	Path::Iterator i (path);
+	Iterator i (path);
 
 	while (i.next())
 	{
@@ -38407,21 +38407,21 @@ void LowLevelGraphicsPostScriptRenderer::writePath (const Path& path) const
 
 		switch (i.elementType)
 		{
-		case Path::Iterator::startNewSubPath:
+		case Iterator::startNewSubPath:
 			writeXY (i.x1, i.y1);
 			lastX = i.x1;
 			lastY = i.y1;
 			out << "m ";
 			break;
 
-		case Path::Iterator::lineTo:
+		case Iterator::lineTo:
 			writeXY (i.x1, i.y1);
 			lastX = i.x1;
 			lastY = i.y1;
 			out << "l ";
 			break;
 
-		case Path::Iterator::quadraticTo:
+		case Iterator::quadraticTo:
 			{
 				const float cp1x = lastX + (i.x1 - lastX) * 2.0f / 3.0f;
 				const float cp1y = lastY + (i.y1 - lastY) * 2.0f / 3.0f;
@@ -38437,7 +38437,7 @@ void LowLevelGraphicsPostScriptRenderer::writePath (const Path& path) const
 			}
 			break;
 
-		case Path::Iterator::cubicTo:
+		case Iterator::cubicTo:
 			writeXY (i.x1, i.y1);
 			writeXY (i.x2, i.y2);
 			writeXY (i.x3, i.y3);
@@ -38446,7 +38446,7 @@ void LowLevelGraphicsPostScriptRenderer::writePath (const Path& path) const
 			lastY = i.y3;
 			break;
 
-		case Path::Iterator::closePath:
+		case Iterator::closePath:
 			out << "cp ";
 			break;
 
@@ -98051,17 +98051,17 @@ void CoreGraphicsContext::drawGradient()
 void CoreGraphicsContext::createPath (const Path& path) const
 {
 	CGContextBeginPath (context);
-	Path::Iterator i (path);
+	Iterator i (path);
 
 	while (i.next())
 	{
 		switch (i.elementType)
 		{
-			case Path::Iterator::startNewSubPath:  CGContextMoveToPoint (context, i.x1, i.y1); break;
-			case Path::Iterator::lineTo:           CGContextAddLineToPoint (context, i.x1, i.y1); break;
-			case Path::Iterator::quadraticTo:      CGContextAddQuadCurveToPoint (context, i.x1, i.y1, i.x2, i.y2); break;
-			case Path::Iterator::cubicTo:          CGContextAddCurveToPoint (context, i.x1, i.y1, i.x2, i.y2, i.x3, i.y3); break;
-			case Path::Iterator::closePath:        CGContextClosePath (context); break;
+			case Iterator::startNewSubPath:  CGContextMoveToPoint (context, i.x1, i.y1); break;
+			case Iterator::lineTo:           CGContextAddLineToPoint (context, i.x1, i.y1); break;
+			case Iterator::quadraticTo:      CGContextAddQuadCurveToPoint (context, i.x1, i.y1, i.x2, i.y2); break;
+			case Iterator::cubicTo:          CGContextAddCurveToPoint (context, i.x1, i.y1, i.x2, i.y2, i.x3, i.y3); break;
+			case Iterator::closePath:        CGContextClosePath (context); break;
 			default:                               jassertfalse; break;
 		}
 	}
@@ -98070,29 +98070,29 @@ void CoreGraphicsContext::createPath (const Path& path) const
 void CoreGraphicsContext::createPath (const Path& path, const AffineTransform& transform) const
 {
 	CGContextBeginPath (context);
-	Path::Iterator i (path);
+	Iterator i (path);
 
 	while (i.next())
 	{
 		switch (i.elementType)
 		{
-		case Path::Iterator::startNewSubPath:
+		case Iterator::startNewSubPath:
 			transform.transformPoint (i.x1, i.y1);
 			CGContextMoveToPoint (context, i.x1, flipHeight - i.y1);
 			break;
-		case Path::Iterator::lineTo:
+		case Iterator::lineTo:
 			transform.transformPoint (i.x1, i.y1);
 			CGContextAddLineToPoint (context, i.x1, flipHeight - i.y1);
 			break;
-		case Path::Iterator::quadraticTo:
+		case Iterator::quadraticTo:
 			transform.transformPoints (i.x1, i.y1, i.x2, i.y2);
 			CGContextAddQuadCurveToPoint (context, i.x1, flipHeight - i.y1, i.x2, flipHeight - i.y2);
 			break;
-		case Path::Iterator::cubicTo:
+		case Iterator::cubicTo:
 			transform.transformPoints (i.x1, i.y1, i.x2, i.y2, i.x3, i.y3);
 			CGContextAddCurveToPoint (context, i.x1, flipHeight - i.y1, i.x2, flipHeight - i.y2, i.x3, flipHeight - i.y3);
 			break;
-		case Path::Iterator::closePath:
+		case Iterator::closePath:
 			CGContextClosePath (context); break;
 		default:
 			jassertfalse;
@@ -99114,13 +99114,13 @@ private:
 
 	static void pathToGeometrySink (const Path& path, ID2D1GeometrySink* sink, const AffineTransform& transform, int x, int y)
 	{
-		Path::Iterator it (path);
+		Iterator it (path);
 
 		while (it.next())
 		{
 			switch (it.elementType)
 			{
-				case Path::Iterator::cubicTo:
+				case Iterator::cubicTo:
 				{
 					D2D1_BEZIER_SEGMENT seg;
 
@@ -99137,14 +99137,14 @@ private:
 					break;
 				}
 
-				case Path::Iterator::lineTo:
+				case Iterator::lineTo:
 				{
 					transform.transformPoint (it.x1, it.y1);
 					sink->AddLine (D2D1::Point2F (it.x1 + x, it.y1 + y));
 					break;
 				}
 
-				case Path::Iterator::quadraticTo:
+				case Iterator::quadraticTo:
 				{
 					D2D1_QUADRATIC_BEZIER_SEGMENT seg;
 
@@ -99158,13 +99158,13 @@ private:
 					break;
 				}
 
-				case Path::Iterator::closePath:
+				case Iterator::closePath:
 				{
 					sink->EndFigure (D2D1_FIGURE_END_CLOSED);
 					break;
 				}
 
-				case Path::Iterator::startNewSubPath:
+				case Iterator::startNewSubPath:
 				{
 					transform.transformPoint (it.x1, it.y1);
 					sink->BeginFigure (D2D1::Point2F (it.x1 + x, it.y1 + y), D2D1_FIGURE_BEGIN_FILLED);
@@ -99181,7 +99181,7 @@ private:
 
 		ComSmartPtr <ID2D1GeometrySink> sink;
 		HRESULT hr = p->Open (sink.resetAndGetPointerAddress());
-		sink->SetFillMode (D2D1_FILL_MODE_WINDING); // xxx need to check Path::isUsingNonZeroWinding()
+		sink->SetFillMode (D2D1_FILL_MODE_WINDING); // xxx need to check isUsingNonZeroWinding()
 
 		pathToGeometrySink (path, sink, transform, point.getX(), point.getY());
 
@@ -101873,17 +101873,17 @@ private:
 	{
 		jobject p = env->NewObject (PathClass, PathClass.constructor);
 
-		Path::Iterator i (path);
+		Iterator i (path);
 
 		while (i.next())
 		{
 			switch (i.elementType)
 			{
-				case Path::Iterator::startNewSubPath:  env->CallVoidMethod (p, PathClass.moveTo, i.x1, i.y1); break;
-				case Path::Iterator::lineTo:           env->CallVoidMethod (p, PathClass.lineTo, i.x1, i.y1); break;
-				case Path::Iterator::quadraticTo:      env->CallVoidMethod (p, PathClass.quadTo, i.x1, i.y1, i.x2, i.y2); break;
-				case Path::Iterator::cubicTo:          env->CallVoidMethod (p, PathClass.cubicTo, i.x1, i.y1, i.x2, i.y2, i.x3, i.y3); break;
-				case Path::Iterator::closePath:        env->CallVoidMethod (p, PathClass.closePath); break;
+				case Iterator::startNewSubPath:  env->CallVoidMethod (p, PathClass.moveTo, i.x1, i.y1); break;
+				case Iterator::lineTo:           env->CallVoidMethod (p, PathClass.lineTo, i.x1, i.y1); break;
+				case Iterator::quadraticTo:      env->CallVoidMethod (p, PathClass.quadTo, i.x1, i.y1, i.x2, i.y2); break;
+				case Iterator::cubicTo:          env->CallVoidMethod (p, PathClass.cubicTo, i.x1, i.y1, i.x2, i.y2, i.x3, i.y3); break;
+				case Iterator::closePath:        env->CallVoidMethod (p, PathClass.closePath); break;
 				default:                               jassertfalse; break;
 			}
 		}

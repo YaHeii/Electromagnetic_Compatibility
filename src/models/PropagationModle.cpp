@@ -4,12 +4,13 @@
 #include <limits> // For std::numeric_limits
 #include "../include/utils/point_2D.h"
 #include "models/shortlist.h"
-#define C_LIGHT 300000000
-namespace Electromagnetic_compatibility {
-namespace models {
 
-double FreeSpaceModel::getPathLossDb(const utils::Point2D& pos_tx,
-                                     const utils::Point2D& pos_rx,
+
+#define C_LIGHT 300000000
+
+
+double FreeSpaceModel::getPathLossDb(const Point2D& pos_tx,
+                                     const Point2D& pos_rx,
                                      double frequency_mhz) const {
     // 计算距离
     double dx = pos_tx.x - pos_rx.x;
@@ -27,8 +28,8 @@ double FreeSpaceModel::getPathLossDb(const utils::Point2D& pos_tx,
 // --- TwoRayModel 实现 ---
 TwoRayModel::TwoRayModel(double h_t_m, double h_r_m) : m_h_t_m(h_t_m), m_h_r_m(h_r_m) {}
 
-double TwoRayModel::getPathLossDb(const utils::Point2D& pos_tx,
-                                  const utils::Point2D& pos_rx,
+double TwoRayModel::getPathLossDb(const Point2D& pos_tx,
+                                  const Point2D& pos_rx,
                                   double frequency_mhz) const {
     if (frequency_mhz <= 0) {
         throw std::invalid_argument("Frequency must be positive.");
@@ -101,8 +102,6 @@ double TwoRayModel::getPathLossDb(const utils::Point2D& pos_tx,
 }
 
 
-double TwoRayModel::calculate_distance(const utils::Point2D &pos_tx, const utils::Point2D &pos_rx){
+double TwoRayModel::calculate_distance(const Point2D &pos_tx, const Point2D &pos_rx){
     return std::sqrt(std::pow(pos_tx.x - pos_rx.x, 2) + std::pow(pos_tx.y - pos_rx.y, 2));
 }
-} // namespace models
-} // namespace Electromagnetic_compatibility

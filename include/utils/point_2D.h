@@ -1,7 +1,5 @@
 #pragma once
 
-namespace Electromagnetic_compatibility {
-namespace utils {
 class Point2D {
     public:
     Point2D(double x, double y) : x(x), y(y) {}
@@ -12,8 +10,6 @@ class Point2D {
     double y;
 };
 
-} // namespace utils
-} // namespace Electromagnetic_compatibility
 
 
 // struct Point2D {

@@ -7,10 +7,8 @@
 #include <vector>
 #include <unordered_map>
 
-using namespace std;
-namespace Electromagnetic_compatibility {
-namespace core {
-Electromagnetic_compatibility::core::ship::ship(string id, utils::Point2D location, vector<double> distance,double orientation_deg,double speed)
+
+ship::ship(string id,Point2D location, vector<double> distance,double orientation_deg,double speed)
 : m_id(id), // 使用初始化列表初始化 m_location  
 m_location(location), // 使用初始化列表初始化 m_location  
 m_distance(distance),  // 初始化 m_distance
@@ -28,18 +26,17 @@ Equipment* ship::findEquipmentByID(const std::string& eq_id) const {
         return nullptr;
     }
 //添加设备
-void Electromagnetic_compatibility::core::ship::ship::addEquipment(std::unique_ptr<Equipment> eq) {
-        Electromagnetic_compatibility::core::ship::m_equipmentList.push_back(std::move(eq));
+void ship::addEquipment(std::unique_ptr<Equipment> eq) {
+        m_equipmentList.push_back(std::move(eq));
     }
 
 //获取设备列表
-const std::vector<std::unique_ptr<Electromagnetic_compatibility::core::Equipment>>& Electromagnetic_compatibility::core::ship::getEquipmentList(){
+const std::vector<std::unique_ptr<Equipment>>& ship::getEquipmentList(){
         return m_equipmentList;
     }
     //设置坐标
-    void ship::setLocation(utils::Point2D position_new) {
-        m_location = position_new;
-    }
+void ship::setLocation(Point2D position_new) {
+    m_location = position_new;
+}
 
-}
-}
+

@@ -1,13 +1,11 @@
 #pragma once
 #include <string>
-#include <memory> // For std::unique_ptr
+#include <memory>
 #include "Antenna.h"
 #include "ship.h"
 #include "../utils/point_2D.h"
 #include "../utils/conversions.h"
 
-namespace Electromagnetic_compatibility {
-namespace core {
 
 enum class EquipmentType {
     GENERIC,//通用设备
@@ -19,13 +17,13 @@ enum class EquipmentType {
 
 class Equipment {
 public:
-    Equipment(const std::string& id, EquipmentType type, const utils::Point2D& relative_pos = {0,0}, double power_dbm = 0)
+    Equipment(const std::string& id, EquipmentType type, const Point2D& relative_pos = {0,0}, double power_dbm = 0)
         : m_id(id), m_type(type), m_relative_position(relative_pos), m_antenna(nullptr),m_power_dbm(power_dbm) {}
     virtual ~Equipment() = default;
 
     std::string getID() const { return m_id; }
     EquipmentType getType() const { return m_type; }
-    utils::Point2D getRelativePosition() const { return m_relative_position; }
+    Point2D getRelativePosition() const { return m_relative_position; }
 
     void setAntenna(std::unique_ptr<Antenna> antenna) {
         m_antenna = std::move(antenna);
@@ -37,7 +35,7 @@ public:
 protected:
     std::string m_id;
     EquipmentType m_type;
-    utils::Point2D m_relative_position; // 相对于船只参考点的位置
+    Point2D m_relative_position; // 相对于船只参考点的位置
     double m_power_dbm;
     std::unique_ptr<Antenna> m_antenna;
 };
@@ -50,7 +48,7 @@ public:
                 double frequency_mhz,//频率
                 double power_dbm,//功率
                 double bandwidth_khz,//带宽
-                const utils::Point2D& relative_pos = {0,0})
+                const Point2D& relative_pos = {0,0})
         : Equipment(id, EquipmentType::TRANSMITTER, relative_pos),
           m_frequency_mhz(frequency_mhz),
           m_power_dbm(power_dbm),
@@ -77,7 +75,7 @@ public:
              double noise_figure_db = 3.0, // 噪声系数 (dB)
              double SINR_threshold_db = 10.0, // 信噪比阈值 (dB)
              double interference_threshold_db = 10.0, // 干扰阈值 (dB)
-             const utils::Point2D& relative_pos = {0.0,0.0})
+             const Point2D& relative_pos = {0.0,0.0})
         : Equipment(id, EquipmentType::RECEIVER, relative_pos),
           m_frequency_mhz(frequency_mhz),
           m_sensitivity_dbm(sensitivity_dbm),
@@ -122,5 +120,3 @@ private:
 
 
 
-} // namespace core
-} // namespace Electromagnetic_compatibility

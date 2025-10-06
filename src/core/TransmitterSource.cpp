@@ -2,7 +2,7 @@
 #include <limits> // for std::numeric_limits
 
 
-Electromagnetic_compatibility::core::TransmitterSource::TransmitterSource(std::string id, double centerFrequencyHz, double bandwidthHz, double averagePowerDbm)
+TransmitterSource::TransmitterSource(std::string id, double centerFrequencyHz, double bandwidthHz, double averagePowerDbm)
     : m_id(std::move(id)),
       m_centerFrequencyHz(centerFrequencyHz),
       m_bandwidthHz(bandwidthHz),
@@ -15,7 +15,7 @@ Electromagnetic_compatibility::core::TransmitterSource::TransmitterSource(std::s
     }
 }
 
-void Electromagnetic_compatibility::core::TransmitterSource::setAsPulsed(double pulseWidthS, double prfHz) {
+void TransmitterSource::setAsPulsed(double pulseWidthS, double prfHz) {
     if (pulseWidthS <= 0 || prfHz <= 0) {
         throw std::invalid_argument("Pulse width and PRF must be positive.");
     }
@@ -25,33 +25,33 @@ void Electromagnetic_compatibility::core::TransmitterSource::setAsPulsed(double 
     calculatePeakPower();
 }
 
-void Electromagnetic_compatibility::core::TransmitterSource::setAsCW() {
+void TransmitterSource::setAsCW() {
     m_signalType = SignalType::CONTINUOUS_WAVE;
 }
 
-void Electromagnetic_compatibility::core::TransmitterSource::setSpectralMask(const std::map<double, double>& mask) {
+void TransmitterSource::setSpectralMask(const std::map<double, double>& mask) {
     m_spectralMaskDbc = mask;
 }
 
-void Electromagnetic_compatibility::core::TransmitterSource::addHarmonic(int order, double relativePowerDb) {
+void TransmitterSource::addHarmonic(int order, double relativePowerDb) {
     if (order < 2) {
         throw std::invalid_argument("Harmonic order must be 2 or greater.");
     }
     m_harmonics.push_back({order, relativePowerDb});
 }
 
-void Electromagnetic_compatibility::core::TransmitterSource::associateAntenna(Antenna* antenna) {
+void TransmitterSource::associateAntenna(Antenna* antenna) {
     m_associatedAntenna = antenna;
 }
 
-const Electromagnetic_compatibility::core::PulseInfo& Electromagnetic_compatibility::core::TransmitterSource::getPulseInfo() const {
+const PulseInfo& TransmitterSource::getPulseInfo() const {
     if (m_signalType != SignalType::PULSED) {
         throw std::logic_error("Pulse info is only available for PULSED signal type.");
     }
     return m_pulseInfo;
 }
 
-double Electromagnetic_compatibility::core::TransmitterSource::getPowerAtFrequency(double queryFrequencyHz) const {
+double TransmitterSource::getPowerAtFrequency(double queryFrequencyHz) const {
     // 步骤1: 检查查询频率是否落在某个谐波的频带内
     for (const auto& harmonic : m_harmonics) {
         double harmonicCenterFreq = m_centerFrequencyHz * harmonic.order;
@@ -79,7 +79,7 @@ double Electromagnetic_compatibility::core::TransmitterSource::getPowerAtFrequen
 }
 
 
-void Electromagnetic_compatibility::core::TransmitterSource::calculatePeakPower() {
+void TransmitterSource::calculatePeakPower() {
     if (m_signalType != SignalType::PULSED) return;
 
     double dutyCycle = m_pulseInfo.pulseWidthS * m_pulseInfo.prfHz;
@@ -96,7 +96,7 @@ void Electromagnetic_compatibility::core::TransmitterSource::calculatePeakPower(
     m_pulseInfo.peakPowerDbm = m_averagePowerDbm - 10.0 * std::log10(dutyCycle);
 }
 
-double Electromagnetic_compatibility::core::TransmitterSource::getSuppressionFromMask(double frequencyOffsetHz) const {
+double TransmitterSource::getSuppressionFromMask(double frequencyOffsetHz) const {
     if (m_spectralMaskDbc.empty()) {
         // 如果没有定义模板，返回一个极低的默认值，表示极强的抑制
         return -std::numeric_limits<double>::infinity();

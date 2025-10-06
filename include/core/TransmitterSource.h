@@ -8,8 +8,6 @@
 #include "Antenna.h"
 
 
-namespace Electromagnetic_compatibility {
-    namespace core {
 
 //定义信号类型
 enum class SignalType {
@@ -93,5 +91,3 @@ private:
     // 抑制值 (dBc, 负值)。
     double getSuppressionFromMask(double frequencyOffsetHz) const;
 };
-    }
-}

@@ -11,14 +11,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia)
-set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/ui)
+
 qt_standard_project_setup()
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/resource/ui)
+set(APP_TARGET_NAME Electromagnetic_Compatibility)
 
-
-qt_add_executable(${PROJECT_NAME}
+qt_add_executable(${APP_TARGET_NAME}
 #        ${src}
         src/main.cpp
-        src/mainwindow.cpp
         src/core/EMC_Engine.cpp
         src/core/fleet.cpp
         src/core/ship.cpp
@@ -28,8 +28,15 @@ qt_add_executable(${PROJECT_NAME}
         src/models/PropagationModle.cpp
         src/models/shortlist.cpp
         src/utils/data_get.cpp
-#        ${header}
-        include/mainwindow.h
+        src/widget/devicewidget.cpp
+        src/models/move.cpp
+        src/mainwindow.cpp
+        resource/ui/shipwidget.cpp
+        src/models/DataModel.cpp
+        include/log/LogQueue.hpp
+        resource/ui/deviceonship.cpp
+        resource/ui/devicewidget.cpp
+        #        ${header}
         include/core/Antenna.h
         include/core/EMC_Engine.h
         include/core/Equipment.h
@@ -46,33 +53,47 @@ qt_add_executable(${PROJECT_NAME}
         include/utils/data_get.h
         include/utils/farfield_get.hpp
         include/utils/point_2D.h
-#        ${ui}
-        ui/mainwindow.ui
+        include/mainwindow.h
+        resource/ui/shipwidget.h
+        include/models/DataModel.h
+        resource/ui/devicewidget.h
+        resource/ui/deviceonship.h
+
+        #        ${ui}
+        resource/ui/mainwindow.ui
+        resource/ui/devicewidget.ui
+        resource/ui/shipwidget.ui
+        resource/ui/deviceonship.ui
+
+
 
 
 )
 
 set(DSPFilters_DIR ${CMAKE_SOURCE_DIR}/third_party/DSPFilters-master)
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${APP_TARGET_NAME} PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         ${DSPFilters_DIR}/shared/DSPFilters/include
 )
 
 # 为目标链接 Qt 库
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${APP_TARGET_NAME} PRIVATE
+        Qt6::Core
         Qt6::Widgets
+        Qt6::Multimedia
 )
+
 
 include(GNUInstallDirs)
 
-install(TARGETS Electromagnetic_Compatibility
+install(TARGETS ${APP_TARGET_NAME}
         BUNDLE  DESTINATION .
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 qt_generate_deploy_app_script(
-        TARGET Electromagnetic_Compatibility
+        TARGET ${APP_TARGET_NAME}
         OUTPUT_SCRIPT deploy_script
         NO_UNSUPPORTED_PLATFORM_ERROR
 )

@@ -25061,31 +25061,31 @@ void FileOutputStream::writeRepeatedByte (uint8 byte, int numBytes)
 
 
 /*** Start of inlined file: juce_FileSearchPath.cpp ***/
-FileSearchPath::FileSearchPath()
+FileSearchFileSearchPath()
 {
 }
 
-FileSearchPath::FileSearchPath (const String& path)
+FileSearchFileSearchPath (const String& path)
 {
 	init (path);
 }
 
-FileSearchPath::FileSearchPath (const FileSearchPath& other)
+FileSearchFileSearchPath (const FileSearchPath& other)
   : directories (other.directories)
 {
 }
 
-FileSearchPath::~FileSearchPath()
+FileSearch~FileSearchPath()
 {
 }
 
-FileSearchPath& FileSearchPath::operator= (const String& path)
+FileSearchPath& FileSearchoperator= (const String& path)
 {
 	init (path);
 	return *this;
 }
 
-void FileSearchPath::init (const String& path)
+void FileSearchinit (const String& path)
 {
 	directories.clear();
 	directories.addTokens (path, ";", "\"");
@@ -25096,17 +25096,17 @@ void FileSearchPath::init (const String& path)
 		directories.set (i, directories[i].unquoted());
 }
 
-int FileSearchPath::getNumPaths() const
+int FileSearchgetNumPaths() const
 {
 	return directories.size();
 }
 
-File FileSearchPath::operator[] (const int index) const
+File FileSearchoperator[] (const int index) const
 {
 	return File (directories [index]);
 }
 
-String FileSearchPath::toString() const
+String FileSearchtoString() const
 {
 	StringArray directories2 (directories);
 	for (int i = directories2.size(); --i >= 0;)
@@ -25116,12 +25116,12 @@ String FileSearchPath::toString() const
 	return directories2.joinIntoString (";");
 }
 
-void FileSearchPath::add (const File& dir, const int insertIndex)
+void FileSearchadd (const File& dir, const int insertIndex)
 {
 	directories.insert (insertIndex, dir.getFullPathName());
 }
 
-void FileSearchPath::addIfNotAlreadyThere (const File& dir)
+void FileSearchaddIfNotAlreadyThere (const File& dir)
 {
 	for (int i = 0; i < directories.size(); ++i)
 		if (File (directories[i]) == dir)
@@ -25130,18 +25130,18 @@ void FileSearchPath::addIfNotAlreadyThere (const File& dir)
 	add (dir);
 }
 
-void FileSearchPath::remove (const int index)
+void FileSearchremove (const int index)
 {
 	directories.remove (index);
 }
 
-void FileSearchPath::addPath (const FileSearchPath& other)
+void FileSearchaddPath (const FileSearchPath& other)
 {
 	for (int i = 0; i < other.getNumPaths(); ++i)
 		addIfNotAlreadyThere (other[i]);
 }
 
-void FileSearchPath::removeRedundantPaths()
+void FileSearchremoveRedundantPaths()
 {
 	for (int i = directories.size(); --i >= 0;)
 	{
@@ -25160,14 +25160,14 @@ void FileSearchPath::removeRedundantPaths()
 	}
 }
 
-void FileSearchPath::removeNonExistentPaths()
+void FileSearchremoveNonExistentPaths()
 {
 	for (int i = directories.size(); --i >= 0;)
 		if (! File (directories[i]).isDirectory())
 			directories.remove (i);
 }
 
-int FileSearchPath::findChildFiles (Array<File>& results,
+int FileSearchfindChildFiles (Array<File>& results,
 									const int whatToLookFor,
 									const bool searchRecursively,
 									const String& wildCardPattern) const
@@ -25183,7 +25183,7 @@ int FileSearchPath::findChildFiles (Array<File>& results,
 	return total;
 }
 
-bool FileSearchPath::isFileInPath (const File& fileToCheck,
+bool FileSearchisFileInPath (const File& fileToCheck,
 								   const bool checkRecursively) const
 {
 	for (int i = directories.size(); --i >= 0;)

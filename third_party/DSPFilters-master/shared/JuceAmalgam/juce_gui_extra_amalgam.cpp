@@ -28137,7 +28137,7 @@ public:
 private:
 
 	friend class PathFlatteningIterator;
-	friend class Path::Iterator;
+	friend class Iterator;
 	ArrayAllocationBase <float, DummyCriticalSection> data;
 	size_t numElements;
 	float pathXMin, pathXMax, pathYMin, pathYMax;
@@ -28669,14 +28669,14 @@ public:
 
 	/** Uses the current colour or brush to fill a rectangle with rounded corners.
 
-		@see drawRoundedRectangle, Path::addRoundedRectangle
+		@see drawRoundedRectangle, addRoundedRectangle
 	*/
 	void fillRoundedRectangle (float x, float y, float width, float height,
 							   float cornerSize) const;
 
 	/** Uses the current colour or brush to fill a rectangle with rounded corners.
 
-		@see drawRoundedRectangle, Path::addRoundedRectangle
+		@see drawRoundedRectangle, addRoundedRectangle
 	*/
 	void fillRoundedRectangle (const Rectangle<float>& rectangle,
 							   float cornerSize) const;
@@ -28719,14 +28719,14 @@ public:
 
 	/** Uses the current colour or brush to draw the outline of a rectangle with rounded corners.
 
-		@see fillRoundedRectangle, Path::addRoundedRectangle
+		@see fillRoundedRectangle, addRoundedRectangle
 	*/
 	void drawRoundedRectangle (float x, float y, float width, float height,
 							   float cornerSize, float lineThickness) const;
 
 	/** Uses the current colour or brush to draw the outline of a rectangle with rounded corners.
 
-		@see fillRoundedRectangle, Path::addRoundedRectangle
+		@see fillRoundedRectangle, addRoundedRectangle
 	*/
 	void drawRoundedRectangle (const Rectangle<float>& rectangle,
 							   float cornerSize, float lineThickness) const;
@@ -28760,13 +28760,13 @@ public:
 
 		The ellipse is drawn to fit inside the given rectangle.
 
-		@see drawEllipse, Path::addEllipse
+		@see drawEllipse, addEllipse
 	*/
 	void fillEllipse (float x, float y, float width, float height) const;
 
 	/** Draws an elliptical stroke using the current colour or brush.
 
-		@see fillEllipse, Path::addEllipse
+		@see fillEllipse, addEllipse
 	*/
 	void drawEllipse (float x, float y, float width, float height,
 					  float lineThickness) const;
@@ -28779,7 +28779,7 @@ public:
 
 	/** Draws a line between two points with a given thickness.
 
-		@see Path::addLineSegment
+		@see addLineSegment
 	*/
 	void drawLine (float startX, float startY, float endX, float endY,
 				   float lineThickness) const;
@@ -28792,7 +28792,7 @@ public:
 
 	/** Draws a line between two points with a given thickness.
 
-		@see Path::addLineSegment
+		@see addLineSegment
 	*/
 	void drawLine (const Line<float>& line, float lineThickness) const;
 
@@ -29598,7 +29598,7 @@ public:
 	This is used by the Graphics and DrawablePath classes as a way to encapsulate
 	a brush type. It can either be a solid colour, a gradient, or a tiled image.
 
-	@see Graphics::setFillType, DrawablePath::setFill
+	@see Graphics::setFillType, DrawablesetFill
 */
 class JUCE_API  FillType
 {
@@ -43703,7 +43703,7 @@ public:
 	void swapWith (RelativePointPath& other) noexcept;
 
 	/** The types of element that may be contained in this path.
-		@see RelativePointPath::ElementBase
+		@see RelativePointElementBase
 	*/
 	enum ElementType
 	{

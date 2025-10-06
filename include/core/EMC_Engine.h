@@ -1,16 +1,10 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <iostream> // For temporary output
 #include "fleet.h"
-#include "equipment.h" // For Transmitter, Receiver
 #include "../models/PropagationModle.h"
-#include "../utils/conversions.h" // For dBmToWatts, wattsToDbm
 
-namespace Electromagnetic_compatibility {
-namespace core {
 
-// Structure to hold a single interference result
 struct InterferenceResult {//
     std::string aggressor_ship_id;//干扰源船ID
     std::string aggressor_equip_id;//干扰源设备ID
@@ -28,11 +22,9 @@ struct InterferenceResult {//
 
 class EMCEngine {
 public:
-    EMCEngine(const models::PropagationModel& prop_model);
-    std::vector<InterferenceResult> analyzeFleet(const core::Fleet& fleet);
+    EMCEngine(const PropagationModel& prop_model);
+    std::vector<InterferenceResult> analyzeFleet(const Fleet& fleet);
 
 private:
-    const models::PropagationModel& m_prop_model;
+    const PropagationModel& m_prop_model;
 };
-}
-} // namespace Electromagnetic_compatibility

@@ -1,0 +1,9 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>resource/qml/main.qml</file>
+        <file>resource/qml/DevicePanel.qml</file>
+        <file>resource/qml/ShipPanel.qml</file>
+        <file>resource/qml/qmldir</file>
+    </qresource>
+</RCC>

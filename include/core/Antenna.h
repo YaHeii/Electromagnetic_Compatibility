@@ -1,9 +1,6 @@
 #pragma once
 #include <string>
 
-namespace Electromagnetic_compatibility {
-namespace core {
-
 class Antenna {
 public:
     Antenna(const std::string& id, double orientation_deg = 0.0)
@@ -35,6 +32,7 @@ public:
 private:
     double m_gain_dbi;
 };
+
 //定向天线
 class DirectionalAntenna : public Antenna {
 public:
@@ -49,7 +47,3 @@ private:
     double m_azimuth_deg;
     double m_elevation_deg;
 };
-
-
-} // namespace core
-} // namespace Electromagnetic_compatibility

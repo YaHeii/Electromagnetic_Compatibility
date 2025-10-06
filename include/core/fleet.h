@@ -2,10 +2,6 @@
 #include <vector>
 #include <memory>
 #include "ship.h"
-
-namespace Electromagnetic_compatibility {
-namespace core {
-
 class Fleet {
 public:
     //添加舰船
@@ -26,5 +22,3 @@ private:
     std::vector<std::unique_ptr<ship>> m_ships;
 };
 
-} // namespace core
-} // namespace Electromagnetic_compatibility

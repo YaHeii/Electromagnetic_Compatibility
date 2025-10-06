@@ -1,8 +1,7 @@
 #pragma once
 #include <cmath> // For log10, pow
 
-namespace Electromagnetic_compatibility {
-namespace utils {
+
 
 // dBm to Watts
 inline double dbmToWatts(double dbm) {
@@ -26,5 +25,3 @@ inline double linearToDb(double linear_val) {
     return 10.0 * std::log10(linear_val);
 }
 
-} // namespace utils
-} // namespace Electromagnetic_compatibility

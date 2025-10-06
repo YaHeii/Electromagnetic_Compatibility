@@ -16,9 +16,9 @@
 #include "../include/models/move.h"
 
 using namespace std;
-using namespace Electromagnetic_compatibility::core;
-using namespace Electromagnetic_compatibility::models;
-using namespace Electromagnetic_compatibility::utils;
+using namespace core;
+using namespace models;
+using namespace utils;
 int main(){
     //----------------------------------------------------第二章---------------------------------------------------------
 
@@ -26,11 +26,11 @@ int main(){
     //设定船数量最大值
     int total_ship_num = 5;//后面要对这个值进行输入
     // 创建编队
-    Electromagnetic_compatibility::core::Fleet ship_fleet;
+    Fleet ship_fleet;
     //读取文件
-    unordered_map<string,pair<int,int>> data = Electromagnetic_compatibility::utils::read_file("D:\\code\\C++\\Electromagnetic_compatibility\\src\\input.txt",3);
+    unordered_map<string,pair<int,int>> data = read_file("D:\\code\\C++\\Electromagnetic_compatibility\\src\\input.txt",3);
     //生成路径队列
-    vector<Electromagnetic_compatibility::models::Path> Path_list;
+    vector<Path> Path_list;
     //生成全部的船和设备等，并绑定
     for (int i = 0;i<total_ship_num;i++) {
         double x = data["ship"+to_string(i)].first;
@@ -69,7 +69,7 @@ int main(){
              double noise_figure_db = 3.0, // 噪声系数 (dB)
              double SINR_threshold_db = 10.0, // 信噪比阈值 (dB)
              double interference_threshold_db = 10.0, // 干扰阈值 (dB)
-             const utils::Point2D& relative_pos = {0.0,0.0})
+             constPoint2D& relative_pos = {0.0,0.0})
         
         */
         // GPS L1, 2MHz BW, 2.5dB NF
@@ -92,20 +92,20 @@ int main(){
     int t_step_num = 60;//采样点数
     int t_step = t/t_step_num;//时间步长，单位s
 
-    vector<Electromagnetic_compatibility::models::Path> path_list;
+    vector<Path> path_list;
     path_list.push_back(ship0_path);
-    Electromagnetic_compatibility::models::PathManager Total_Path(1,path_list);
+    PathManager Total_Path(1,path_list);
     //---------------------------------------------根据时间采样，不断移动编队，计算电磁兼容情况----------------------------------
     for(int t_index = 0;t_index<t_step_num;t_index++){
-        Electromagnetic_compatibility::models::move_location(ship_fleet,t_step,Total_Path);//移动船
+        move_location(ship_fleet,t_step,Total_Path);//移动船
         //根据频率是否在接收机范围进行筛选
 
         //对有指向性的天线进行筛选
 
         //使用自由空间衰减计算最坏的传输情况
-        Electromagnetic_compatibility::models::FreeSpaceModel prop_modle_FREE;//采用自由空间衰减模型
-        Electromagnetic_compatibility::core::EMCEngine EMC_engine(prop_modle_FREE);//实例化
-        vector<Electromagnetic_compatibility::core::InterferenceResult> results = EMC_engine.analyzeFleet(ship_fleet);//存储编队内部所有的电磁兼容情况
+        FreeSpaceModel prop_modle_FREE;//采用自由空间衰减模型
+        EMCEngine EMC_engine(prop_modle_FREE);//实例化
+        vector<InterferenceResult> results = EMC_engine.analyzeFleet(ship_fleet);//存储编队内部所有的电磁兼容情况
         cout<<"results: "<<results.size()<<endl;
         cout<<results[0].victim_equip_id<<endl;
         //如果传输功率小于自身噪声，则排除
@@ -132,9 +132,9 @@ int main(){
     //------------------------------------------------测试exam-----------------------------------------------------------
     // //----------------------------------干扰矩阵生成--------------------------------------
     // //计算距离，生成距离二维矩阵
-    // vector<vector<double>> distance_arr = Electromagnetic_compatibility::models::calculate_distance(data);
+    // vector<vector<double>> distance_arr = calculate_distance(data);
     // //根据距离矩阵生成判断矩阵
-    // vector<vector<int>> formation_distance_arr = Electromagnetic_compatibility::models::formation_distance(distance_arr);
+    // vector<vector<int>> formation_distance_arr = formation_distance(distance_arr);
     // // for(int i = 0;i<formation_distance_arr.size();i++){
     // //     for(int j = 0;j<formation_distance_arr[0].size();j++){
     // //         cout<<formation_distance_arr[i][j]<<" ";
@@ -155,9 +155,9 @@ int main(){
 //     std::cout << "20 dBm is " << power_watts << " Watts." << std::endl;
 //     std::cout << power_watts << " Watts is " << wattsToDbm(power_watts) << " dBm." << std::endl;
 //     //测试传播模型
-//     Electromagnetic_compatibility::models::FreeSpaceModel fs_model;
-//     Electromagnetic_compatibility::core::Point2D p1 = {0, 0};
-//     Electromagnetic_compatibility::core::Point2D p2 = {1000, 0}; // 1 km distance
+//     FreeSpaceModel fs_model;
+//     Point2D p1 = {0, 0};
+//     Point2D p2 = {1000, 0}; // 1 km distance
 //     double freq_mhz = 433.0;
 //
 //     double path_loss = fs_model.getPathLossDb(p1, p2, freq_mhz);

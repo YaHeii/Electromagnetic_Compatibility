@@ -28132,7 +28132,7 @@ public:
 private:
 
 	friend class PathFlatteningIterator;
-	friend class Path::Iterator;
+	friend class Iterator;
 	ArrayAllocationBase <float, DummyCriticalSection> data;
 	size_t numElements;
 	float pathXMin, pathXMax, pathYMin, pathYMax;
@@ -28664,14 +28664,14 @@ public:
 
 	/** Uses the current colour or brush to fill a rectangle with rounded corners.
 
-		@see drawRoundedRectangle, Path::addRoundedRectangle
+		@see drawRoundedRectangle, addRoundedRectangle
 	*/
 	void fillRoundedRectangle (float x, float y, float width, float height,
 							   float cornerSize) const;
 
 	/** Uses the current colour or brush to fill a rectangle with rounded corners.
 
-		@see drawRoundedRectangle, Path::addRoundedRectangle
+		@see drawRoundedRectangle, addRoundedRectangle
 	*/
 	void fillRoundedRectangle (const Rectangle<float>& rectangle,
 							   float cornerSize) const;
@@ -28714,14 +28714,14 @@ public:
 
 	/** Uses the current colour or brush to draw the outline of a rectangle with rounded corners.
 
-		@see fillRoundedRectangle, Path::addRoundedRectangle
+		@see fillRoundedRectangle, addRoundedRectangle
 	*/
 	void drawRoundedRectangle (float x, float y, float width, float height,
 							   float cornerSize, float lineThickness) const;
 
 	/** Uses the current colour or brush to draw the outline of a rectangle with rounded corners.
 
-		@see fillRoundedRectangle, Path::addRoundedRectangle
+		@see fillRoundedRectangle, addRoundedRectangle
 	*/
 	void drawRoundedRectangle (const Rectangle<float>& rectangle,
 							   float cornerSize, float lineThickness) const;
@@ -28755,13 +28755,13 @@ public:
 
 		The ellipse is drawn to fit inside the given rectangle.
 
-		@see drawEllipse, Path::addEllipse
+		@see drawEllipse, addEllipse
 	*/
 	void fillEllipse (float x, float y, float width, float height) const;
 
 	/** Draws an elliptical stroke using the current colour or brush.
 
-		@see fillEllipse, Path::addEllipse
+		@see fillEllipse, addEllipse
 	*/
 	void drawEllipse (float x, float y, float width, float height,
 					  float lineThickness) const;
@@ -28774,7 +28774,7 @@ public:
 
 	/** Draws a line between two points with a given thickness.
 
-		@see Path::addLineSegment
+		@see addLineSegment
 	*/
 	void drawLine (float startX, float startY, float endX, float endY,
 				   float lineThickness) const;
@@ -28787,7 +28787,7 @@ public:
 
 	/** Draws a line between two points with a given thickness.
 
-		@see Path::addLineSegment
+		@see addLineSegment
 	*/
 	void drawLine (const Line<float>& line, float lineThickness) const;
 
@@ -29593,7 +29593,7 @@ public:
 	This is used by the Graphics and DrawablePath classes as a way to encapsulate
 	a brush type. It can either be a solid colour, a gradient, or a tiled image.
 
-	@see Graphics::setFillType, DrawablePath::setFill
+	@see Graphics::setFillType, DrawablesetFill
 */
 class JUCE_API  FillType
 {
@@ -43698,7 +43698,7 @@ public:
 	void swapWith (RelativePointPath& other) noexcept;
 
 	/** The types of element that may be contained in this path.
-		@see RelativePointPath::ElementBase
+		@see RelativePointElementBase
 	*/
 	enum ElementType
 	{
@@ -68976,11 +68976,11 @@ ValueTree DrawableImage::createValueTree (ComponentBuilder::ImageProvider* image
 
 
 /*** Start of inlined file: juce_DrawablePath.cpp ***/
-DrawablePath::DrawablePath()
+DrawableDrawablePath()
 {
 }
 
-DrawablePath::DrawablePath (const DrawablePath& other)
+DrawableDrawablePath (const DrawablePath& other)
 	: DrawableShape (other)
 {
 	if (other.relativePath != nullptr)
@@ -68989,32 +68989,32 @@ DrawablePath::DrawablePath (const DrawablePath& other)
 		setPath (other.path);
 }
 
-DrawablePath::~DrawablePath()
+Drawable~DrawablePath()
 {
 }
 
-Drawable* DrawablePath::createCopy() const
+Drawable* DrawablecreateCopy() const
 {
 	return new DrawablePath (*this);
 }
 
-void DrawablePath::setPath (const Path& newPath)
+void DrawablesetPath (const Path& newPath)
 {
 	path = newPath;
 	pathChanged();
 }
 
-const Path& DrawablePath::getPath() const
+const Path& DrawablegetPath() const
 {
 	return path;
 }
 
-const Path& DrawablePath::getStrokePath() const
+const Path& DrawablegetStrokePath() const
 {
 	return strokePath;
 }
 
-void DrawablePath::applyRelativePath (const RelativePointPath& newRelativePath, Expression::Scope* scope)
+void DrawableapplyRelativePath (const RelativePointPath& newRelativePath, Expression::Scope* scope)
 {
 	Path newPath;
 	newRelativePath.createPath (newPath, scope);
@@ -69026,7 +69026,7 @@ void DrawablePath::applyRelativePath (const RelativePointPath& newRelativePath, 
 	}
 }
 
-class DrawablePath::RelativePositioner  : public RelativeCoordinatePositionerBase
+class DrawableRelativePositioner  : public RelativeCoordinatePositionerBase
 {
 public:
 	RelativePositioner (DrawablePath& component_)
@@ -69044,7 +69044,7 @@ public:
 
 		for (int i = 0; i < path.elements.size(); ++i)
 		{
-			RelativePointPath::ElementBase* const e = path.elements.getUnchecked(i);
+			RelativePointElementBase* const e = path.elements.getUnchecked(i);
 
 			int numPoints;
 			RelativePoint* const points = e->getControlPoints (numPoints);
@@ -69075,7 +69075,7 @@ private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativePositioner);
 };
 
-void DrawablePath::setPath (const RelativePointPath& newRelativePath)
+void DrawablesetPath (const RelativePointPath& newRelativePath)
 {
 	if (newRelativePath.containsAnyDynamicPoints())
 	{
@@ -69095,35 +69095,35 @@ void DrawablePath::setPath (const RelativePointPath& newRelativePath)
 	}
 }
 
-const Identifier DrawablePath::valueTreeType ("Path");
+const Identifier DrawablevalueTreeType ("Path");
 
-const Identifier DrawablePath::ValueTreeWrapper::nonZeroWinding ("nonZeroWinding");
-const Identifier DrawablePath::ValueTreeWrapper::point1 ("p1");
-const Identifier DrawablePath::ValueTreeWrapper::point2 ("p2");
-const Identifier DrawablePath::ValueTreeWrapper::point3 ("p3");
+const Identifier DrawableValueTreeWrapper::nonZeroWinding ("nonZeroWinding");
+const Identifier DrawableValueTreeWrapper::point1 ("p1");
+const Identifier DrawableValueTreeWrapper::point2 ("p2");
+const Identifier DrawableValueTreeWrapper::point3 ("p3");
 
-DrawablePath::ValueTreeWrapper::ValueTreeWrapper (const ValueTree& state_)
+DrawableValueTreeWrapper::ValueTreeWrapper (const ValueTree& state_)
 	: FillAndStrokeState (state_)
 {
 	jassert (state.hasType (valueTreeType));
 }
 
-ValueTree DrawablePath::ValueTreeWrapper::getPathState()
+ValueTree DrawableValueTreeWrapper::getPathState()
 {
 	return state.getOrCreateChildWithName (path, nullptr);
 }
 
-bool DrawablePath::ValueTreeWrapper::usesNonZeroWinding() const
+bool DrawableValueTreeWrapper::usesNonZeroWinding() const
 {
 	return state [nonZeroWinding];
 }
 
-void DrawablePath::ValueTreeWrapper::setUsesNonZeroWinding (bool b, UndoManager* undoManager)
+void DrawableValueTreeWrapper::setUsesNonZeroWinding (bool b, UndoManager* undoManager)
 {
 	state.setProperty (nonZeroWinding, b, undoManager);
 }
 
-void DrawablePath::ValueTreeWrapper::readFrom (const RelativePointPath& relativePath, UndoManager* undoManager)
+void DrawableValueTreeWrapper::readFrom (const RelativePointPath& relativePath, UndoManager* undoManager)
 {
 	setUsesNonZeroWinding (relativePath.usesNonZeroWinding, undoManager);
 
@@ -69134,7 +69134,7 @@ void DrawablePath::ValueTreeWrapper::readFrom (const RelativePointPath& relative
 		pathTree.addChild (relativePath.elements.getUnchecked(i)->createTree(), -1, undoManager);
 }
 
-void DrawablePath::ValueTreeWrapper::writeTo (RelativePointPath& relativePath) const
+void DrawableValueTreeWrapper::writeTo (RelativePointPath& relativePath) const
 {
 	relativePath.usesNonZeroWinding = usesNonZeroWinding();
 	RelativePoint points[3];
@@ -69149,51 +69149,51 @@ void DrawablePath::ValueTreeWrapper::writeTo (RelativePointPath& relativePath) c
 		for (int j = 0; j < numCps; ++j)
 			points[j] = e.getControlPoint (j);
 
-		RelativePointPath::ElementBase* newElement = nullptr;
+		RelativePointElementBase* newElement = nullptr;
 		const Identifier t (e.getType());
 
-		if      (t == Element::startSubPathElement)  newElement = new RelativePointPath::StartSubPath (points[0]);
-		else if (t == Element::closeSubPathElement)  newElement = new RelativePointPath::CloseSubPath();
-		else if (t == Element::lineToElement)        newElement = new RelativePointPath::LineTo (points[0]);
-		else if (t == Element::quadraticToElement)   newElement = new RelativePointPath::QuadraticTo (points[0], points[1]);
-		else if (t == Element::cubicToElement)       newElement = new RelativePointPath::CubicTo (points[0], points[1], points[2]);
+		if      (t == Element::startSubPathElement)  newElement = new RelativePointStartSubPath (points[0]);
+		else if (t == Element::closeSubPathElement)  newElement = new RelativePointCloseSubPath();
+		else if (t == Element::lineToElement)        newElement = new RelativePointLineTo (points[0]);
+		else if (t == Element::quadraticToElement)   newElement = new RelativePointQuadraticTo (points[0], points[1]);
+		else if (t == Element::cubicToElement)       newElement = new RelativePointCubicTo (points[0], points[1], points[2]);
 		else                                         jassertfalse;
 
 		relativePath.addElement (newElement);
 	}
 }
 
-const Identifier DrawablePath::ValueTreeWrapper::Element::mode ("mode");
-const Identifier DrawablePath::ValueTreeWrapper::Element::startSubPathElement ("Move");
-const Identifier DrawablePath::ValueTreeWrapper::Element::closeSubPathElement ("Close");
-const Identifier DrawablePath::ValueTreeWrapper::Element::lineToElement ("Line");
-const Identifier DrawablePath::ValueTreeWrapper::Element::quadraticToElement ("Quad");
-const Identifier DrawablePath::ValueTreeWrapper::Element::cubicToElement ("Cubic");
+const Identifier DrawableValueTreeWrapper::Element::mode ("mode");
+const Identifier DrawableValueTreeWrapper::Element::startSubPathElement ("Move");
+const Identifier DrawableValueTreeWrapper::Element::closeSubPathElement ("Close");
+const Identifier DrawableValueTreeWrapper::Element::lineToElement ("Line");
+const Identifier DrawableValueTreeWrapper::Element::quadraticToElement ("Quad");
+const Identifier DrawableValueTreeWrapper::Element::cubicToElement ("Cubic");
 
-const char* DrawablePath::ValueTreeWrapper::Element::cornerMode = "corner";
-const char* DrawablePath::ValueTreeWrapper::Element::roundedMode = "round";
-const char* DrawablePath::ValueTreeWrapper::Element::symmetricMode = "symm";
+const char* DrawableValueTreeWrapper::Element::cornerMode = "corner";
+const char* DrawableValueTreeWrapper::Element::roundedMode = "round";
+const char* DrawableValueTreeWrapper::Element::symmetricMode = "symm";
 
-DrawablePath::ValueTreeWrapper::Element::Element (const ValueTree& state_)
+DrawableValueTreeWrapper::Element::Element (const ValueTree& state_)
 	: state (state_)
 {
 }
 
-DrawablePath::ValueTreeWrapper::Element::~Element()
+DrawableValueTreeWrapper::Element::~Element()
 {
 }
 
-DrawablePath::ValueTreeWrapper DrawablePath::ValueTreeWrapper::Element::getParent() const
+DrawableValueTreeWrapper DrawableValueTreeWrapper::Element::getParent() const
 {
 	return ValueTreeWrapper (state.getParent().getParent());
 }
 
-DrawablePath::ValueTreeWrapper::Element DrawablePath::ValueTreeWrapper::Element::getPreviousElement() const
+DrawableValueTreeWrapper::Element DrawableValueTreeWrapper::Element::getPreviousElement() const
 {
 	return Element (state.getSibling (-1));
 }
 
-int DrawablePath::ValueTreeWrapper::Element::getNumControlPoints() const noexcept
+int DrawableValueTreeWrapper::Element::getNumControlPoints() const noexcept
 {
 	const Identifier i (state.getType());
 	if (i == startSubPathElement || i == lineToElement) return 1;
@@ -69202,25 +69202,25 @@ int DrawablePath::ValueTreeWrapper::Element::getNumControlPoints() const noexcep
 	return 0;
 }
 
-RelativePoint DrawablePath::ValueTreeWrapper::Element::getControlPoint (const int index) const
+RelativePoint DrawableValueTreeWrapper::Element::getControlPoint (const int index) const
 {
 	jassert (index >= 0 && index < getNumControlPoints());
 	return RelativePoint (state [index == 0 ? point1 : (index == 1 ? point2 : point3)].toString());
 }
 
-Value DrawablePath::ValueTreeWrapper::Element::getControlPointValue (int index, UndoManager* undoManager)
+Value DrawableValueTreeWrapper::Element::getControlPointValue (int index, UndoManager* undoManager)
 {
 	jassert (index >= 0 && index < getNumControlPoints());
 	return state.getPropertyAsValue (index == 0 ? point1 : (index == 1 ? point2 : point3), undoManager);
 }
 
-void DrawablePath::ValueTreeWrapper::Element::setControlPoint (const int index, const RelativePoint& point, UndoManager* undoManager)
+void DrawableValueTreeWrapper::Element::setControlPoint (const int index, const RelativePoint& point, UndoManager* undoManager)
 {
 	jassert (index >= 0 && index < getNumControlPoints());
 	state.setProperty (index == 0 ? point1 : (index == 1 ? point2 : point3), point.toString(), undoManager);
 }
 
-RelativePoint DrawablePath::ValueTreeWrapper::Element::getStartPoint() const
+RelativePoint DrawableValueTreeWrapper::Element::getStartPoint() const
 {
 	const Identifier i (state.getType());
 
@@ -69232,7 +69232,7 @@ RelativePoint DrawablePath::ValueTreeWrapper::Element::getStartPoint() const
 	return getPreviousElement().getEndPoint();
 }
 
-RelativePoint DrawablePath::ValueTreeWrapper::Element::getEndPoint() const
+RelativePoint DrawableValueTreeWrapper::Element::getEndPoint() const
 {
 	const Identifier i (state.getType());
 	if (i == startSubPathElement || i == lineToElement)  return getControlPoint (0);
@@ -69243,7 +69243,7 @@ RelativePoint DrawablePath::ValueTreeWrapper::Element::getEndPoint() const
 	return RelativePoint();
 }
 
-float DrawablePath::ValueTreeWrapper::Element::getLength (Expression::Scope* scope) const
+float DrawableValueTreeWrapper::Element::getLength (Expression::Scope* scope) const
 {
 	const Identifier i (state.getType());
 
@@ -69270,18 +69270,18 @@ float DrawablePath::ValueTreeWrapper::Element::getLength (Expression::Scope* sco
 	return 0;
 }
 
-String DrawablePath::ValueTreeWrapper::Element::getModeOfEndPoint() const
+String DrawableValueTreeWrapper::Element::getModeOfEndPoint() const
 {
 	return state [mode].toString();
 }
 
-void DrawablePath::ValueTreeWrapper::Element::setModeOfEndPoint (const String& newMode, UndoManager* undoManager)
+void DrawableValueTreeWrapper::Element::setModeOfEndPoint (const String& newMode, UndoManager* undoManager)
 {
 	if (state.hasType (cubicToElement))
 		state.setProperty (mode, newMode, undoManager);
 }
 
-void DrawablePath::ValueTreeWrapper::Element::convertToLine (UndoManager* undoManager)
+void DrawableValueTreeWrapper::Element::convertToLine (UndoManager* undoManager)
 {
 	const Identifier i (state.getType());
 
@@ -69294,7 +69294,7 @@ void DrawablePath::ValueTreeWrapper::Element::convertToLine (UndoManager* undoMa
 	}
 }
 
-void DrawablePath::ValueTreeWrapper::Element::convertToCubic (Expression::Scope* scope, UndoManager* undoManager)
+void DrawableValueTreeWrapper::Element::convertToCubic (Expression::Scope* scope, UndoManager* undoManager)
 {
 	const Identifier i (state.getType());
 
@@ -69315,7 +69315,7 @@ void DrawablePath::ValueTreeWrapper::Element::convertToCubic (Expression::Scope*
 	}
 }
 
-void DrawablePath::ValueTreeWrapper::Element::convertToPathBreak (UndoManager* undoManager)
+void DrawableValueTreeWrapper::Element::convertToPathBreak (UndoManager* undoManager)
 {
 	const Identifier i (state.getType());
 
@@ -69351,7 +69351,7 @@ namespace DrawablePathHelpers
 	}
 }
 
-float DrawablePath::ValueTreeWrapper::Element::findProportionAlongLine (const Point<float>& targetPoint, Expression::Scope* scope) const
+float DrawableValueTreeWrapper::Element::findProportionAlongLine (const Point<float>& targetPoint, Expression::Scope* scope) const
 {
 	using namespace DrawablePathHelpers;
 	const Identifier type (state.getType());
@@ -69408,7 +69408,7 @@ float DrawablePath::ValueTreeWrapper::Element::findProportionAlongLine (const Po
 	return bestProp;
 }
 
-ValueTree DrawablePath::ValueTreeWrapper::Element::insertPoint (const Point<float>& targetPoint, Expression::Scope* scope, UndoManager* undoManager)
+ValueTree DrawableValueTreeWrapper::Element::insertPoint (const Point<float>& targetPoint, Expression::Scope* scope, UndoManager* undoManager)
 {
 	ValueTree newTree;
 	const Identifier type (state.getType());
@@ -69483,12 +69483,12 @@ ValueTree DrawablePath::ValueTreeWrapper::Element::insertPoint (const Point<floa
 	return newTree;
 }
 
-void DrawablePath::ValueTreeWrapper::Element::removePoint (UndoManager* undoManager)
+void DrawableValueTreeWrapper::Element::removePoint (UndoManager* undoManager)
 {
 	state.getParent().removeChild (state, undoManager);
 }
 
-void DrawablePath::refreshFromValueTree (const ValueTree& tree, ComponentBuilder& builder)
+void DrawablerefreshFromValueTree (const ValueTree& tree, ComponentBuilder& builder)
 {
 	ValueTreeWrapper v (tree);
 	setComponentID (v.getID());
@@ -69501,7 +69501,7 @@ void DrawablePath::refreshFromValueTree (const ValueTree& tree, ComponentBuilder
 	setPath (newRelativePath);
 }
 
-ValueTree DrawablePath::createValueTree (ComponentBuilder::ImageProvider* imageProvider) const
+ValueTree DrawablecreateValueTree (ComponentBuilder::ImageProvider* imageProvider) const
 {
 	ValueTree tree (valueTreeType);
 	ValueTreeWrapper v (tree);
@@ -70992,12 +70992,12 @@ private:
 		path.applyTransform (transform);
 		dp->setPath (path);
 
-		Path::Iterator iter (path);
+		Iterator iter (path);
 
 		bool containsClosedSubPath = false;
 		while (iter.next())
 		{
-			if (iter.elementType == Path::Iterator::closePath)
+			if (iter.elementType == Iterator::closePath)
 			{
 				containsClosedSubPath = true;
 				break;
@@ -84108,13 +84108,13 @@ bool RelativePoint::isDynamic() const
 
 
 /*** Start of inlined file: juce_RelativePointPath.cpp ***/
-RelativePointPath::RelativePointPath()
+RelativePointRelativePointPath()
 	: usesNonZeroWinding (true),
 	  containsDynamicPoints (false)
 {
 }
 
-RelativePointPath::RelativePointPath (const RelativePointPath& other)
+RelativePointRelativePointPath (const RelativePointPath& other)
 	: usesNonZeroWinding (true),
 	  containsDynamicPoints (false)
 {
@@ -84122,29 +84122,29 @@ RelativePointPath::RelativePointPath (const RelativePointPath& other)
 		elements.add (other.elements.getUnchecked(i)->clone());
 }
 
-RelativePointPath::RelativePointPath (const Path& path)
+RelativePointRelativePointPath (const Path& path)
 	: usesNonZeroWinding (path.isUsingNonZeroWinding()),
 	  containsDynamicPoints (false)
 {
-	for (Path::Iterator i (path); i.next();)
+	for (Iterator i (path); i.next();)
 	{
 		switch (i.elementType)
 		{
-			case Path::Iterator::startNewSubPath:   elements.add (new StartSubPath (RelativePoint (i.x1, i.y1))); break;
-			case Path::Iterator::lineTo:            elements.add (new LineTo (RelativePoint (i.x1, i.y1))); break;
-			case Path::Iterator::quadraticTo:       elements.add (new QuadraticTo (RelativePoint (i.x1, i.y1), RelativePoint (i.x2, i.y2))); break;
-			case Path::Iterator::cubicTo:           elements.add (new CubicTo (RelativePoint (i.x1, i.y1), RelativePoint (i.x2, i.y2), RelativePoint (i.x3, i.y3))); break;
-			case Path::Iterator::closePath:         elements.add (new CloseSubPath()); break;
+			case Iterator::startNewSubPath:   elements.add (new StartSubPath (RelativePoint (i.x1, i.y1))); break;
+			case Iterator::lineTo:            elements.add (new LineTo (RelativePoint (i.x1, i.y1))); break;
+			case Iterator::quadraticTo:       elements.add (new QuadraticTo (RelativePoint (i.x1, i.y1), RelativePoint (i.x2, i.y2))); break;
+			case Iterator::cubicTo:           elements.add (new CubicTo (RelativePoint (i.x1, i.y1), RelativePoint (i.x2, i.y2), RelativePoint (i.x3, i.y3))); break;
+			case Iterator::closePath:         elements.add (new CloseSubPath()); break;
 			default:                                jassertfalse; break;
 		}
 	}
 }
 
-RelativePointPath::~RelativePointPath()
+RelativePoint~RelativePointPath()
 {
 }
 
-bool RelativePointPath::operator== (const RelativePointPath& other) const noexcept
+bool RelativePointoperator== (const RelativePointPath& other) const noexcept
 {
 	if (elements.size() != other.elements.size()
 		 || usesNonZeroWinding != other.usesNonZeroWinding
@@ -84173,30 +84173,30 @@ bool RelativePointPath::operator== (const RelativePointPath& other) const noexce
 	return true;
 }
 
-bool RelativePointPath::operator!= (const RelativePointPath& other) const noexcept
+bool RelativePointoperator!= (const RelativePointPath& other) const noexcept
 {
 	return ! operator== (other);
 }
 
-void RelativePointPath::swapWith (RelativePointPath& other) noexcept
+void RelativePointswapWith (RelativePointPath& other) noexcept
 {
 	elements.swapWithArray (other.elements);
 	std::swap (usesNonZeroWinding, other.usesNonZeroWinding);
 	std::swap (containsDynamicPoints, other.containsDynamicPoints);
 }
 
-void RelativePointPath::createPath (Path& path, Expression::Scope* scope) const
+void RelativePointcreatePath (Path& path, Expression::Scope* scope) const
 {
 	for (int i = 0; i < elements.size(); ++i)
 		elements.getUnchecked(i)->addToPath (path, scope);
 }
 
-bool RelativePointPath::containsAnyDynamicPoints() const
+bool RelativePointcontainsAnyDynamicPoints() const
 {
 	return containsDynamicPoints;
 }
 
-void RelativePointPath::addElement (ElementBase* newElement)
+void RelativePointaddElement (ElementBase* newElement)
 {
 	if (newElement != nullptr)
 	{
@@ -84205,11 +84205,11 @@ void RelativePointPath::addElement (ElementBase* newElement)
 	}
 }
 
-RelativePointPath::ElementBase::ElementBase (const ElementType type_) : type (type_)
+RelativePointElementBase::ElementBase (const ElementType type_) : type (type_)
 {
 }
 
-bool RelativePointPath::ElementBase::isDynamic()
+bool RelativePointElementBase::isDynamic()
 {
 	int numPoints;
 	const RelativePoint* const points = getControlPoints (numPoints);
@@ -84221,121 +84221,121 @@ bool RelativePointPath::ElementBase::isDynamic()
 	return false;
 }
 
-RelativePointPath::StartSubPath::StartSubPath (const RelativePoint& pos)
+RelativePointStartSubStartSubPath (const RelativePoint& pos)
 	: ElementBase (startSubPathElement), startPos (pos)
 {
 }
 
-ValueTree RelativePointPath::StartSubPath::createTree() const
+ValueTree RelativePointStartSubcreateTree() const
 {
-	ValueTree v (DrawablePath::ValueTreeWrapper::Element::startSubPathElement);
-	v.setProperty (DrawablePath::ValueTreeWrapper::point1, startPos.toString(), nullptr);
+	ValueTree v (DrawableValueTreeWrapper::Element::startSubPathElement);
+	v.setProperty (DrawableValueTreeWrapper::point1, startPos.toString(), nullptr);
 	return v;
 }
 
-void RelativePointPath::StartSubPath::addToPath (Path& path, Expression::Scope* scope) const
+void RelativePointStartSubaddToPath (Path& path, Expression::Scope* scope) const
 {
 	path.startNewSubPath (startPos.resolve (scope));
 }
 
-RelativePoint* RelativePointPath::StartSubPath::getControlPoints (int& numPoints)
+RelativePoint* RelativePointStartSubgetControlPoints (int& numPoints)
 {
 	numPoints = 1;
 	return &startPos;
 }
 
-RelativePointPath::ElementBase* RelativePointPath::StartSubPath::clone() const
+RelativePointElementBase* RelativePointStartSubclone() const
 {
 	return new StartSubPath (startPos);
 }
 
-RelativePointPath::CloseSubPath::CloseSubPath()
+RelativePointCloseSubCloseSubPath()
 	: ElementBase (closeSubPathElement)
 {
 }
 
-ValueTree RelativePointPath::CloseSubPath::createTree() const
+ValueTree RelativePointCloseSubcreateTree() const
 {
-	return ValueTree (DrawablePath::ValueTreeWrapper::Element::closeSubPathElement);
+	return ValueTree (DrawableValueTreeWrapper::Element::closeSubPathElement);
 }
 
-void RelativePointPath::CloseSubPath::addToPath (Path& path, Expression::Scope*) const
+void RelativePointCloseSubaddToPath (Path& path, Expression::Scope*) const
 {
 	path.closeSubPath();
 }
 
-RelativePoint* RelativePointPath::CloseSubPath::getControlPoints (int& numPoints)
+RelativePoint* RelativePointCloseSubgetControlPoints (int& numPoints)
 {
 	numPoints = 0;
 	return nullptr;
 }
 
-RelativePointPath::ElementBase* RelativePointPath::CloseSubPath::clone() const
+RelativePointElementBase* RelativePointCloseSubclone() const
 {
 	return new CloseSubPath();
 }
 
-RelativePointPath::LineTo::LineTo (const RelativePoint& endPoint_)
+RelativePointLineTo::LineTo (const RelativePoint& endPoint_)
 	: ElementBase (lineToElement), endPoint (endPoint_)
 {
 }
 
-ValueTree RelativePointPath::LineTo::createTree() const
+ValueTree RelativePointLineTo::createTree() const
 {
-	ValueTree v (DrawablePath::ValueTreeWrapper::Element::lineToElement);
-	v.setProperty (DrawablePath::ValueTreeWrapper::point1, endPoint.toString(), nullptr);
+	ValueTree v (DrawableValueTreeWrapper::Element::lineToElement);
+	v.setProperty (DrawableValueTreeWrapper::point1, endPoint.toString(), nullptr);
 	return v;
 }
 
-void RelativePointPath::LineTo::addToPath (Path& path, Expression::Scope* scope) const
+void RelativePointLineTo::addToPath (Path& path, Expression::Scope* scope) const
 {
 	path.lineTo (endPoint.resolve (scope));
 }
 
-RelativePoint* RelativePointPath::LineTo::getControlPoints (int& numPoints)
+RelativePoint* RelativePointLineTo::getControlPoints (int& numPoints)
 {
 	numPoints = 1;
 	return &endPoint;
 }
 
-RelativePointPath::ElementBase* RelativePointPath::LineTo::clone() const
+RelativePointElementBase* RelativePointLineTo::clone() const
 {
 	return new LineTo (endPoint);
 }
 
-RelativePointPath::QuadraticTo::QuadraticTo (const RelativePoint& controlPoint, const RelativePoint& endPoint)
+RelativePointQuadraticTo::QuadraticTo (const RelativePoint& controlPoint, const RelativePoint& endPoint)
 	: ElementBase (quadraticToElement)
 {
 	controlPoints[0] = controlPoint;
 	controlPoints[1] = endPoint;
 }
 
-ValueTree RelativePointPath::QuadraticTo::createTree() const
+ValueTree RelativePointQuadraticTo::createTree() const
 {
-	ValueTree v (DrawablePath::ValueTreeWrapper::Element::quadraticToElement);
-	v.setProperty (DrawablePath::ValueTreeWrapper::point1, controlPoints[0].toString(), nullptr);
-	v.setProperty (DrawablePath::ValueTreeWrapper::point2, controlPoints[1].toString(), nullptr);
+	ValueTree v (DrawableValueTreeWrapper::Element::quadraticToElement);
+	v.setProperty (DrawableValueTreeWrapper::point1, controlPoints[0].toString(), nullptr);
+	v.setProperty (DrawableValueTreeWrapper::point2, controlPoints[1].toString(), nullptr);
 	return v;
 }
 
-void RelativePointPath::QuadraticTo::addToPath (Path& path, Expression::Scope* scope) const
+void RelativePointQuadraticTo::addToPath (Path& path, Expression::Scope* scope) const
 {
 	path.quadraticTo (controlPoints[0].resolve (scope),
 					  controlPoints[1].resolve (scope));
 }
 
-RelativePoint* RelativePointPath::QuadraticTo::getControlPoints (int& numPoints)
+RelativePoint* RelativePointQuadraticTo::getControlPoints (int& numPoints)
 {
 	numPoints = 2;
 	return controlPoints;
 }
 
-RelativePointPath::ElementBase* RelativePointPath::QuadraticTo::clone() const
+RelativePointElementBase* RelativePointQuadraticTo::clone() const
 {
 	return new QuadraticTo (controlPoints[0], controlPoints[1]);
 }
 
-RelativePointPath::CubicTo::CubicTo (const RelativePoint& controlPoint1, const RelativePoint& controlPoint2, const RelativePoint& endPoint)
+RelativePointCubicTo::CubicTo (const RelativePoint& controlPoint1, const RelativePoint& controlPoint2, const RelativePoint& endPoint)
 	: ElementBase (cubicToElement)
 {
 	controlPoints[0] = controlPoint1;
@@ -84343,29 +84343,29 @@ RelativePointPath::CubicTo::CubicTo (const RelativePoint& controlPoint1, const R
 	controlPoints[2] = endPoint;
 }
 
-ValueTree RelativePointPath::CubicTo::createTree() const
+ValueTree RelativePointCubicTo::createTree() const
 {
-	ValueTree v (DrawablePath::ValueTreeWrapper::Element::cubicToElement);
-	v.setProperty (DrawablePath::ValueTreeWrapper::point1, controlPoints[0].toString(), nullptr);
-	v.setProperty (DrawablePath::ValueTreeWrapper::point2, controlPoints[1].toString(), nullptr);
-	v.setProperty (DrawablePath::ValueTreeWrapper::point3, controlPoints[2].toString(), nullptr);
+	ValueTree v (DrawableValueTreeWrapper::Element::cubicToElement);
+	v.setProperty (DrawableValueTreeWrapper::point1, controlPoints[0].toString(), nullptr);
+	v.setProperty (DrawableValueTreeWrapper::point2, controlPoints[1].toString(), nullptr);
+	v.setProperty (DrawableValueTreeWrapper::point3, controlPoints[2].toString(), nullptr);
 	return v;
 }
 
-void RelativePointPath::CubicTo::addToPath (Path& path, Expression::Scope* scope) const
+void RelativePointCubicTo::addToPath (Path& path, Expression::Scope* scope) const
 {
 	path.cubicTo (controlPoints[0].resolve (scope),
 				  controlPoints[1].resolve (scope),
 				  controlPoints[2].resolve (scope));
 }
 
-RelativePoint* RelativePointPath::CubicTo::getControlPoints (int& numPoints)
+RelativePoint* RelativePointCubicTo::getControlPoints (int& numPoints)
 {
 	numPoints = 3;
 	return controlPoints;
 }
 
-RelativePointPath::ElementBase* RelativePointPath::CubicTo::clone() const
+RelativePointElementBase* RelativePointCubicTo::clone() const
 {
 	return new CubicTo (controlPoints[0], controlPoints[1], controlPoints[2]);
 }
