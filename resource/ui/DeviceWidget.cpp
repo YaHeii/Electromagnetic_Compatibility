@@ -37,8 +37,8 @@ void DeviceWidget::setData(const DeviceData &data)
     ui->interferenceMargin->setText(QString::number(data.interferenceMargin));
 
 }
-void DeviceWidget::updateModelData()
-{
+
+void DeviceWidget::updateModelData() {
     bool ok;
     for (DeviceData &data : DataModel::instance()->allDevices) {
         if(data.equipmentID == m_currentId){

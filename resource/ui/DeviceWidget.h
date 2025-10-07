@@ -30,6 +30,4 @@ private slots:
     void on_equipmentReduction_clicked();
 };
 
-
-
 #endif //DEVICEWIDGET_H

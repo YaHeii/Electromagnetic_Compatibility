@@ -16,3 +16,7 @@ DeviceonShip::DeviceonShip(QWidget *parent) :
 DeviceonShip::~DeviceonShip() {
     delete ui;
 }
+//
+// Ui::DeviceonShip *DeviceonShip::getUI() {
+//     return ui;
+// }

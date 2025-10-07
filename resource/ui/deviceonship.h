@@ -18,7 +18,8 @@ Q_OBJECT
 public:
     explicit DeviceonShip(QWidget *parent = nullptr);
     ~DeviceonShip() override;
-    void getData();
+
+// Ui::DeviceonShip *getUI();
 private:
     Ui::DeviceonShip *ui;
 };

@@ -36,15 +36,44 @@ void ShipWidget::setData(const ShipData& data)
 
 void ShipWidget::updateShipModelData()
 {
+    // 检查UI指针有效性
+    if (!ui) {
+        return;
+    }
+
     // 遍历数据模型，找到与自己ID匹配的ShipData
     for (ShipData &ship : DataModel::instance()->allShips) {
         if (ship.shipID == m_currentShipId) {
             // 用UI的值更新模型数据
             // ship.shipName = ui->ship_Name->text();
-            ship.ship_X = ui->ship_X->text().toDouble();
-            ship.ship_Y = ui->ship_Y->text().toDouble();
-            ship.ship_Orienteation = ui->ship_Orienteation->text().toDouble();
-            ship.ship_Speed = ui->ship_Speed->text().toDouble();
+            
+            // 使用toDouble函数的bool*参数检查转换是否成功
+            bool ok = false;
+            double value = 0.0;
+            
+            // 更新ship_X
+            value = ui->ship_X->text().toDouble(&ok);
+            if (ok) {
+                ship.ship_X = value;
+            }
+            
+            // 更新ship_Y
+            value = ui->ship_Y->text().toDouble(&ok);
+            if (ok) {
+                ship.ship_Y = value;
+            }
+            
+            // 更新ship_Orienteation
+            value = ui->ship_Orienteation->text().toDouble(&ok);
+            if (ok) {
+                ship.ship_Orienteation = value;
+            }
+            
+            // 更新ship_Speed，确保速度非负
+            value = ui->ship_Speed->text().toDouble(&ok);
+            if (ok && value >= 0) {
+                ship.ship_Speed = value;
+            }
 
             // 注意：舰船上配置的设备列表是通过“+”按钮直接修改模型的，
             // 这里通常不需要再单独更新，除非有删除或修改设备的操作。
@@ -95,8 +124,13 @@ void ShipWidget::syncDeviceListWithModel()
                 DeviceonShip *deviceEntryUi = new DeviceonShip();
 
                 // 填充下拉框，并设置当前选中的项
-                // deviceEntryUi->ui->comboBox->addItems(availableDeviceIDs);
-                // deviceEntryUi->ui->comboBox->setCurrentText(config.deviceID);
+                if (!availableDeviceIDs.isEmpty()) {
+                    QComboBox* equipmentComboBox = deviceEntryUi->findChild<QComboBox*>("EquipmentID");
+                    if (equipmentComboBox) {
+                        equipmentComboBox->addItems(availableDeviceIDs);
+                        equipmentComboBox->setCurrentText(config.deviceID);
+                    }
+                }
 
                 ui->DeviceonShipLayout->addWidget(deviceEntryUi);
             }
