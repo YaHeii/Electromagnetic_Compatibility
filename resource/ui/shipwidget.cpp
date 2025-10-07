@@ -83,9 +83,15 @@ void ShipWidget::updateShipModelData()
     }
 }
 
+void ShipWidget::on_deleteShip_clicked() {
+    delete this;
+    qDebug() << "ShipWidget destroyed";
+}
+
+
 void ShipWidget::on_shipEquipmentPlus_clicked()
 {
-    // 1. 在数据模型中为当前舰船添加一个空的设备配置
+    // 在数据模型中为当前舰船添加一个空的设备配置
     for (ShipData &ship : DataModel::instance()->allShips) {
         if (ship.shipID == m_currentShipId) {
             DeviceOnShipConfig newConfig;
@@ -98,7 +104,7 @@ void ShipWidget::on_shipEquipmentPlus_clicked()
         }
     }
 
-    // 2. 刷新UI来显示这个新的设备配置条目
+    // 刷新UI来显示这个新的设备配置条目
     syncDeviceListWithModel();
 }
 
@@ -134,6 +140,7 @@ void ShipWidget::syncDeviceListWithModel()
 
                 ui->DeviceonShipLayout->addWidget(deviceEntryUi);
             }
+
             break; // 找到舰船后即可退出
         }
     }

@@ -1,7 +1,3 @@
-//
-// Created by lenovo on 25-10-6.
-//
-
 #ifndef DEVICEONSHIP_H
 #define DEVICEONSHIP_H
 
@@ -22,7 +18,7 @@ public:
 // Ui::DeviceonShip *getUI();
 private:
     Ui::DeviceonShip *ui;
+private slots:
+    void on_deleteDeviceonShip_clicked();
 };
-
-
 #endif //DEVICEONSHIP_H

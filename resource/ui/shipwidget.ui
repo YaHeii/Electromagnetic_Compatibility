@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>772</width>
-    <height>329</height>
+    <width>776</width>
+    <height>337</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -87,8 +87,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>359</width>
-               <height>240</height>
+               <width>361</width>
+               <height>218</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -126,6 +126,13 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="deleteShip">
+     <property name="text">
+      <string>-</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

@@ -7,7 +7,7 @@
 #include <QString>
 #include <QList>
 #include <QObject>
-
+//// 设备数据模型
 struct DeviceData {
     QString equipmentID;
     QString equipmentType;
@@ -33,14 +33,15 @@ struct DeviceData {
     double SNRMargin;
     double interferenceMargin;
 };
-
+//// 船上设备数据模型
 struct DeviceOnShipConfig {
-    QString deviceID; // 引用一个已存在的设备
-    // ... 其他与舰船相关的配置，如安装位置等 ...
+    QString deviceID;
+    double device_X_offset;
+    double device_Y_offset;
 };
-
+//// 舰船模型
 struct ShipData {
-    int shipID; // 唯一的舰船ID
+    int shipID;
     QString shipName;
     double ship_X;
     double ship_Y;
@@ -48,6 +49,7 @@ struct ShipData {
     double ship_Speed;
     QList<DeviceOnShipConfig> configuredDevices;
 };
+//// 数据模型
 class DataModel : public QObject
 {
     Q_OBJECT

@@ -27,10 +27,10 @@ private:
     QString m_currentId;
     void syncDeviceListWithModel();
     int m_currentShipId;
-    // QList<DeviceWidget*> m_deviceList;
-    // QList<DeviceonShip*> m_deviceonShipList;
+
 private slots:
     void on_shipEquipmentPlus_clicked();
+    void on_deleteShip_clicked();
 };
 
 

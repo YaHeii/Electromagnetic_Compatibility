@@ -1,8 +1,3 @@
-//
-// Created by lenovo on 25-9-24.
-//
-
-
 #include "ui_mainwindow.h"
 #include "ui_devicewidget.h"
 #include "../include/mainwindow.h"

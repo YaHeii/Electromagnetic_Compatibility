@@ -28,11 +28,12 @@ qt_add_executable(${APP_TARGET_NAME}
         src/models/PropagationModle.cpp
         src/models/shortlist.cpp
         src/utils/data_get.cpp
-        src/widget/devicewidget.cpp
+#        src/widget/devicewidget.cpp
         src/models/move.cpp
         src/mainwindow.cpp
         resource/ui/shipwidget.cpp
         src/models/DataModel.cpp
+        include/utils/farfield_get.hpp
         include/log/LogQueue.hpp
         resource/ui/deviceonship.cpp
         resource/ui/devicewidget.cpp
@@ -51,7 +52,6 @@ qt_add_executable(${APP_TARGET_NAME}
         include/models/shortlist.h
         include/utils/conversions.h
         include/utils/data_get.h
-        include/utils/farfield_get.hpp
         include/utils/point_2D.h
         include/mainwindow.h
         resource/ui/shipwidget.h
