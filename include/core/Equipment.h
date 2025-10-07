@@ -24,6 +24,10 @@ public:
     std::string getID() const { return m_id; }
     EquipmentType getType() const { return m_type; }
     Point2D getRelativePosition() const { return m_relative_position; }
+    
+    // 设置设备相对位置的接口
+    void setRelativePosition(const Point2D& position) { m_relative_position = position; }
+    void setRelativePosition(double x, double y) { m_relative_position.x = x; m_relative_position.y = y; }
 
     void setAntenna(std::unique_ptr<Antenna> antenna) {
         m_antenna = std::move(antenna);
@@ -116,7 +120,3 @@ private:
     std::string m_transmitter_id;
     std::string m_transmitter_in_ship_id;
 };
-
-
-
-

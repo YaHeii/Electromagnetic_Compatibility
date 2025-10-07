@@ -64,8 +64,10 @@ qt_add_executable(${APP_TARGET_NAME}
         resource/ui/devicewidget.ui
         resource/ui/shipwidget.ui
         resource/ui/deviceonship.ui
-
-
+        resource/ui/TreeViewManager.cpp
+        resource/ui/TreeViewManager.h
+        include/models/TransferToEngin.cpp
+        include/models/TransferToEngin.h
 
 
 )

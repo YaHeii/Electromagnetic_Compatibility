@@ -22,12 +22,16 @@ struct DeviceData {
     double antennaPhi;
     double pattern;
 
+    // 发射机参数
     double transmitterPower;
     double transmitterBandwidth;
+    double transmitterFrequency; // 添加发射机频率字段
     double WIP;
 
+    // 接收机参数
     double recieverSensitive;
     double recieverBandwidth;
+    double recieverFrequency; // 添加接收机频率字段
     QString reciever_TransmiterID;
     double noiseFigure;
     double SNRMargin;

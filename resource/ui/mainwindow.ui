@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>972</width>
-    <height>732</height>
+    <height>685</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,4">
       <item>
-       <widget class="QTabWidget" name="tabWidget_4">
+       <widget class="QTabWidget" name="treeViewManager">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -34,6 +34,12 @@
         <property name="elideMode">
          <enum>Qt::TextElideMode::ElideLeft</enum>
         </property>
+        <property name="documentMode">
+         <bool>true</bool>
+        </property>
+        <property name="movable">
+         <bool>false</bool>
+        </property>
         <widget class="QWidget" name="tab_6">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -44,6 +50,11 @@
          <attribute name="title">
           <string>结构树</string>
          </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <widget class="QTreeView" name="treeView"/>
+          </item>
+         </layout>
         </widget>
        </widget>
       </item>
@@ -52,7 +63,7 @@
         <item>
          <widget class="QTabWidget" name="tabWidget_3">
           <property name="currentIndex">
-           <number>1</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="device_Tab">
            <attribute name="title">
@@ -79,7 +90,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>717</width>
-                 <height>439</height>
+                 <height>402</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -142,7 +153,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>729</width>
-                 <height>439</height>
+                 <height>402</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -186,6 +197,25 @@
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="Path">
+           <attribute name="title">
+            <string>路径规划</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="simulate_tab">
+           <attribute name="title">
+            <string>开始仿真</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <item>
+             <widget class="QPushButton" name="StartSimulate">
+              <property name="text">
+               <string>仿真</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
         <item>
@@ -203,7 +233,7 @@
            <enum>QTabWidget::TabShape::Triangular</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <property name="elideMode">
            <enum>Qt::TextElideMode::ElideMiddle</enum>
