@@ -13,7 +13,6 @@
 #include <vector>
 #include <cmath>
 #include <fftw3.h> // 核心头文件
-#define M_PI 3.1415926535897932384626433832795
 
 // 简单的复数输出辅助函数
 void print_complex(const char* tag, fftw_complex* arr, int n) {
