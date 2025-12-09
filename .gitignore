@@ -18,3 +18,5 @@ cmake-build-*/
 # Other common files
 compile_commands.json
 *.user
+.vs/
+third_party/*

@@ -10,8 +10,9 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia)
-
+set(Qt6_DIR "D:/QT/6.9.3/msvc2022_64/lib/cmake/Qt6")
+find_package(Qt6 6.9.3 REQUIRED COMPONENTS Core Widgets Multimedia)
+find_package(FFTW3 CONFIG REQUIRED)
 qt_standard_project_setup()
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/resource/ui)
 set(APP_TARGET_NAME Electromagnetic_Compatibility)
@@ -84,7 +85,7 @@ target_link_libraries(${APP_TARGET_NAME} PRIVATE
         Qt6::Widgets
         Qt6::Multimedia
 )
-
+target_link_libraries(${APP_TARGET_NAME} PRIVATE FFTW3::fftw3)
 
 include(GNUInstallDirs)
 
