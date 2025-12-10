@@ -1,8 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "fleet.h"
-#include "../models/PropagationModle.h"
+#include "PropagationModle.h"
 
 
 struct InterferenceResult {//

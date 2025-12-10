@@ -1,4 +1,4 @@
-#include "../include/mainwindow.h"
+ï»¿#include "../include/mainwindow.h"
 #include <QApplication>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -12,42 +12,42 @@ int main(int argc, char *argv[])
 }
 //#include "../include/models/PEModel.h"
 //int main() {
-//    // 1. ·ÂÕæ²ÎÊıÉèÖÃ
+//    // 1. ä»¿çœŸå‚æ•°è®¾ç½®
 //    double freq = 9.4e9;       // 9.4 GHz (X-band)
-//    double dx = 50.0;          // ²½½ø 50m
-//    double dz = 0.2;           // ´¹Ö±·Ö±æÂÊ 0.2m (Ô½¸ßÔ½ºÃ£¬½¨Òé <= lambda/2)
-//    int nz = 2048;             // ÎïÀí¸ß¶ÈÍø¸ñ (×Ü¸ß¶È ~400m)
+//    double dx = 50.0;          // æ­¥è¿› 50m
+//    double dz = 0.2;           // å‚ç›´åˆ†è¾¨ç‡ 0.2m (è¶Šé«˜è¶Šå¥½ï¼Œå»ºè®® <= lambda/2)
+//    int nz = 2048;             // ç‰©ç†é«˜åº¦ç½‘æ ¼ (æ€»é«˜åº¦ ~400m)
 //    double max_range = 50000.0;// 50 km
 //
-//    // 2. ³õÊ¼»¯´óÆøÄ£ĞÍ£ºÕô·¢²¨µ¼¸ß¶È 20m
-//    // ¶ÔÓ¦ Paper 2 Fig. 6(d) ºÍ Eq. (35)
+//    // 2. åˆå§‹åŒ–å¤§æ°”æ¨¡å‹ï¼šè’¸å‘æ³¢å¯¼é«˜åº¦ 20m
+//    // å¯¹åº” Paper 2 Fig. 6(d) å’Œ Eq. (35)
 //    AtmosphereModel atm(20.0);
 //
-//    // 3. Ô¤¼ÆËãÕÛÉäÂÊÆÊÃæ (Profile)
-//    // ÕâÒ»²½·Ç³£ÖØÒª£¬±ÜÃâÔÚ step Ñ­»·ÖĞÖØ¸´¼ÆËã log º¯Êı£¬ÌáÉıĞ§ÂÊ
+//    // 3. é¢„è®¡ç®—æŠ˜å°„ç‡å‰–é¢ (Profile)
+//    // è¿™ä¸€æ­¥éå¸¸é‡è¦ï¼Œé¿å…åœ¨ step å¾ªç¯ä¸­é‡å¤è®¡ç®— log å‡½æ•°ï¼Œæå‡æ•ˆç‡
 //    std::vector<double> n_profile(nz);
 //    for (int i = 0; i < nz; ++i) {
 //        double z = i * dz;
 //        n_profile[i] = atm.getRefractiveIndex(z);
 //    }
 //
-//    // 4. ³õÊ¼»¯Çó½âÆ÷ (°üº¬ FFTW3 ºÍ ¾µÏñ·¨)
+//    // 4. åˆå§‹åŒ–æ±‚è§£å™¨ (åŒ…å« FFTW3 å’Œ é•œåƒæ³•)
 //    PEModel solver(freq, dx, dz, nz);
 //
-//    // ³õÊ¼»¯¸ßË¹²¨Êø£ºÌìÏß¸ß¶È 25m
+//    // åˆå§‹åŒ–é«˜æ–¯æ³¢æŸï¼šå¤©çº¿é«˜åº¦ 25m
 //    solver.initializeGaussian(25.0, 2.0, 0.0);
 //
-//    // 5. ¿ªÊ¼²½½ø·ÂÕæ
+//    // 5. å¼€å§‹æ­¥è¿›ä»¿çœŸ
 //    std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
 //
 //    for (double r = 0; r < max_range; r += dx) {
-//        // [¹Ø¼ü]£º½«Ô¤¼ÆËãºÃµÄ´óÆøÆÊÃæ´«µİ¸øÇó½âÆ÷
-//        // 7.0 ÊÇ·çËÙ (m/s)£¬ÓÃÓÚ¼ÆËã Miller-Brown ´Ö²Ú¶È
+//        // [å…³é”®]ï¼šå°†é¢„è®¡ç®—å¥½çš„å¤§æ°”å‰–é¢ä¼ é€’ç»™æ±‚è§£å™¨
+//        // 7.0 æ˜¯é£é€Ÿ (m/s)ï¼Œç”¨äºè®¡ç®— Miller-Brown ç²—ç³™åº¦
 //        solver.step_Miller_Brown(r, 7.0, n_profile);
 //
-//        // Êä³öÊı¾İ
+//        // è¾“å‡ºæ•°æ®
 //        if (std::abs(fmod(r, 1000.0)) < 0.1) {
-//            // »ñÈ¡½ÓÊÕÌìÏß¸ß¶È 15m ´¦µÄËğºÄ
+//            // è·å–æ¥æ”¶å¤©çº¿é«˜åº¦ 15m å¤„çš„æŸè€—
 //            int rx_idx = static_cast<int>(15.0 / dz);
 //            double loss = solver.getPathLoss(rx_idx, r);
 //            std::cout << r / 1000.0 << " \t\t " << loss << std::endl;

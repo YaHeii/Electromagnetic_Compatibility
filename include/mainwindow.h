@@ -13,7 +13,7 @@
 #include "../include/utils/conversions.h"
 #include "../include/models/PropagationModle.h"
 #include "../include/core/fleet.h"
-#include "../include/core/EMC_Engine.h"
+#include "../include/models/EMC_Engine.h"
 #include "../include/models/Path.h"
 #include "../include/models/move.h"
 #include "../include/models/datamodel.h"
