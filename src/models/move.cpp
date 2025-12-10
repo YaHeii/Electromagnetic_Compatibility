@@ -1,5 +1,7 @@
 #include "../../include/models/move.h"
-
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 void moveModel::move_location(Fleet& ship_fleet, int t_step, PathManager total_path){
     for(auto& ship : ship_fleet.getShips()){
         Point2D position = ship->getLocation();

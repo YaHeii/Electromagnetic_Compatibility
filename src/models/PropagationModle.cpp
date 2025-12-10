@@ -4,7 +4,9 @@
 #include <limits> // For std::numeric_limits
 #include "../include/utils/point_2D.h"
 #include "models/shortlist.h"
-
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #define C_LIGHT 300000000
 

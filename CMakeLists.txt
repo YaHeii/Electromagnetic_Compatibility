@@ -13,6 +13,9 @@ set(CMAKE_AUTORCC ON)
 set(Qt6_DIR "D:/QT/6.9.3/msvc2022_64/lib/cmake/Qt6")
 find_package(Qt6 6.9.3 REQUIRED COMPONENTS Core Widgets Multimedia)
 find_package(FFTW3 CONFIG REQUIRED)
+find_package(Eigen3 CONFIG REQUIRED) 
+find_package(OpenMP REQUIRED)
+
 qt_standard_project_setup()
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/resource/ui)
 set(APP_TARGET_NAME Electromagnetic_Compatibility)
@@ -51,12 +54,15 @@ qt_add_executable(${APP_TARGET_NAME}
         include/models/PathManager.h
         include/models/PropagationModle.h
         include/models/shortlist.h
+        include/models/PEModel.h
         include/utils/conversions.h
         include/utils/data_get.h
         include/utils/point_2D.h
         include/mainwindow.h
         resource/ui/shipwidget.h
         include/models/DataModel.h
+        include/models/PEModel.h
+        include/models/PEModel.cpp
         resource/ui/devicewidget.h
         resource/ui/deviceonship.h
 
@@ -86,6 +92,10 @@ target_link_libraries(${APP_TARGET_NAME} PRIVATE
         Qt6::Multimedia
 )
 target_link_libraries(${APP_TARGET_NAME} PRIVATE FFTW3::fftw3)
+target_link_libraries(${APP_TARGET_NAME} PRIVATE Eigen3::Eigen)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${APP_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
 include(GNUInstallDirs)
 

@@ -1,5 +1,7 @@
 #include "../include/core/EMC_Engine.h"
-
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 EMCEngine::EMCEngine(const PropagationModel& prop_model)
 : m_prop_model(prop_model) {}
 std::vector<InterferenceResult> EMCEngine::analyzeFleet(const Fleet& fleet) {//返回受扰计算结果数组

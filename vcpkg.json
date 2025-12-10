@@ -1,3 +1,14 @@
 {
-
+  "name": "electromagnetic-compatibility",
+  "version-string": "0.1.0",
+  "description": "EMC simulation project using FFTW3 and Eigen3",
+  "dependencies": [
+    {
+      "name": "eigen3"
+    },
+    {
+      "name": "fftw3",
+      "features": [ "threads" ]
+    }
+  ]
 }

@@ -1,9 +1,6 @@
 #pragma once
 #include "../utils/point_2D.h"
 #include "../core/antenna.h" // For Antenna (though not directly used in this simplified Friis)
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 class PropagationModel {
 public:
     virtual ~PropagationModel() = default;
