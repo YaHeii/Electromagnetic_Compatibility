@@ -17,68 +17,34 @@ find_package(Eigen3 CONFIG REQUIRED)
 find_package(OpenMP REQUIRED)
 
 qt_standard_project_setup()
+
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/resource/ui)
 set(APP_TARGET_NAME Electromagnetic_Compatibility)
+# 扫描core
+file(GLOB_RECURSE SRC_CORE CONFIGURE_DEPENDS "src/core/*.cpp" "src/core/*.c")
+file(GLOB_RECURSE HDR_CORE CONFIGURE_DEPENDS "include/core/*.h")
+# 扫描models
+file(GLOB_RECURSE SRC_MODELS CONFIGURE_DEPENDS "src/models/*.cpp" "include/models/*.cpp")
+file(GLOB_RECURSE HDR_MODELS CONFIGURE_DEPENDS "include/models/*.h" "include/models/*.hpp")
+# 扫描UI
+file(GLOB_RECURSE UI_FILES   CONFIGURE_DEPENDS "resource/ui/*.ui")
+file(GLOB_RECURSE SRC_UI_RES CONFIGURE_DEPENDS "resource/ui/*.cpp")
+file(GLOB_RECURSE HDR_UI_RES CONFIGURE_DEPENDS "resource/ui/*.h")
+# 扫描 Utils 模块
+file(GLOB_RECURSE SRC_UTILS CONFIGURE_DEPENDS "src/utils/*.cpp")
+file(GLOB_RECURSE HDR_UTILS CONFIGURE_DEPENDS "include/utils/*.h" "include/utils/*.hpp")
+# 扫描SRC
+file(GLOB SRC_MAIN CONFIGURE_DEPENDS "src/*.cpp") 
+file(GLOB HDR_MAIN CONFIGURE_DEPENDS "include/*.h")
 
 qt_add_executable(${APP_TARGET_NAME}
-#        ${src}
-        src/main.cpp
-        src/core/EMC_Engine.cpp
-        src/core/fleet.cpp
-        src/core/ship.cpp
-        src/core/TransmitterSource.cpp
-        src/models/path.cpp
-        src/models/PathManager.cpp
-        src/models/PropagationModle.cpp
-        src/models/shortlist.cpp
-        src/utils/data_get.cpp
-#        src/widget/devicewidget.cpp
-        src/models/move.cpp
-        src/mainwindow.cpp
-        resource/ui/shipwidget.cpp
-        src/models/DataModel.cpp
-        include/utils/farfield_get.hpp
-        include/log/LogQueue.hpp
-        resource/ui/deviceonship.cpp
-        resource/ui/devicewidget.cpp
-        #        ${header}
-        include/core/Antenna.h
-        include/core/EMC_Engine.h
-        include/core/Equipment.h
-        include/core/filter.h
-        include/core/fleet.h
-        include/core/ship.h
-        include/core/TransmitterSource.h
-        include/models/move.h
-        include/models/Path.h
-        include/models/PathManager.h
-        include/models/PropagationModle.h
-        include/models/shortlist.h
-        include/models/PEModel.h
-        include/utils/conversions.h
-        include/utils/data_get.h
-        include/utils/point_2D.h
-        include/mainwindow.h
-        resource/ui/shipwidget.h
-        include/models/DataModel.h
-        include/models/PEModel.h
-        include/models/PEModel.cpp
-        resource/ui/devicewidget.h
-        resource/ui/deviceonship.h
-
-        #        ${ui}
-        resource/ui/mainwindow.ui
-        resource/ui/devicewidget.ui
-        resource/ui/shipwidget.ui
-        resource/ui/deviceonship.ui
-        resource/ui/TreeViewManager.cpp
-        resource/ui/TreeViewManager.h
-        include/models/TransferToEngin.cpp
-        include/models/TransferToEngin.h
-
-
+    ${SRC_MAIN}      ${HDR_MAIN}
+    ${SRC_CORE}      ${HDR_CORE}
+    ${SRC_MODELS}    ${HDR_MODELS}
+    ${SRC_UI_RES}    ${HDR_UI_RES}  ${UI_FILES}
+    ${SRC_UTILS}     ${HDR_UTILS}
 )
-
+# 包含 DSPFilters 库头文件路径
 set(DSPFilters_DIR ${CMAKE_SOURCE_DIR}/third_party/DSPFilters-master)
 target_include_directories(${APP_TARGET_NAME} PUBLIC
         ${CMAKE_SOURCE_DIR}/include
@@ -90,9 +56,9 @@ target_link_libraries(${APP_TARGET_NAME} PRIVATE
         Qt6::Core
         Qt6::Widgets
         Qt6::Multimedia
+        FFTW3::fftw3
+        Eigen3::Eigen
 )
-target_link_libraries(${APP_TARGET_NAME} PRIVATE FFTW3::fftw3)
-target_link_libraries(${APP_TARGET_NAME} PRIVATE Eigen3::Eigen)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${APP_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif()
