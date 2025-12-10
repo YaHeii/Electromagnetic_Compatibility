@@ -1,23 +1,27 @@
 #pragma once
 #include <string>
 
+/// <summary>
+/// 
+/// 
+/// </summary>
 class Antenna {
 public:
-    Antenna(const std::string& id, double orientation_deg = 0.0)
-        : m_id(id), m_orientation_deg(orientation_deg) {}
+    Antenna(const std::string& id,double relative_height,double beam_width_deg, double tilt_deg = 0.0)
+        : _id(id),_relative_height(relative_height),
+        _beam_width_deg(beam_width_deg), _tilt_deg(tilt_deg) {}
     virtual ~Antenna() = default;
 
-    virtual double getGainDbi(double azimuth_deg_relative_to_antenna) const {
-        // 默认实现全向天线, 0 dBi增益
-        return 0.0;
-    }
-
-    std::string getID() const { return m_id; }
-    double getOrientationDeg() const { return m_orientation_deg; }
+    std::string getID() const { return _id; }
+	double getRelativeHeight() const { return _relative_height; }
+	double getBeamWidthDeg() const { return _beam_width_deg; }
+	double getTiltDeg() const { return _tilt_deg; }
 
 protected:
-    std::string m_id;
-    double m_orientation_deg; // 天线自身相对于安装平台的朝向
+    std::string _id;
+    double _relative_height;
+    double _beam_width_deg;
+    double _tilt_deg;
 };
 
 // 一个简单的全向天线
