@@ -7,8 +7,6 @@
 #include <stdexcept> // 用于抛出异常
 #include "Antenna.h"
 
-
-
 //定义信号类型
 enum class SignalType {
     CONTINUOUS_WAVE, // 连续波

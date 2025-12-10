@@ -130,16 +130,16 @@ void MainWindow::on_StartSimulate_clicked() {
         //对有指向性的天线进行筛选
 
         //使用自由空间衰减计算最坏的传输情况
-        FreeSpaceModel prop_modle_FREE;//采用自由空间衰减模型
-        EMCEngine EMC_engine(prop_modle_FREE);//实例化
-        vector<InterferenceResult> results = EMC_engine.analyzeFleet(*fleetPtr);//存储编队内部所有的电磁兼容情况
-        
-        // 添加结果检查，避免访问空vector
-        if (!results.empty()) {
-            cout << "results: " << results.size() << endl;
-            cout << results[0].victim_equip_id << endl;
-        } else {
-            cout << "无干扰结果" << endl;
-        }
+        //FreeSpaceModel prop_modle_FREE;//采用自由空间衰减模型
+        //EMC_Engine EMC_engine(prop_modle_FREE);//实例化
+        //vector<InterferenceResult> results = EMC_engine.EMC_computing(*fleetPtr);//存储编队内部所有的电磁兼容情况
+        //
+        //// 添加结果检查，避免访问空vector
+        //if (!results.empty()) {
+        //    cout << "results: " << results.size() << endl;
+        //    cout << results[0].victim_equip_id << endl;
+        //} else {
+        //    cout << "无干扰结果" << endl;
+        //}
     }
 }

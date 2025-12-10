@@ -8,7 +8,7 @@
 #include "Equipment.h"
 #include "../utils/point_2D.h"
 using namespace std;
-
+class Equipment;
 /// <summary>
 /// @param id 船只标识符
 /// @param location 船只位置
@@ -24,7 +24,8 @@ public:
     const std::string& getID() const { return _id; }
     Point2D getLocation() const {return _location; }
     const std::vector<double>& getDistance() const { return _distance; }
-	auto getEquipmentList() const { return _equipmentList; }
+    // 返回设备列表的常量引用，避免拷贝唯一所有权指针
+    const std::vector<std::unique_ptr<Equipment>>& getEquipmentList() const { return _equipmentList; }
     double getOrientationDeg() const { return _orientation_deg; } // 船体朝向，0度为X轴正向
 
     Equipment* findEquipmentByID(const std::string& eq_id) const ;

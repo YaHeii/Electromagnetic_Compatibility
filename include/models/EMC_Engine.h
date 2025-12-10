@@ -2,9 +2,9 @@
 #include <vector>
 #include <string>
 #include "PropagationModle.h"
+#include "core/Equipment.h"
 
-
-struct InterferenceResult {//
+struct InterferenceResult {
     std::string aggressor_ship_id;//干扰源船ID
     std::string aggressor_equip_id;//干扰源设备ID
     std::string victim_ship_id;//受害船ID
@@ -18,12 +18,16 @@ struct InterferenceResult {//
     bool is_communication_degraded; // 通信是否受损
     bool is_interference_degraded; // 干扰裕度是否超限
 };
+class Propagation_Engine {
 
-class EMCEngine {
+
+};
+class EMC_Engine {
 public:
-    EMCEngine(const PropagationModel& prop_model);
-    std::vector<InterferenceResult> analyzeFleet(const Fleet& fleet);
+    EMC_Engine(Equipment* analysed_Equipment) 
+        :_analysed_Equipment(analysed_Equipment) {}
+    //std::vector<InterferenceResult> EMC_computing(const Fleet& fleet);
 
 private:
-    const PropagationModel& m_prop_model;
+    Equipment* _analysed_Equipment;
 };
