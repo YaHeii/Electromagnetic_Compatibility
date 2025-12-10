@@ -204,8 +204,10 @@ public:
         Complex u = reinterpret_cast<Complex*>(_in_ptr)[z_idx];
         double mag = std::abs(u);
         // PE 计算的是 u，真实场 E = u * exp(ikx) / sqrt(x)
+        double F = mag * std::sqrt(range); // 补上 2D->3D 的扩散因子 sqrt(r)
         double lambda = 299792458.0 / _freq;
-        double loss = 20.0 * log10(4.0 * M_PI * range / lambda) - 20.0 * log10(mag + 1e-12);
+        double L_fspl = 20.0 * log10(4.0 * M_PI * range / lambda);
+        double loss = L_fspl - 20.0 * log10(F + 1e-12);
         return loss;
     }
 };

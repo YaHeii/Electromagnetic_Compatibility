@@ -8,7 +8,7 @@ void Propagation_Engine::initializePEmodel(PE_data _PEdata,double reciever_anten
     // 初始化大气模型：蒸发波导高度 20m
     // 对应 Paper 2 Fig. 6(d) 和 Eq. (35)
     AtmosphereModel atm(_PEdata.duct_height);
-
+    JONSWAPSurfaceGenerator surface(_PEdata.wind_speed);
     // 预计算折射率剖面 (Profile)
     // 这一步非常重要，避免在 step 循环中重复计算 log 函数，提升效率
     std::vector<double> n_profile(_PEdata.nz);
@@ -27,10 +27,10 @@ void Propagation_Engine::initializePEmodel(PE_data _PEdata,double reciever_anten
     // 开始步进仿真
     std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
     //r为仿真距离（剖面）
-    for (double r = 0; r < _PEdata.max_range; r += _PEdata.dx) {
-        // [关键]：将预计算好的大气剖面传递给求解器
-        // 7.0 是风速 (m/s)，用于计算 Miller-Brown 粗糙度
-        solver.step_Miller_Brown(r, _PEdata.wind_speed, n_profile);
+    for (double r = _PEdata.dx; r < _PEdata.max_range; r += _PEdata.dx) {
+        // 将预计算好的大气剖面传递给求解器
+        //solver.step_Miller_Brown(r, _PEdata.wind_speed, n_profile);
+        solver.step_PLST(r, n_profile, surface, 0);
 
         // 输出数据
         if (std::abs(fmod(r, 1000.0)) < 0.1) {

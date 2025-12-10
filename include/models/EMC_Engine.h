@@ -38,6 +38,7 @@ public:
         : _model_type(Model_type) {
         if (_model_type == "PEModel") {
             //初始化PEModel
+
         }
         else if (_model_type == "RayModel") {
             //初始化RayModel

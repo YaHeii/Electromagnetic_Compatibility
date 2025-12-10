@@ -1,5 +1,6 @@
 #include "PEModel.h"
 #include <random>
+#include <chrono>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -10,6 +11,8 @@ void JONSWAPSurfaceGenerator::generateSpectrumComponents() {
 	_components.reserve(m_freq_bins * n_angle_bins);// 预分配空间
     std::vector<double> rand_vals(m_freq_bins * n_angle_bins);
     std::vector<double> phase_vals(m_freq_bins * n_angle_bins);
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine gen(seed);
     // 计算波峰频率 omega_m 
     // U 10 为海平面以上 10 米处的风速。
     // X_tilde为无量纲区域长度
@@ -30,7 +33,6 @@ void JONSWAPSurfaceGenerator::generateSpectrumComponents() {
     // 随机数生成器
     // default_random_engine 默认随机数
     // uniform_real_distribution 均匀分布浮点数
-    std::default_random_engine gen;
     std::uniform_real_distribution<double> dist_phase(0.0, 2.0 * M_PI);
     std::uniform_real_distribution<double> dist_rand(0.0, 1.0);
 
