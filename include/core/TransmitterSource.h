@@ -59,7 +59,7 @@ public:
     double getPowerAtFrequency(double queryFrequencyHz) const;
 
     // --- Getters ---
-    std::string getID() const { return m_id; }
+    std::string getID() const { return _id; }
     double getCenterFrequencyHz() const { return m_centerFrequencyHz; }
     double getBandwidthHz() const { return m_bandwidthHz; }
     double getAveragePowerDbm() const { return m_averagePowerDbm; }
@@ -71,7 +71,7 @@ public:
 
 private:
     // --- 私有成员变量 ---
-    std::string m_id;
+    std::string _id;
     double m_centerFrequencyHz;
     double m_bandwidthHz;
     double m_averagePowerDbm;

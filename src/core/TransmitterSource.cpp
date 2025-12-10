@@ -3,7 +3,7 @@
 
 
 TransmitterSource::TransmitterSource(std::string id, double centerFrequencyHz, double bandwidthHz, double averagePowerDbm)
-    : m_id(std::move(id)),
+    : _id(std::move(id)),
       m_centerFrequencyHz(centerFrequencyHz),
       m_bandwidthHz(bandwidthHz),
       m_averagePowerDbm(averagePowerDbm),

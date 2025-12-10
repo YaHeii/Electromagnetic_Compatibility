@@ -13,7 +13,7 @@ class ship
 public:
     ship(string id, Point2D location, vector<double> distance = {}, double orientation_deg = 30.0, double speed = 1.0);
     double getOrientationDeg() const { return m_orientation_deg; } // 船体朝向，0度为X轴正向
-    const std::string& getID() const { return m_id; }
+    const std::string& getID() const { return _id; }
 
     Point2D getLocation() const {
     return m_location;
@@ -36,7 +36,7 @@ public:
     void setLocation(Point2D position_new);
 
 private:
-    string m_id;
+    string _id;
     Point2D m_location;
     std::vector<double> m_distance;
     std::vector<std::unique_ptr<Equipment>>m_equipmentList;

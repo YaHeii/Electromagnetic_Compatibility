@@ -9,7 +9,7 @@
 
 
 ship::ship(string id,Point2D location, vector<double> distance,double orientation_deg,double speed)
-: m_id(id), // 使用初始化列表初始化 m_location  
+: _id(id), // 使用初始化列表初始化 m_location  
 m_location(location), // 使用初始化列表初始化 m_location  
 m_distance(distance),  // 初始化 m_distance
 m_orientation_deg(orientation_deg),//初始化穿的朝向

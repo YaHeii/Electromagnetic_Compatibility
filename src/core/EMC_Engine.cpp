@@ -65,8 +65,10 @@ for (const auto& rx_pair : all_receivers) {
         }
 
         // 2. 天线增益计算
-        double gain_tx_dbi = aggressor_tx->getAntenna() ? aggressor_tx->getAntenna()->getGainDbi(0) : 0.0;
-        double gain_rx_dbi = victim_rx->getAntenna() ? victim_rx->getAntenna()->getGainDbi(0) : 0.0;
+       /* double gain_tx_dbi = aggressor_tx->getAntenna() ? aggressor_tx->getAntenna()->getGainDbi(0) : 0.0;
+        double gain_rx_dbi = victim_rx->getAntenna() ? victim_rx->getAntenna()->getGainDbi(0) : 0.0;*/
+        double gain_tx_dbi = 0.0;
+        double gain_rx_dbi = 0.0;
 
 
         // 3. 接收端功率
