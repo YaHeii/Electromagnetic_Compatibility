@@ -1,9 +1,9 @@
-#include "../include/models/PropagationModle.h"
+#include "../include/models/RayModel.h"
 #include <cmath> // For sqrt, pow, log10
 #include <complex>
 #include <limits> // For std::numeric_limits
 #include "../include/utils/point_2D.h"
-#include "models/shortlist.h"
+#include "models/Computing_distance.h"
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif

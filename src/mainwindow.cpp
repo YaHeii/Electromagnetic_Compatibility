@@ -4,7 +4,7 @@
 #include "../resource/ui/shipwidget.h"
 #include "../resource/ui/DeviceWidget.h"
 #include <QMessageBox>
-#include "../include/models/TransferToEngin.h"
+#include "../include/utils/TransferToEngin.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),

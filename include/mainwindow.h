@@ -8,17 +8,17 @@
 #include "../include/core/ship.h"
 #include "../include/core/equipment.h"
 #include "../include/utils/point_2D.h"
-#include "../include/models/shortlist.h"
+#include "../include/models/Computing_distance.h"
 #include "../include/utils/data_get.h"
 #include "../include/utils/conversions.h"
-#include "../include/models/PropagationModle.h"
+#include "../include/models/RayModel.h"
 #include "../include/core/fleet.h"
 #include "../include/models/EMC_Engine.h"
 #include "../include/models/Path.h"
 #include "../include/models/move.h"
 #include "../include/models/datamodel.h"
 #include "../resource/ui/TreeViewManager.h"
-#include "../include/models/TransferToEngin.h"
+#include "../include/utils/TransferToEngin.h"
 
 class ShipWidget;
 class DeviceWidget;

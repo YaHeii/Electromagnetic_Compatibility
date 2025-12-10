@@ -1,22 +1,18 @@
-//
-// Created by lenovo on 25-10-7.
-//
+#pragma once
 
-#ifndef TRANSFERTOENGIN_H
-#define TRANSFERTOENGIN_H
 
 #include "../core/fleet.h"
 #include "../core/ship.h"
 #include "../core/Equipment.h"
 #include "../core/Antenna.h"
-#include "DataModel.h"
+#include "../models/DataModel.h"
 #include <memory>
 
-    /**
-     * @brief 数据转换类，用于将前端UI数据模型转换为后端核心算法所需的数据结构
-     * 该类提供了一组静态方法，用于将DataModel中的数据转换为Fleet、ship、Equipment等
-     * 核心算法所需的对象。确保前后端数据类型匹配，避免精度损失。
-     */
+/**
+    * @brief 数据转换类，用于将前端UI数据模型转换为后端核心算法所需的数据结构
+    * 该类提供了一组静态方法，用于将DataModel中的数据转换为Fleet、ship、Equipment等
+    * 核心算法所需的对象。确保前后端数据类型匹配，避免精度损失。
+    */
 class TransferToEngine {
 public:
 /**
@@ -49,5 +45,3 @@ private:
      */
     static std::unique_ptr<Antenna> createAntennaForEquipment(const DeviceData& deviceData);
 };
-
-#endif //TRANSFERTOENGIN_H
