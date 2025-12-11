@@ -14,11 +14,14 @@
 #include "../include/models/RayModel.h"
 #include "../include/core/fleet.h"
 #include "../include/models/EMC_Engine.h"
-#include "../include/models/Path.h"
-#include "../include/models/move.h"
-#include "../include/models/datamodel.h"
+#include "models/Path.h"
+#include "models/move.h"
+#include "models/datamodel.h"
 #include "../resource/ui/TreeViewManager.h"
-#include "../include/utils/TransferToEngin.h"
+#include "utils/TransferToEngin.h"
+#include "utils/PaintImage.hpp"
+#include "models/PEModel.h"
+
 
 class ShipWidget;
 class DeviceWidget;

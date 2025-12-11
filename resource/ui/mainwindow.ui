@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>972</width>
-    <height>685</height>
+    <width>1032</width>
+    <height>735</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,7 +63,7 @@
         <item>
          <widget class="QTabWidget" name="tabWidget_3">
           <property name="currentIndex">
-           <number>2</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="device_Tab">
            <attribute name="title">
@@ -89,8 +89,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>717</width>
-                 <height>402</height>
+                 <width>765</width>
+                 <height>442</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -152,8 +152,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>729</width>
-                 <height>402</height>
+                 <width>777</width>
+                 <height>442</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -208,6 +208,9 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_7">
             <item>
+             <widget class="QCustomPlot" name="PEmodel_2Dplot" native="true"/>
+            </item>
+            <item>
              <widget class="QPushButton" name="StartSimulate">
               <property name="text">
                <string>仿真</string>
@@ -261,6 +264,14 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

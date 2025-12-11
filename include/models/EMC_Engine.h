@@ -3,6 +3,7 @@
 #include <string>
 #include "RayModel.h"
 #include "PEModel.h"
+#include <omp.h>
 #include "core/Equipment.h"
 
 struct InterferenceResult {

@@ -5,13 +5,9 @@
 #endif
 int main(int argc, char *argv[])
 {
-    //QApplication a(argc, argv);
-    //MainWindow w;
-    //w.show();
-    //return a.exec();
-    string Model = "PEModel";
-    PE_data PEdata;
-    Propagation_Engine PE(Model);
-    PE.PEmodel_computing2D(PEdata, 25);
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
 
 }
