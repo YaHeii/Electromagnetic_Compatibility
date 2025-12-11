@@ -4,7 +4,7 @@
 #endif
 
 
-void Propagation_Engine::initializePEmodel(PE_data _PEdata,double reciever_antenna_height) {
+LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_antenna_height) {
     // 初始化大气模型：蒸发波导高度 20m
     // 对应 Paper 2 Fig. 6(d) 和 Eq. (35)
     AtmosphereModel atm(_PEdata.duct_height);
@@ -38,11 +38,108 @@ void Propagation_Engine::initializePEmodel(PE_data _PEdata,double reciever_anten
             int rx_idx = static_cast<int>(reciever_antenna_height / _PEdata.dz);
             double loss = solver.getPathLoss(rx_idx, r);
             std::cout << r / 1000.0 << " \t\t " << loss << std::endl;
+            _LossLine.push_back(loss);
         }
     }
+    return _LossLine;
 }
 
+GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height) {
+    // 1. 定义地图网格参数
+    double map_size_km = 20.0;
+    double grid_res_m = 50.0; // 50米一个像素
+    int grid_dim = static_cast<int>((map_size_km * 1000) / grid_res_m); // 400x400
 
+    // 初始化地图为极小值 (代表无信号/底噪)
+    GridMap coverage_map(grid_dim, std::vector<double>(grid_dim, -200.0));
+
+    // 2. 准备环境
+    AtmosphereModel atm(_PEdata.duct_height);
+    JONSWAPSurfaceGenerator surface(_PEdata.wind_speed);
+    // 预计算 n_profile
+    std::vector<double> n_profile(_PEdata.nz);
+    for (int i = 0; i < _PEdata.nz; ++i) n_profile[i] = atm.getRefractiveIndex(i * _PEdata.dz);
+
+    // 3. 存储极坐标扫描数据 [角度][距离索引] -> 损耗值
+    // 角度步长 5度
+    int angle_step_deg = 5;
+    int num_angles = 360 / angle_step_deg;
+    int num_ranges = static_cast<int>(_PEdata.max_range / _PEdata.dx);
+
+    // polar_data[angle_idx][range_idx]
+    std::vector<std::vector<double>> polar_data(num_angles, std::vector<double>(num_ranges));
+
+    std::cout << "Starting 360-degree scan..." << std::endl;
+    // 创建每个线程专用的 solver 池，避免在并行循环中反复创建/销毁 FFTW 计划
+    int num_threads = omp_get_max_threads();
+    std::vector<std::unique_ptr<PEModel>> solvers;
+    solvers.reserve(num_threads);
+    for (int t = 0; t < num_threads; ++t) {
+        solvers.emplace_back(std::make_unique<PEModel>(_PEdata.freq, _PEdata.dx, _PEdata.dz, _PEdata.nz));
+        solvers.back()->initializeGaussian(_PEdata.sender_antenna_height, _PEdata.beam_width_deg, _PEdata.elevation_deg);
+    }
+    // --- 核心循环：旋转扫描 ---
+#pragma omp parallel for // 并行计算各个角度 (OpenMP)
+    for (int i = 0; i < num_angles; ++i) {
+        double az_deg = i * angle_step_deg;
+        double az_rad = az_deg * M_PI / 180.0;
+
+        int tid = omp_get_thread_num();
+        PEModel* solver = solvers[tid].get();
+
+        solver->initializeGaussian(_PEdata.sender_antenna_height, _PEdata.beam_width_deg, _PEdata.elevation_deg);
+
+        int range_idx = 0;
+        for (double r = _PEdata.dx; r < _PEdata.max_range; r += _PEdata.dx) {
+            // 调用修改后的 PLST，传入方位角
+            solver->step_PLST(r, az_rad, n_profile, surface, 0.0);
+
+            // 获取特定高度的损耗并存储
+            int rx_z_idx = static_cast<int>(reciever_antenna_height / _PEdata.dz);
+            polar_data[i][range_idx] = solver->getPathLoss(rx_z_idx, r);
+            range_idx++;
+        }
+    }
+
+    std::cout << "Scan complete. Mapping to Cartesian grid..." << std::endl;
+    std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
+    // 4. 坐标映射 (填满车轮空隙)
+    // 遍历地图上的每一个像素点 (x, y)
+    double center_idx = grid_dim / 2.0;
+
+#pragma omp parallel for collapse(2)
+    for (int y = 0; y < grid_dim; ++y) {
+        for (int x = 0; x < grid_dim; ++x) {
+            // 像素坐标 -> 物理坐标 (相对于中心，单位 m)
+            double px = (x - center_idx) * grid_res_m;
+            double py = (y - center_idx) * grid_res_m; // 注意图像坐标系 y 可能相反，这里暂按数学坐标
+
+            // 计算极坐标 (r, theta)
+            double r = std::sqrt(px * px + py * py);
+            double theta = std::atan2(py, px); // (-PI, PI)
+            if (theta < 0) theta += 2.0 * M_PI; // (0, 2PI)
+
+            // 如果超出最大射程，跳过
+            if (r >= _PEdata.max_range) continue;
+
+            // 查找最近的数据点 (Nearest Neighbor 插值)
+            // 1. 找角度索引
+            double az_deg = theta * 180.0 / M_PI;
+            int az_idx = static_cast<int>(std::round(az_deg / angle_step_deg)) % num_angles;
+
+            // 2. 找距离索引
+            int r_idx = static_cast<int>(r / _PEdata.dx);
+            if (r_idx >= num_ranges) r_idx = num_ranges - 1;
+
+            // 填值
+            coverage_map[y][x] = polar_data[az_idx][r_idx];
+            std::cout << x / 1000.0 << " \t\t " << coverage_map[y][x];
+        }
+        cout << endl;
+    }
+
+    return coverage_map;
+}
 //std::vector<InterferenceResult> EMC_Engine::EMC_computing(const Fleet& fleet) {//返回受扰计算结果数组
 //
 //}

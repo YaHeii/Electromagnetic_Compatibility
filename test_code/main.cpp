@@ -164,7 +164,7 @@ int main() {
     PEModel solver(freq, dx, dz, nz);
 
     // 初始化高斯波束：天线高度 25m
-    solver.initializeGaussian(25.0, 2.0, 0.0);
+    solver.PEmodel_computing2D(25.0, 2.0, 0.0);
 
     // 5. 开始步进仿真
     std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;

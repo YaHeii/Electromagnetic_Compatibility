@@ -12,6 +12,6 @@ int main(int argc, char *argv[])
     string Model = "PEModel";
     PE_data PEdata;
     Propagation_Engine PE(Model);
-    PE.initializePEmodel(PEdata, 25);
+    PE.PEmodel_computing2D(PEdata, 25);
 
 }

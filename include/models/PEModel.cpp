@@ -1,4 +1,4 @@
-#include "PEModel.h"
+ï»¿#include "PEModel.h"
 #include <random>
 #include <chrono>
 #ifndef M_PI
@@ -6,23 +6,23 @@
 #endif
 
 void JONSWAPSurfaceGenerator::generateSpectrumComponents() {
-    int m_freq_bins = 50; // ÆµÂÊ»®·ÖÊı
-    int n_angle_bins = 20; // ½Ç¶È»®·ÖÊı
-	_components.reserve(m_freq_bins * n_angle_bins);// Ô¤·ÖÅä¿Õ¼ä
+    int m_freq_bins = 50; // é¢‘ç‡åˆ’åˆ†æ•°
+    int n_angle_bins = 20; // è§’åº¦åˆ’åˆ†æ•°
+	_components.reserve(m_freq_bins * n_angle_bins);// é¢„åˆ†é…ç©ºé—´
     std::vector<double> rand_vals(m_freq_bins * n_angle_bins);
     std::vector<double> phase_vals(m_freq_bins * n_angle_bins);
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine gen(seed);
-    // ¼ÆËã²¨·åÆµÂÊ omega_m 
-    // U 10 Îªº£Æ½ÃæÒÔÉÏ 10 Ã×´¦µÄ·çËÙ¡£
-    // X_tildeÎªÎŞÁ¿¸ÙÇøÓò³¤¶È
+    // è®¡ç®—æ³¢å³°é¢‘ç‡ omega_m 
+    // U 10 ä¸ºæµ·å¹³é¢ä»¥ä¸Š 10 ç±³å¤„çš„é£é€Ÿã€‚
+    // X_tildeä¸ºæ— é‡çº²åŒºåŸŸé•¿åº¦
     double g = GRAVITY;
     double X_tilde = g * _wind_fetch_X / std::pow(_wind_speed_U10, 2);
     double omega_m = 22.0 * (g / _wind_speed_U10) * std::pow(X_tilde, -0.33);
-    // delta_omegaÎª·ÖÆµ¼ä¸ô
-    // omega_L ÎªÆµÂÊÏÂÏŞ
-    // omega_H ÎªÆµÂÊÉÏÏŞ
-	// ÆµÂÊ·¶Î§Í¨³£È¡Îª omega_m µÄ 0.5 µ½ 3 ±¶(ÊÇ·ñÕıÈ·£¿Ó°ÏìÈçºÎ£¿)
+    // delta_omegaä¸ºåˆ†é¢‘é—´éš”
+    // omega_L ä¸ºé¢‘ç‡ä¸‹é™
+    // omega_H ä¸ºé¢‘ç‡ä¸Šé™
+	// é¢‘ç‡èŒƒå›´é€šå¸¸å–ä¸º omega_m çš„ 0.5 åˆ° 3 å€(æ˜¯å¦æ­£ç¡®ï¼Ÿå½±å“å¦‚ä½•ï¼Ÿ)
     double omega_L = 0.5 * omega_m; 
     double omega_H = 3.0 * omega_m; 
     double delta_omega = (omega_H - omega_L) / m_freq_bins;
@@ -30,21 +30,21 @@ void JONSWAPSurfaceGenerator::generateSpectrumComponents() {
     double theta_min = -M_PI / 2.0;
     double theta_max = M_PI / 2.0;
     double delta_theta = (theta_max - theta_min) / n_angle_bins;
-    // Ëæ»úÊıÉú³ÉÆ÷
-    // default_random_engine Ä¬ÈÏËæ»úÊı
-    // uniform_real_distribution ¾ùÔÈ·Ö²¼¸¡µãÊı
+    // éšæœºæ•°ç”Ÿæˆå™¨
+    // default_random_engine é»˜è®¤éšæœºæ•°
+    // uniform_real_distribution å‡åŒ€åˆ†å¸ƒæµ®ç‚¹æ•°
     std::uniform_real_distribution<double> dist_phase(0.0, 2.0 * M_PI);
     std::uniform_real_distribution<double> dist_rand(0.0, 1.0);
 
     for (int i = 1; i <= m_freq_bins; ++i) {
-        // µü´úÖĞĞÄÆµÂÊ omega_i
+        // è¿­ä»£ä¸­å¿ƒé¢‘ç‡ omega_i
         double omega_i = omega_L + (i - 0.5) * delta_omega;
 
-        // JONSWAP S(omega) ¼ÆËã 
-        // ¦Ò Îª²¨ĞÎÒò×Ó
-        // ¦Á_S Îª²¨ÄÜÁ¿Òò×Ó
-        // gamma_peakÎª·åÖµÉıÁ¦Òò×Ó
-        // S_omegaÎªÆ×º¯Êı
+        // JONSWAP S(omega) è®¡ç®— 
+        // Ïƒ ä¸ºæ³¢å½¢å› å­
+        // Î±_S ä¸ºæ³¢èƒ½é‡å› å­
+        // gamma_peakä¸ºå³°å€¼å‡åŠ›å› å­
+        // S_omegaä¸ºè°±å‡½æ•°
         double sigma = (omega_i <= omega_m) ? 0.07 : 0.09;
         double alpha_s = 0.076 * std::pow(X_tilde, -0.22);
         double exponent1 = -1.25 * std::pow(omega_m / omega_i, 4);
@@ -56,22 +56,22 @@ void JONSWAPSurfaceGenerator::generateSpectrumComponents() {
         for (int j = 1; j <= n_angle_bins; ++j) {
             double theta_j = theta_min + (j - 0.5) * delta_theta;
 
-            // s_paramÎª·½Ïò·Ö²¼µÄ¼¯ÖĞ²ÎÊı
-            // G_theta Îª ·½ÏòÀ©Æµº¯Êı
-            // G0ÎªG_theta ÏµÊı
+            // s_paramä¸ºæ–¹å‘åˆ†å¸ƒçš„é›†ä¸­å‚æ•°
+            // G_theta ä¸º æ–¹å‘æ‰©é¢‘å‡½æ•°
+            // G0ä¸ºG_theta ç³»æ•°
             double s_param = (omega_i <= omega_m) ? 10.0 * std::pow(omega_i / omega_m, 5) : 10.0 * std::pow(omega_i / omega_m, -2.5); 
             double G0 = 1.0 / M_PI * std::pow(2, 2 * s_param - 1) * std::pow(std::tgamma(s_param + 1),2) / std::tgamma(2 * s_param + 1);
             double G_theta = G0 * std::pow(std::cos(theta_j / 2.0), 2.0 * s_param);
 
-            // S_totalÎªÈıÎ¬Ëæ»ú²¨µÄ·½ÏòÆ×
+            // S_totalä¸ºä¸‰ç»´éšæœºæ³¢çš„æ–¹å‘è°±
             double S_total = S_omega * G_theta;
 
             _WaveComponent wc;
             wc.amplitude = std::sqrt(2.0 * S_total * delta_omega * delta_theta); // [cite: 781]
-            // ¼ÓÈëËæ»úÈÅ¶¯µ½ÆµÂÊ
+            // åŠ å…¥éšæœºæ‰°åŠ¨åˆ°é¢‘ç‡
             double rand_val = dist_rand(gen);
             wc.omega = omega_i + (j - 1 + rand_val) * delta_omega / n_angle_bins;
-            wc.k = wc.omega * wc.omega / g; // ÉîË®½üËÆ k = w^2/g
+            wc.k = wc.omega * wc.omega / g; // æ·±æ°´è¿‘ä¼¼ k = w^2/g
             wc.angle = theta_j;
             wc.phase = dist_phase(gen);
             wc.kx = wc.k * std::cos(wc.angle);
@@ -81,10 +81,10 @@ void JONSWAPSurfaceGenerator::generateSpectrumComponents() {
     }
 }
 
-//ĞÔÄÜÆ¿¾±£¬Ê¹ÓÃopenMpÓÅ»¯
+//æ€§èƒ½ç“¶é¢ˆï¼Œä½¿ç”¨openMpä¼˜åŒ–
 double JONSWAPSurfaceGenerator::getSurfaceHeight(double x, double y, double t) {
     double eta = 0.0;
-    // ¼ÙÉè´«²¥·½ÏòÑØ x Öá£¬Vx=Vy=0 (¾²Ö¹º£Ãæ¿ìÕÕ)
+    // å‡è®¾ä¼ æ’­æ–¹å‘æ²¿ x è½´ï¼ŒVx=Vy=0 (é™æ­¢æµ·é¢å¿«ç…§)
 #pragma omp parallel for reduction(+:eta)
     for (int i = 0; i < _components.size(); ++i) {
         const auto& wc = _components[i];
@@ -96,14 +96,14 @@ double JONSWAPSurfaceGenerator::getSurfaceHeight(double x, double y, double t) {
 
 void PEModel::setupAbsorber() {
     _absorber.resize(_nz);
-    int layer_thickness = _nz / 8; // ¶¥²¿ 1/4 ×÷ÎªÎüÊÕ²ã
+    int layer_thickness = _nz / 8; // é¡¶éƒ¨ 1/4 ä½œä¸ºå¸æ”¶å±‚
 
     for (int i = 0; i < _nz; ++i) {
         if (i < _nz - layer_thickness) {
             _absorber[i] = 1.0;
         }
         else {
-            // Ê¹ÓÃÆ½»¬µÄººÄş´° (Hanning Window) Ë¥¼õÖÁ 0
+            // ä½¿ç”¨å¹³æ»‘çš„æ±‰å®çª— (Hanning Window) è¡°å‡è‡³ 0
             double ratio = (double)(i - (_nz - layer_thickness)) / layer_thickness;
             _absorber[i] = 0.5 * (1.0 + cos(M_PI * ratio));
         }
@@ -111,30 +111,30 @@ void PEModel::setupAbsorber() {
 }
 
 void PEModel::precomputeDiffraction() {
-    // ²ÉÓÃ¿í½ÇÅ×ÎïÏß·½³Ì (Wide-Angle PE) µÄÑÜÉäÏî
-    // ÑÜÉä²¿·Ö½üËÆ: sqrt(k^2 - p^2) - k
+    // é‡‡ç”¨å®½è§’æŠ›ç‰©çº¿æ–¹ç¨‹ (Wide-Angle PE) çš„è¡å°„é¡¹
+    // è¡å°„éƒ¨åˆ†è¿‘ä¼¼: sqrt(k^2 - p^2) - k
     // p = kz
     _diffraction_term.resize(_fft_size);
     double dk_z = 2.0 * M_PI / (_fft_size * _dz);
 #pragma omp parallel for
     for (int i = 0; i < _fft_size; ++i) {
         double kz;
-        // FFTW ÆµÂÊÅÅĞò: [0, 1, ... N/2, -N/2, ... -1]
+        // FFTW é¢‘ç‡æ’åº: [0, 1, ... N/2, -N/2, ... -1]
         if (i <= _fft_size / 2) kz = i * dk_z;
         else kz = (i - _fft_size) * dk_z;
         double p2 = kz * kz;
         double k2 = _k0 * _k0;
-        // Õ­½ÇÑÜÉäÒò×Ó exp(-i * kz^2 * dx / 2k) [cite: 669]
-        // ¿í½Ç½üËÆ (Feit-Fleck) ´«²¥Òò×Ó [cite: 276]
+        // çª„è§’è¡å°„å› å­ exp(-i * kz^2 * dx / 2k) [cite: 669]
+        // å®½è§’è¿‘ä¼¼ (Feit-Fleck) ä¼ æ’­å› å­ [cite: 276]
         // sqrt(k^2 - p^2) - k
-        // ×¢Òâ£ºµ± p^2 > k^2 Ê±£¨Ù¿ÊÅ²¨£©£¬¸ùºÅÄÚÎª¸º£¬±äÎª´¿ĞéÊıË¥¼õ
+        // æ³¨æ„ï¼šå½“ p^2 > k^2 æ—¶ï¼ˆå€é€æ³¢ï¼‰ï¼Œæ ¹å·å†…ä¸ºè´Ÿï¼Œå˜ä¸ºçº¯è™šæ•°è¡°å‡
         Complex propagator;
         if (k2 >= p2) {
             double sqrt_val = std::sqrt(k2 - p2);
             propagator = std::exp(J * _dx * (sqrt_val - _k0));
         }
         else {
-            // Ù¿ÊÅ²¨´¦Àí£ºÑ¸ËÙË¥¼õ
+            // å€é€æ³¢å¤„ç†ï¼šè¿…é€Ÿè¡°å‡
             double sqrt_val = std::sqrt(p2 - k2);
             propagator = std::exp(-_dx * (sqrt_val)-J * _dx * _k0);
         }
@@ -143,11 +143,11 @@ void PEModel::precomputeDiffraction() {
 }
 
 double PEModel::calculateRoughnessRho(double wind_speed, double grazing_angle_rad) {
-    // ¾ù·½¸ù²¨¸ß
+    // å‡æ–¹æ ¹æ³¢é«˜
     double h_rms = 0.0051 * pow(wind_speed, 2);
-    // ÈğÀû´Ö²Ú¶È²ÎÊı
+    // ç‘åˆ©ç²—ç³™åº¦å‚æ•°
     double gamma = 2.0 * _k0 * h_rms * sin(grazing_angle_rad);
-    // Miller-Brown ĞŞÕıÒò×Ó
+    // Miller-Brown ä¿®æ­£å› å­
     // rho = exp(-0.5 * gamma^2) * I0(0.5 * gamma^2)
     double g2_half = 0.5 * gamma * gamma;
     double I0 = std::cyl_bessel_i(0.0, g2_half);
@@ -159,123 +159,123 @@ Complex PEModel::calculateFresnel(double grazing_angle_rad, Complex epsilon_sea)
     double sin_theta = sin(grazing_angle_rad);
     double cos_theta = cos(grazing_angle_rad);
 
-    // Ë®Æ½¼«»¯¹«Ê½
+    // æ°´å¹³æåŒ–å…¬å¼
     Complex numerator = sin_theta - std::sqrt(epsilon_sea - pow(cos_theta, 2));
     Complex denominator = sin_theta + std::sqrt(epsilon_sea - pow(cos_theta, 2));
     return numerator / denominator;
 }
 
 void PEModel::step_Miller_Brown(double current_range, double wind_speed, const std::vector<double>& n_profile) {
-    // Ê¹ÓÃ Eigen Map Ö±½Ó²Ù×÷ FFTW µÄÄÚ´æ£¬´úÂë¸ü¼ò½àÇÒÀûÓÚ±àÒëÆ÷ÓÅ»¯
+    // ä½¿ç”¨ Eigen Map ç›´æ¥æ“ä½œ FFTW çš„å†…å­˜ï¼Œä»£ç æ›´ç®€æ´ä¸”åˆ©äºç¼–è¯‘å™¨ä¼˜åŒ–
     using Eigen::VectorXcd;
     using Eigen::Map;
 
-    // Ó³Éä FFTW ÊäÈë/Êä³ö»º³åÇøÎª Eigen ÏòÁ¿
+    // æ˜ å°„ FFTW è¾“å…¥/è¾“å‡ºç¼“å†²åŒºä¸º Eigen å‘é‡
     Map<VectorXcd> u_space(reinterpret_cast<Complex*>(_in_ptr), _fft_size);
     Map<VectorXcd> u_kspace(reinterpret_cast<Complex*>(_out_ptr), _fft_size);
-    // --- ²½Öè A: ¿Õ¼äÓò´¦Àí (ÕÛÉä + ÎüÊÕ + ±ß½ç¹¹½¨) ---
+    // --- æ­¥éª¤ A: ç©ºé—´åŸŸå¤„ç† (æŠ˜å°„ + å¸æ”¶ + è¾¹ç•Œæ„å»º) ---
 
-    // 1. ¹ÀËãÂÓÉä½Ç (¼òµ¥µÄ¼¸ºÎ½üËÆ£¬Êµ¼ÊÓ¦²Î¿¼ Paper 2 [cite: 175] Ê¹ÓÃÆ×¹À¼Æ)
-    double grazing_approx = atan(25.0 / (current_range + 1000.0)); // ¼ÙÉèÌìÏß¸ß25m
+    // 1. ä¼°ç®—æ å°„è§’ (ç®€å•çš„å‡ ä½•è¿‘ä¼¼ï¼Œå®é™…åº”å‚è€ƒ Paper 2 [cite: 175] ä½¿ç”¨è°±ä¼°è®¡)
+    double grazing_approx = atan(25.0 / (current_range + 1000.0)); // å‡è®¾å¤©çº¿é«˜25m
 
-    // 2. ¼ÆËãµ×²¿±ß½ç²ÎÊı
-    double rho = calculateRoughnessRho(wind_speed, grazing_approx); // ´Ö²Ú¶È 
-    Complex eps_sea(80.0, -4.0 * M_PI * 4.0 / (_k0 * 299792458.0)); // º£Ë®½éµç³£ÊıÊ¾Àı
-    Complex Gamma_f = calculateFresnel(grazing_approx, eps_sea);    // ·ÆÄù¶û [cite: 96]
+    // 2. è®¡ç®—åº•éƒ¨è¾¹ç•Œå‚æ•°
+    double rho = calculateRoughnessRho(wind_speed, grazing_approx); // ç²—ç³™åº¦ 
+    Complex eps_sea(80.0, -4.0 * M_PI * 4.0 / (_k0 * 299792458.0)); // æµ·æ°´ä»‹ç”µå¸¸æ•°ç¤ºä¾‹
+    Complex Gamma_f = calculateFresnel(grazing_approx, eps_sea);    // è²æ¶…å°” [cite: 96]
 
-    // Paper 2 Eq. (93): ÓĞĞ§·´ÉäÏµÊı Gamma_eff = rho * Gamma_Fresnel
+    // Paper 2 Eq. (93): æœ‰æ•ˆåå°„ç³»æ•° Gamma_eff = rho * Gamma_Fresnel
     Complex Gamma_eff = rho * Gamma_f;
 
-    // 3. Ìî³äÎïÀí¿Õ¼ä (0 ~ nz-1)
+    // 3. å¡«å……ç‰©ç†ç©ºé—´ (0 ~ nz-1)
 #pragma omp parallel for
     for (int i = 0; i < _nz; ++i) {
         double n = n_profile[i];
-        // ÂÛÎÄ¹«Ê½ (33) ÕÛÉäÏî: sqrt(n^2 - sin^2(beta)) - 1
-        // ÔÚ Miller-Brown (Æ½Ì¹¼ÙÉè) ÏÂ£¬beta = 0£¬ÍË»¯Îª n - 1
+        // è®ºæ–‡å…¬å¼ (33) æŠ˜å°„é¡¹: sqrt(n^2 - sin^2(beta)) - 1
+        // åœ¨ Miller-Brown (å¹³å¦å‡è®¾) ä¸‹ï¼Œbeta = 0ï¼Œé€€åŒ–ä¸º n - 1
         Complex refraction = std::exp(J * _k0 * (n - 1.0) * _dx);
-        // Ö±½Ó²Ù×÷ Eigen ¶ÔÏó¶ÔÓ¦µÄÄÚ´æ
+        // ç›´æ¥æ“ä½œ Eigen å¯¹è±¡å¯¹åº”çš„å†…å­˜
         u_space[i] *= refraction * _absorber[i];
     }
 
-    // 4. [¹Ø¼ü] ¹¹½¨¾µÏñ¿Õ¼ä (nz ~ 2*nz-1) ÊµÏÖº£Ãæ±ß½ç
-    // Âß¼­: u(-z) = Gamma * u(z)
-    // ÔÚ FFTW Êı×éÖĞ£¬ºó°ë²¿·Ö¶ÔÓ¦¸º×ø±ê£¨ÓÉÓÚÖÜÆÚĞÔ£©
+    // 4. [å…³é”®] æ„å»ºé•œåƒç©ºé—´ (nz ~ 2*nz-1) å®ç°æµ·é¢è¾¹ç•Œ
+    // é€»è¾‘: u(-z) = Gamma * u(z)
+    // åœ¨ FFTW æ•°ç»„ä¸­ï¼ŒååŠéƒ¨åˆ†å¯¹åº”è´Ÿåæ ‡ï¼ˆç”±äºå‘¨æœŸæ€§ï¼‰
 #pragma omp parallel for
     for (int i = 1; i < _nz; ++i) {
-        // ¾µÏñµã¸³Öµ
+        // é•œåƒç‚¹èµ‹å€¼
         u_space[_fft_size - i] = Gamma_eff * u_space[i];
     }
     u_space[0] *= (1.0 + Gamma_eff);
 
-    // --- ²½Öè B: ±ä»»µ½²¨ÊıÓò (FFT) ---
+    // --- æ­¥éª¤ B: å˜æ¢åˆ°æ³¢æ•°åŸŸ (FFT) ---
     fftw_execute(_plan_fwd);
 
-    // --- ²½Öè C: ²¨ÊıÓòÑÜÉä (Eigen Ğ´·¨) ---
-        // ÕâÖÖĞ´·¨»á×Ô¶¯µ÷ÓÃÏòÁ¿»¯Ö¸Áî (SIMD)
+    // --- æ­¥éª¤ C: æ³¢æ•°åŸŸè¡å°„ (Eigen å†™æ³•) ---
+        // è¿™ç§å†™æ³•ä¼šè‡ªåŠ¨è°ƒç”¨å‘é‡åŒ–æŒ‡ä»¤ (SIMD)
         // Map<VectorXcd> diff_vec(_diffraction_term.data(), _fft_size);
-        // u_kspace.cwiseProduct(diff_vec); // ÕâÑùĞ´Èç¹ûÓĞ±ğÃûÎÊÌâĞèĞ¡ĞÄ
+        // u_kspace.cwiseProduct(diff_vec); // è¿™æ ·å†™å¦‚æœæœ‰åˆ«åé—®é¢˜éœ€å°å¿ƒ
 
-        // °²È«ÇÒ²¢ĞĞµÄĞ´·¨£º
+        // å®‰å…¨ä¸”å¹¶è¡Œçš„å†™æ³•ï¼š
 #pragma omp parallel for
     for (int i = 0; i < _fft_size; ++i) {
         u_kspace[i] *= _diffraction_term[i];
     }
 
 
-    // --- ²½Öè D: ±ä»Ø¿Õ¼äÓò (IFFT) ---
+    // --- æ­¥éª¤ D: å˜å›ç©ºé—´åŸŸ (IFFT) ---
     fftw_execute(_plan_bwd);
 
-    // --- ²½Öè E: ¹éÒ»»¯ ---
+    // --- æ­¥éª¤ E: å½’ä¸€åŒ– ---
     u_space /= (double)_fft_size;
 }
 
 void PEModel::step_PLST(double current_range, const std::vector<double>& n_profile, JONSWAPSurfaceGenerator& surface_gen, double time_sec) {
-    // Ê¹ÓÃ Eigen Map Ö±½Ó²Ù×÷ FFTW µÄÄÚ´æ
+    // ä½¿ç”¨ Eigen Map ç›´æ¥æ“ä½œ FFTW çš„å†…å­˜
     using Eigen::VectorXcd;
     using Eigen::Map;
 
-    // 1. »ñÈ¡µØĞÎ¼¸ºÎĞÅÏ¢ (¼ÆËãĞ±ÂÊ beta)
-    // ÂÛÎÄ·½·¨£º·Ö¶ÎÏßĞÔÎ»ÒÆ±ä»» [cite: 265]
-    // ĞèÒª¼ÆËãµ±Ç°Î»ÖÃ x ºÍÏÂÒ»²½ x+dx Ö®¼äµÄ¸ß²îÀ´È·¶¨Ğ±ÂÊ
-    // ×¢Òâ£ºÕâÀïµÄ y ÉèÎª 0£¬¼ÙÉèÎÒÃÇÔÚ x-z ÆÊÃæ¼ÆËã
+    // 1. è·å–åœ°å½¢å‡ ä½•ä¿¡æ¯ (è®¡ç®—æ–œç‡ beta)
+    // è®ºæ–‡æ–¹æ³•ï¼šåˆ†æ®µçº¿æ€§ä½ç§»å˜æ¢ [cite: 265]
+    // éœ€è¦è®¡ç®—å½“å‰ä½ç½® x å’Œä¸‹ä¸€æ­¥ x+dx ä¹‹é—´çš„é«˜å·®æ¥ç¡®å®šæ–œç‡
+    // æ³¨æ„ï¼šè¿™é‡Œçš„ y è®¾ä¸º 0ï¼Œå‡è®¾æˆ‘ä»¬åœ¨ x-z å‰–é¢è®¡ç®—
     double z_curr = surface_gen.getSurfaceHeight(current_range, 0.0, time_sec);
     double z_next = surface_gen.getSurfaceHeight(current_range + _dx, 0.0, time_sec);
 
     // T' = tan(beta) = dz/dx
     double slope = (z_next - z_curr) / _dx;
-    double beta = std::atan(slope); // µØĞÎÇã½Ç
+    double beta = std::atan(slope); // åœ°å½¢å€¾è§’
     double sin_beta = std::sin(beta);
     double cos_beta = std::cos(beta);
     double sin_sq_beta = sin_beta * sin_beta;
     double cos_sq_beta = cos_beta * cos_beta;
 
-    // Ó³Éä FFTW ÄÚ´æ
+    // æ˜ å°„ FFTW å†…å­˜
     Map<VectorXcd> u_space(reinterpret_cast<Complex*>(_in_ptr), _fft_size);
     Map<VectorXcd> u_kspace(reinterpret_cast<Complex*>(_out_ptr), _fft_size);
 
-    // --- ²½Öè A: ¿Õ¼äÓò´¦Àí (ĞŞÕıºóµÄÕÛÉä + ĞŞÕıºóµÄ±ß½ç) ---
+    // --- æ­¥éª¤ A: ç©ºé—´åŸŸå¤„ç† (ä¿®æ­£åçš„æŠ˜å°„ + ä¿®æ­£åçš„è¾¹ç•Œ) ---
 
-    // 2. ĞŞÕı±ß½çÌõ¼ş (PLST Modified Impedance/Reflection)
-    // ¹ÀËã»ù´¡ÂÓÉä½Ç (¼¸ºÎ½üËÆ)
-    double grazing_geom = std::atan(25.0 / (current_range + 1000.0)); // ¼ÙÉè¸ß¶È25m
+    // 2. ä¿®æ­£è¾¹ç•Œæ¡ä»¶ (PLST Modified Impedance/Reflection)
+    // ä¼°ç®—åŸºç¡€æ å°„è§’ (å‡ ä½•è¿‘ä¼¼)
+    double grazing_geom = std::atan(25.0 / (current_range + 1000.0)); // å‡è®¾é«˜åº¦25m
 
-    // [¹Ø¼ü] ¾Ö²¿ÂÓÉä½ÇĞŞÕı
-    // ÂÛÎÄÖ¸³ö Leontovich ±ß½çÌõ¼şËæ beta ¸Ä±ä 
-    // ¹¤³ÌÊµÏÖ£º¾Ö²¿ÈëÉä½Ç = ¼¸ºÎÂÓÉä½Ç + µØĞÎÇã½Ç
+    // [å…³é”®] å±€éƒ¨æ å°„è§’ä¿®æ­£
+    // è®ºæ–‡æŒ‡å‡º Leontovich è¾¹ç•Œæ¡ä»¶éš beta æ”¹å˜ 
+    // å·¥ç¨‹å®ç°ï¼šå±€éƒ¨å…¥å°„è§’ = å‡ ä½•æ å°„è§’ + åœ°å½¢å€¾è§’
     double grazing_local = grazing_geom + beta;
 
-    // ·ÀÖ¹ÂÓÉä½Ç¹ıĞ¡»ò·´Ïò (±³ÆÂÕÚµ²)
+    // é˜²æ­¢æ å°„è§’è¿‡å°æˆ–åå‘ (èƒŒå¡é®æŒ¡)
     if (grazing_local < 1e-6) grazing_local = 1e-6;
 
-    // ¼ÆËãĞŞÕıºóµÄÓĞĞ§·´ÉäÏµÊı
+    // è®¡ç®—ä¿®æ­£åçš„æœ‰æ•ˆåå°„ç³»æ•°
     Complex eps_sea(80.0, -4.0 * M_PI * 4.0 / (_k0 * 299792458.0));
     Complex Gamma_PLST = calculateFresnel(grazing_local, eps_sea);
-    // ×¢Òâ£ºPLST ÒÑ¾­Í¨¹ıÍø¸ñ±äĞÎ´¦ÀíÁË´Ö²Ú¶È´øÀ´µÄÏàÎ»Æ«ÒÆ£¬
-    // ËùÒÔÕâÀïÍ¨³£²»ÔÙ³Ë Miller-Brown µÄ rho£¬³ı·ÇÄ£ÄâÑÇÍø¸ñ³ß¶ÈµÄÎ¢´Ö²Ú¶È¡£
-    // Èç¹û×ñÑ­´¿ PLST ¼¸ºÎ¹âÑ§Âß¼­£¬ÕâÀï½öÊ¹ÓÃ Fresnel¡£
+    // æ³¨æ„ï¼šPLST å·²ç»é€šè¿‡ç½‘æ ¼å˜å½¢å¤„ç†äº†ç²—ç³™åº¦å¸¦æ¥çš„ç›¸ä½åç§»ï¼Œ
+    // æ‰€ä»¥è¿™é‡Œé€šå¸¸ä¸å†ä¹˜ Miller-Brown çš„ rhoï¼Œé™¤éæ¨¡æ‹Ÿäºšç½‘æ ¼å°ºåº¦çš„å¾®ç²—ç³™åº¦ã€‚
+    // å¦‚æœéµå¾ªçº¯ PLST å‡ ä½•å…‰å­¦é€»è¾‘ï¼Œè¿™é‡Œä»…ä½¿ç”¨ Fresnelã€‚
 
-    // 3. Ó¦ÓÃ PLST ĞŞÕıºóµÄÕÛÉäÒò×Ó
-    // ¹«Ê½ (33) ÕÛÉä²¿·Ö: exp(i * k * dx * (sqrt(n^2 - sin^2(beta)) - 1)) 
+    // 3. åº”ç”¨ PLST ä¿®æ­£åçš„æŠ˜å°„å› å­
+    // å…¬å¼ (33) æŠ˜å°„éƒ¨åˆ†: exp(i * k * dx * (sqrt(n^2 - sin^2(beta)) - 1)) 
 #pragma omp parallel for
     for (int i = 0; i < _nz; ++i) {
         double n = n_profile[i];
@@ -284,32 +284,32 @@ void PEModel::step_PLST(double current_range, const std::vector<double>& n_profi
         Complex refraction_term;
         double val = n2 - sin_sq_beta;
 
-        // ´¦Àí¸ùºÅÄÚÕı¸º (ËäÈ»´óÆøÖĞ n~1, beta Í¨³£ºÜĞ¡£¬val > 0)
+        // å¤„ç†æ ¹å·å†…æ­£è´Ÿ (è™½ç„¶å¤§æ°”ä¸­ n~1, beta é€šå¸¸å¾ˆå°ï¼Œval > 0)
         if (val >= 0) {
-            // ±ê×¼´«²¥ÏàÎ»
+            // æ ‡å‡†ä¼ æ’­ç›¸ä½
             refraction_term = std::exp(J * _k0 * _dx * (std::sqrt(val) - 1.0));
         }
         else {
-            // Ù¿ÊÅ²¨Ë¥¼õ (ÀíÂÛÉÏ²»Ó¦·¢ÉúÔÚ´óÆø²¨µ¼¼ÆËãÖĞ)
+            // å€é€æ³¢è¡°å‡ (ç†è®ºä¸Šä¸åº”å‘ç”Ÿåœ¨å¤§æ°”æ³¢å¯¼è®¡ç®—ä¸­)
             refraction_term = std::exp(-_k0 * _dx * std::sqrt(-val) - J * _k0 * _dx);
         }
 
         u_space[i] *= refraction_term * _absorber[i];
     }
 
-    // 4. Ó¦ÓÃ¾µÏñ·¨ (Ê¹ÓÃĞŞÕıºóµÄ·´ÉäÏµÊı)
+    // 4. åº”ç”¨é•œåƒæ³• (ä½¿ç”¨ä¿®æ­£åçš„åå°„ç³»æ•°)
 #pragma omp parallel for
     for (int i = 1; i < _nz; ++i) {
         u_space[_fft_size - i] = Gamma_PLST * u_space[i];
     }
     u_space[0] *= (1.0 + Gamma_PLST);
 
-    // --- ²½Öè B: ±ä»»µ½²¨ÊıÓò (FFT) ---
+    // --- æ­¥éª¤ B: å˜æ¢åˆ°æ³¢æ•°åŸŸ (FFT) ---
     fftw_execute(_plan_fwd);
 
-    // --- ²½Öè C: ²¨ÊıÓò´¦Àí (PLST ĞŞÕıºóµÄÑÜÉä) ---
-    // ¹«Ê½ (33) ÑÜÉä²¿·Ö: exp(i * dx * (sqrt(k^2 * cos^2(beta) - p^2) - k)) 
-    // ÕâÒ»²½±ØĞë¶¯Ì¬¼ÆËã£¬²»ÄÜÊ¹ÓÃÔ¤¼ÆËãµÄ _diffraction_term
+    // --- æ­¥éª¤ C: æ³¢æ•°åŸŸå¤„ç† (PLST ä¿®æ­£åçš„è¡å°„) ---
+    // å…¬å¼ (33) è¡å°„éƒ¨åˆ†: exp(i * dx * (sqrt(k^2 * cos^2(beta) - p^2) - k)) 
+    // è¿™ä¸€æ­¥å¿…é¡»åŠ¨æ€è®¡ç®—ï¼Œä¸èƒ½ä½¿ç”¨é¢„è®¡ç®—çš„ _diffraction_term
 
     double dk_z = 2.0 * M_PI / (_fft_size * _dz);
     double k_eff_sq = _k0 * _k0 * cos_sq_beta; // k^2 * cos^2(beta)
@@ -323,16 +323,16 @@ void PEModel::step_PLST(double current_range, const std::vector<double>& n_profi
         double p2 = kz * kz;
         Complex diff_prop;
 
-        // ¿í½Ç´«²¥Ëã×Ó¼ÆËã
+        // å®½è§’ä¼ æ’­ç®—å­è®¡ç®—
         double val = k_eff_sq - p2;
 
         if (val >= 0) {
-            // ´«²¥²¨: sqrt(k_eff^2 - p^2) - k0
-            // ×¢Òâ£º¼õÈ¥µÄÊÇ²Î¿¼²¨Êı k0£¬ÒòÎª SSFT µÄ split Ëã×Ó¶¨Òå
+            // ä¼ æ’­æ³¢: sqrt(k_eff^2 - p^2) - k0
+            // æ³¨æ„ï¼šå‡å»çš„æ˜¯å‚è€ƒæ³¢æ•° k0ï¼Œå› ä¸º SSFT çš„ split ç®—å­å®šä¹‰
             diff_prop = std::exp(J * _dx * (std::sqrt(val) - _k0));
         }
         else {
-            // Ù¿ÊÅ²¨: i * (i * sqrt(p^2 - k_eff^2)) - i*k0
+            // å€é€æ³¢: i * (i * sqrt(p^2 - k_eff^2)) - i*k0
             // = -sqrt(...) - i*k0
             diff_prop = std::exp(-_dx * std::sqrt(-val) - J * _dx * _k0);
         }
@@ -340,36 +340,129 @@ void PEModel::step_PLST(double current_range, const std::vector<double>& n_profi
         u_kspace[i] *= diff_prop;
     }
 
-    // --- ²½Öè D: ±ä»Ø¿Õ¼äÓò (IFFT) ---
+    // --- æ­¥éª¤ D: å˜å›ç©ºé—´åŸŸ (IFFT) ---
     fftw_execute(_plan_bwd);
 
-    // --- ²½Öè E: ¹éÒ»»¯ ---
+    // --- æ­¥éª¤ E: å½’ä¸€åŒ– ---
     u_space /= (double)_fft_size;
 }
 
+//ä¸ºäº†é¿å…é«˜æ€§èƒ½è®¡ç®—ä¸­å‡ºç°é”™è¯¯ï¼Œæ‰€ä»¥é€‰æ‹©å¤åˆ¶ç²˜è´´ï¼ŒåŠ å…¥æ–¹ä½è§’å½±å“
+void PEModel::step_PLST(double current_range, double azimuth_rad, const std::vector<double>& n_profile, JONSWAPSurfaceGenerator& surface_gen, double time_sec) {
+    using Eigen::VectorXcd;
+    using Eigen::Map;
+
+    double cos_az = std::cos(azimuth_rad);
+    double sin_az = std::sin(azimuth_rad);
+
+    double x_curr = current_range * cos_az;
+    double y_curr = current_range * sin_az;
+
+    double x_next = (current_range + _dx) * cos_az;
+    double y_next = (current_range + _dx) * sin_az;
+
+
+    double z_curr = surface_gen.getSurfaceHeight(x_curr, y_curr, time_sec);
+    double z_next = surface_gen.getSurfaceHeight(x_next, y_next, time_sec);
+
+    double slope = (z_next - z_curr) / _dx;
+    double beta = std::atan(slope);
+    double sin_beta = std::sin(beta);
+    double cos_beta = std::cos(beta);
+    double sin_sq_beta = sin_beta * sin_beta;
+    double cos_sq_beta = cos_beta * cos_beta;
+
+    Map<VectorXcd> u_space(reinterpret_cast<Complex*>(_in_ptr), _fft_size);
+    Map<VectorXcd> u_kspace(reinterpret_cast<Complex*>(_out_ptr), _fft_size);
+
+    double grazing_geom = std::atan(25.0 / (current_range + 1000.0)); // å‡è®¾é«˜åº¦25m
+
+    double grazing_local = grazing_geom + beta;
+
+    if (grazing_local < 1e-6) grazing_local = 1e-6;
+
+    Complex eps_sea(80.0, -4.0 * M_PI * 4.0 / (_k0 * 299792458.0));
+    Complex Gamma_PLST = calculateFresnel(grazing_local, eps_sea);
+
+#pragma omp parallel for
+    for (int i = 0; i < _nz; ++i) {
+        double n = n_profile[i];
+        double n2 = n * n;
+
+        Complex refraction_term;
+        double val = n2 - sin_sq_beta;
+
+        if (val >= 0) {
+            refraction_term = std::exp(J * _k0 * _dx * (std::sqrt(val) - 1.0));
+        }
+        else {
+            refraction_term = std::exp(-_k0 * _dx * std::sqrt(-val) - J * _k0 * _dx);
+        }
+
+        u_space[i] *= refraction_term * _absorber[i];
+    }
+
+#pragma omp parallel for
+    for (int i = 1; i < _nz; ++i) {
+        u_space[_fft_size - i] = Gamma_PLST * u_space[i];
+    }
+    u_space[0] *= (1.0 + Gamma_PLST);
+
+    fftw_execute(_plan_fwd);
+
+    double dk_z = 2.0 * M_PI / (_fft_size * _dz);
+    double k_eff_sq = _k0 * _k0 * cos_sq_beta; // k^2 * cos^2(beta)
+
+#pragma omp parallel for
+    for (int i = 0; i < _fft_size; ++i) {
+        double kz;
+        if (i <= _fft_size / 2) kz = i * dk_z;
+        else kz = (i - _fft_size) * dk_z;
+
+        double p2 = kz * kz;
+        Complex diff_prop;
+
+        double val = k_eff_sq - p2;
+
+        if (val >= 0) {
+
+            diff_prop = std::exp(J * _dx * (std::sqrt(val) - _k0));
+        }
+        else {
+
+            diff_prop = std::exp(-_dx * std::sqrt(-val) - J * _dx * _k0);
+        }
+
+        u_kspace[i] *= diff_prop;
+    }
+
+    fftw_execute(_plan_bwd);
+
+    u_space /= (double)_fft_size;
+}
 
 void PEModel::initializeGaussian(double antenna_height, double beam_width_deg, double tilt_deg) {
-    // ½«²¨Êø¿í¶È£¨½Ç¶È£©×ª»»Îª¸ßË¹º¯ÊıµÄ¿Õ¼ä¿í¶È²ÎÊı w0
-    // ¹«Ê½ÍÆµ¼£º¸ßË¹²¨ÊøµÄ°ë¹¦ÂÊ²¨Êø¿í¶È (HPBW) Óë w0 µÄ¹ØÏµ½üËÆÎª w0 = 2 / (k * sin(HPBW/2))
+    // å°†æ³¢æŸå®½åº¦ï¼ˆè§’åº¦ï¼‰è½¬æ¢ä¸ºé«˜æ–¯å‡½æ•°çš„ç©ºé—´å®½åº¦å‚æ•° w0
+    // å…¬å¼æ¨å¯¼ï¼šé«˜æ–¯æ³¢æŸçš„åŠåŠŸç‡æ³¢æŸå®½åº¦ (HPBW) ä¸ w0 çš„å…³ç³»è¿‘ä¼¼ä¸º w0 = 2 / (k * sin(HPBW/2))
     double w0 = 2.0 / (_k0 * std::sin(beam_width_deg * M_PI / 360.0));
-    // ½«Ñö½Ç×ª»»Îª»¡¶È£¬ÓÃÓÚ¼ÆËãÏàÎ»
+    // å°†ä»°è§’è½¬æ¢ä¸ºå¼§åº¦ï¼Œç”¨äºè®¡ç®—ç›¸ä½
     double tilt_rad = std::sin(tilt_deg * M_PI / 180.0);
     for (int i = 0; i < _fft_size; ++i) {
         reinterpret_cast<Complex*>(_in_ptr)[i] = 0.0;
     }
     for (int i = 0; i < _nz; ++i) {
         double z = i * _dz;
-        // ·ù¶È²¿·Ö (Amplitude): ¸ßË¹·Ö²¼
-        // ¶ÔÓ¦¹«Ê½£ºexp(-(z - za)^2 / w0^2)
-        // ÎïÀíº¬Òå£ºÄÜÁ¿¼¯ÖĞÔÚÌìÏß¸ß¶È antenna_height ¸½½ü
+        // å¹…åº¦éƒ¨åˆ† (Amplitude): é«˜æ–¯åˆ†å¸ƒ
+        // å¯¹åº”å…¬å¼ï¼šexp(-(z - za)^2 / w0^2)
+        // ç‰©ç†å«ä¹‰ï¼šèƒ½é‡é›†ä¸­åœ¨å¤©çº¿é«˜åº¦ antenna_height é™„è¿‘
         double amp = std::exp(-std::pow(z - antenna_height, 2) / std::pow(w0, 2));
-        // ÏàÎ»²¿·Ö (Phase): ÏßĞÔÏàÎ»ÇãĞ±
-        // ¶ÔÓ¦¹«Ê½£ºexp(i * k * z * sin(theta))
-        // ÎïÀíº¬Òå£ºÍ¨¹ı¸Ä±äÏàÎ»Ìİ¶ÈÀ´¿ØÖÆ²¨ÊøµÄ´«²¥·½Ïò£¨Ñö½Ç£©
-        // Èç¹û elevation_deg = 0£¬ÔòÏàÎ»Îª 0£¬²¨ÊøË®Æ½´«²¥
+        // ç›¸ä½éƒ¨åˆ† (Phase): çº¿æ€§ç›¸ä½å€¾æ–œ
+        // å¯¹åº”å…¬å¼ï¼šexp(i * k * z * sin(theta))
+        // ç‰©ç†å«ä¹‰ï¼šé€šè¿‡æ”¹å˜ç›¸ä½æ¢¯åº¦æ¥æ§åˆ¶æ³¢æŸçš„ä¼ æ’­æ–¹å‘ï¼ˆä»°è§’ï¼‰
+        // å¦‚æœ elevation_deg = 0ï¼Œåˆ™ç›¸ä½ä¸º 0ï¼Œæ³¢æŸæ°´å¹³ä¼ æ’­
         Complex phase = std::exp(J * _k0 * z * tilt_rad);
         Complex val = amp * phase;
-        // Ìî³äÎïÀí¿Õ¼ä
+        // å¡«å……ç‰©ç†ç©ºé—´
         reinterpret_cast<Complex*>(_in_ptr)[i] = val;
     }
 }
