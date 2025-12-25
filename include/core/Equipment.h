@@ -8,11 +8,9 @@
 
 
 enum class EquipmentType {
-    GENERIC,//通用设备
     TRANSMITTER,//发射机
     RECEIVER,//接收机
-    TRANSCEIVER, // 收发一体,用于雷达
-    RADAR//雷达
+    TRANSCEIVER, // 收发一体
 };
 
 /// <summary>
