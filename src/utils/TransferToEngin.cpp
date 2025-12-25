@@ -53,15 +53,6 @@ std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& sh
 std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const DeviceData& deviceData) {
     std::unique_ptr<Equipment> equipment = nullptr;
     
-    // 根据设备类型创建不同的设备对象
-    if (deviceData.equipmentType == "通用设备") {
-        Point2D position{deviceData.X_offset, deviceData.Y_offset};
-        equipment = std::make_unique<Equipment>(
-            deviceData.equipmentID.toStdString(),
-            EquipmentType::GENERIC,
-            position
-        );
-    } 
     else if (deviceData.equipmentType == "发射机") {
         Point2D position{deviceData.X_offset, deviceData.Y_offset};
         equipment = std::make_unique<Transmitter>(

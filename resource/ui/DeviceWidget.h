@@ -1,7 +1,3 @@
-//
-// Created by lenovo on 25-10-6.
-//
-
 #ifndef DEVICEWIDGET_H
 #define DEVICEWIDGET_H
 
@@ -20,14 +16,23 @@ class DeviceWidget: public QWidget {
 public:
     explicit DeviceWidget(QWidget *parent =  nullptr);
     ~DeviceWidget();
-    void updateModelData();
+    // 将数据从模型加载到UI界面
     void setData(const DeviceData &data);
-    // void updateModelData();
+    
+    // 将UI界面的数据保存回模型
+    void updateModelData();
 private:
     Ui::DeviceWidget *ui;
     QString m_currentId;
+
+    // 重置/清空各模块的输入框
+    void resetTransmitterUI();
+    void resetReceiverUI();
+    void resetAntennaUI();
 private slots:
     void on_equipmentReduction_clicked();
+    void onEquipmentTypeChanged();
+    void onAntennaTypeChanged();
 };
 
 #endif //DEVICEWIDGET_H

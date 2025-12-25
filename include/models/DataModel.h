@@ -9,33 +9,60 @@
 #include <QObject>
 //// 设备数据模型
 struct DeviceData {
+    // 基本参数
     QString equipmentID;
     QString equipmentType;
     double Gain;
-    QString antennaType;
+    //相对坐标
     double X_offset;
     double Y_offset;
-    QString filterType;
-
-    QString singelAntennaType;
-    double antennaTheta;
-    double antennaPhi;
-    double pattern;
-
-    // 发射机参数
-    double transmitterPower;
-    double transmitterBandwidth;
-    double transmitterFrequency; // 添加发射机频率字段
-    double WIP;
+    double Z_offset;
 
     // 接收机参数
-    double recieverSensitive;
-    double recieverBandwidth;
-    double recieverFrequency; // 添加接收机频率字段
-    QString reciever_TransmiterID;
-    double noiseFigure;
-    double SNRMargin;
+    // 接收机中心频率
+    double CentralF_Reciever;
+    // 接收机带宽
+    double Bandwidth_Reciever;
+    // 接收机灵敏度
+    double Sensitive_reciever;
+    // 接收机干扰阈值
     double interferenceMargin;
+    // 信噪比阈值
+    double SNRMargin;
+    // 噪声系数
+    double noiseFigure;
+
+    // 发射机参数
+    // 发射机中心频率
+    double CentralF_Transmitter;
+    // 发射机带宽
+    double Bandwidth_Transmitter;
+    // 发射机功率
+    double Power_Transmitter;
+    // 天线指向角
+    double antennaPhi_Transmitter;
+    // 发射机波束宽度
+    double Beamwidth_Transmitter;
+    // 发射机极化方式
+    QString PolarizationMethod_Transmitter;
+    //发射机垂直场分布
+    QString VerticalFieldDistribution_Transmitter;
+
+    // 天线参数
+    // 天线中心频率
+    double CentralF_Antenna;
+    // 天线带宽
+    double Bandwidth_Antenna;
+    // 天线功率
+    double Power_Antenna;
+    // 天线指向角
+    double antennaPhi_Antenna;
+    // 天线波束宽度
+    double Beamwidth_Antenna;
+    // 天线极化方式
+    QString PolarizationMethod_Antenna;
+    // 天线垂直场分布
+    QString VerticalFieldDistribution_Antenna;
 };
 //// 船上设备数据模型
 struct DeviceOnShipConfig {

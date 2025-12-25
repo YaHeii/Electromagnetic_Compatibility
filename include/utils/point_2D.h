@@ -10,7 +10,17 @@ class Point2D {
     double y;
 };
 
+class Point3D {
+    public:
+    Point3D(double x, double y, double z) : _x(x), _y(y), _z(z) {}
+    double getX() const { return _x; }
+    double getY() const { return _y; }
+    double getZ() const { return _z; }
 
+    double _x;
+    double _y;
+    double _z;
+};
 
 // struct Point2D {
 //     double x = 0.0;//QT设计时。考虑将数据规范化，
