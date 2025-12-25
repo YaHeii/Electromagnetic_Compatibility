@@ -33,7 +33,7 @@ void DeviceWidget::setData(const DeviceData &data)
     ui->Bandwidth_Reciever->setText(QString::number(data.Bandwidth_Reciever));
     ui->Sensitive_reciever->setText(QString::number(data.Sensitive_reciever));
     ui->interferenceMargin->setText(QString::number(data.interferenceMargin));
-    ui->SNRMargin->setText(QString::number(data.SNRMargin));
+    ui->SINRMargin->setText(QString::number(data.SINRMargin));
     ui->noiseFigure->setText(QString::number(data.noiseFigure));
 
     // --- 3. 发射机参数 ---
@@ -43,7 +43,7 @@ void DeviceWidget::setData(const DeviceData &data)
     ui->antennaPhi_Transmitter->setText(QString::number(data.antennaPhi_Transmitter));
     ui->Beamwidth_Transmitter->setText(QString::number(data.Beamwidth_Transmitter));
     ui->PolarizationMethod_Transmitter->setCurrentText(data.PolarizationMethod_Transmitter);
-    ui->VerticalFieldDistribution_Transmitter->setCurrentText(data.VerticalFieldDistribution_Transmitter);
+    ui->antennaType_Transmitter->setCurrentText(data.antennaType_Transmitter);
 
     // --- 4. 天线参数 ---
     ui->CentralF_Antenna->setText(QString::number(data.CentralF_Antenna));
@@ -52,7 +52,7 @@ void DeviceWidget::setData(const DeviceData &data)
     ui->antennaPhi_Antenna->setText(QString::number(data.antennaPhi_Antenna));
     ui->Beamwidth_Antenna->setText(QString::number(data.Beamwidth_Antenna));
     ui->PolarizationMethod_Antenna->setCurrentText(data.PolarizationMethod_Antenna);
-    ui->VerticalFieldDistribution_Antenna->setCurrentText(data.VerticalFieldDistribution_Antenna);
+    ui->antennaType_Antenna->setCurrentText(data.antennaType_Antenna);
 }
 
 void DeviceWidget::updateModelData() {
@@ -78,7 +78,7 @@ if(data.equipmentID == m_currentId){
                 data.antennaPhi_Transmitter = ui->antennaPhi_Transmitter->text().toDouble(&ok);
                 data.Beamwidth_Transmitter = ui->Beamwidth_Transmitter->text().toDouble(&ok);
                 data.PolarizationMethod_Transmitter = ui->PolarizationMethod_Transmitter->currentText();
-                data.VerticalFieldDistribution_Transmitter = ui->VerticalFieldDistribution_Transmitter->currentText();
+                data.antennaType_Transmitter = ui->antennaType_Transmitter->currentText();
             } else {
                 // 不可见，强制写入无效值（0）
                 data.CentralF_Transmitter = 0;
@@ -87,7 +87,7 @@ if(data.equipmentID == m_currentId){
                 data.antennaPhi_Transmitter = 0;
                 data.Beamwidth_Transmitter = 0;
                 data.PolarizationMethod_Transmitter = "";
-                data.VerticalFieldDistribution_Transmitter = "";
+                data.antennaType_Transmitter = "";
             }
 
             // --- 接收机参数处理 ---
@@ -96,14 +96,14 @@ if(data.equipmentID == m_currentId){
                 data.Bandwidth_Reciever = ui->Bandwidth_Reciever->text().toDouble(&ok);
                 data.Sensitive_reciever = ui->Sensitive_reciever->text().toDouble(&ok);
                 data.interferenceMargin = ui->interferenceMargin->text().toDouble(&ok);
-                data.SNRMargin = ui->SNRMargin->text().toDouble(&ok);
+                data.SINRMargin = ui->SINRMargin->text().toDouble(&ok);
                 data.noiseFigure = ui->noiseFigure->text().toDouble(&ok);
             } else {
                 data.CentralF_Reciever = 0;
                 data.Bandwidth_Reciever = 0;
                 data.Sensitive_reciever = 0;
                 data.interferenceMargin = 0;
-                data.SNRMargin = 0;
+                data.SINRMargin = 0;
                 data.noiseFigure = 0;
             }
             // --- 天线参数处理 ---
@@ -114,7 +114,7 @@ if(data.equipmentID == m_currentId){
                 data.antennaPhi_Antenna = ui->antennaPhi_Antenna->text().toDouble(&ok);
                 data.Beamwidth_Antenna = ui->Beamwidth_Antenna->text().toDouble(&ok);
                 data.PolarizationMethod_Antenna = ui->PolarizationMethod_Antenna->currentText();
-                data.VerticalFieldDistribution_Antenna = ui->VerticalFieldDistribution_Antenna->currentText();
+                data.antennaType_Antenna = ui->antennaType_Antenna->currentText();
             } else {
                 data.CentralF_Antenna = 0;
                 data.Bandwidth_Antenna = 0;
@@ -122,7 +122,7 @@ if(data.equipmentID == m_currentId){
                 data.antennaPhi_Antenna = 0;
                 data.Beamwidth_Antenna = 0;
                 data.PolarizationMethod_Antenna = "";
-                data.VerticalFieldDistribution_Antenna = "";
+                data.antennaType_Antenna = "";
             }
 
             qDebug() << "Data updated for ID:" << data.equipmentID;
@@ -162,7 +162,7 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->Bandwidth_Reciever->setText("100");
         ui->Sensitive_reciever->setText("-90");
         ui->interferenceMargin->setText("6");
-        ui->SNRMargin->setText("10");
+        ui->SINRMargin->setText("10");
         ui->noiseFigure->setText("3");
 
         // 清空其他参数
@@ -185,7 +185,7 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->Bandwidth_Reciever->setText("100");
         ui->Sensitive_reciever->setText("-90");
         ui->interferenceMargin->setText("6");
-        ui->SNRMargin->setText("10");
+        ui->SINRMargin->setText("10");
         ui->noiseFigure->setText("3");
 
         resetAntennaUI();
@@ -199,7 +199,7 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->antennaPhi_Antenna->setText("30");
         ui->Beamwidth_Antenna->setText("20");
         ui->PolarizationMethod_Antenna->setCurrentIndex(0);
-        ui->VerticalFieldDistribution_Antenna->setCurrentIndex(0);
+        ui->antennaType_Antenna->setCurrentIndex(0);
     }
     
     qDebug() << "Equipment type changed to:" << equipmentType;
@@ -222,7 +222,7 @@ void DeviceWidget::resetTransmitterUI() {
     ui->Beamwidth_Transmitter->setText("0");
     // 下拉框可以重置到默认索引0
     ui->PolarizationMethod_Transmitter->setCurrentIndex(0);
-    ui->VerticalFieldDistribution_Transmitter->setCurrentIndex(0);
+    ui->antennaType_Transmitter->setCurrentIndex(0);
 }
 
 void DeviceWidget::resetReceiverUI() {
@@ -230,7 +230,7 @@ void DeviceWidget::resetReceiverUI() {
     ui->Bandwidth_Reciever->setText("0");
     ui->Sensitive_reciever->setText("0");
     ui->interferenceMargin->setText("0");
-    ui->SNRMargin->setText("0");
+    ui->SINRMargin->setText("0");
     ui->noiseFigure->setText("0");
 }
 
@@ -241,5 +241,5 @@ void DeviceWidget::resetAntennaUI() {
     ui->antennaPhi_Antenna->setText("0");
     ui->Beamwidth_Antenna->setText("0");
     ui->PolarizationMethod_Antenna->setCurrentIndex(0);
-    ui->VerticalFieldDistribution_Antenna->setCurrentIndex(0);
+    ui->antennaType_Antenna->setCurrentIndex(0);
 }

@@ -43,5 +43,5 @@ private:
      * @param deviceData 设备数据
      * @return 创建的天线对象唯一指针
      */
-    static std::unique_ptr<Antenna> createAntennaForEquipment(const DeviceData& deviceData);
+    static std::unique_ptr<Antenna> createAntenna(const DeviceData& deviceData);
 };

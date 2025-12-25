@@ -32,7 +32,6 @@ private:
 private slots:
     void on_equipmentReduction_clicked();
     void onEquipmentTypeChanged();
-    void onAntennaTypeChanged();
 };
 
 #endif //DEVICEWIDGET_H

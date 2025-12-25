@@ -40,7 +40,7 @@ std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& sh
                 if (equipment) {
                     // 设置设备在船上的相对位置
                     Point2D relativePos{deviceConfig.device_X_offset, deviceConfig.device_Y_offset};
-                    equipment->setRelativePosition(relativePos);
+                    //equipment->setRelativePosition(relativePos);
                     shipObj->addEquipment(std::move(equipment));
                 }
                 break;
@@ -53,71 +53,99 @@ std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& sh
 std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const DeviceData& deviceData) {
     std::unique_ptr<Equipment> equipment = nullptr;
     
-    else if (deviceData.equipmentType == "发射机") {
-        Point2D position{deviceData.X_offset, deviceData.Y_offset};
+    if (deviceData.equipmentType == "发射机") {
+        Point3D position{deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset};
         equipment = std::make_unique<Transmitter>(
             deviceData.equipmentID.toStdString(),
-            deviceData.transmitterFrequency, // 使用新添加的频率字段
-            deviceData.transmitterPower,
-            deviceData.transmitterBandwidth,
-            position
+            deviceData.CentralF_Transmitter,
+            deviceData.Gain,
+            deviceData.Bandwidth_Transmitter,
+            deviceData.antennaPhi_Transmitter,
+            deviceData.Beamwidth_Transmitter,
+            deviceData.PolarizationMethod_Transmitter,
+            deviceData.antennaType_Transmitter,
+            position // 使用新添加的频率字段
         );
     } 
     else if (deviceData.equipmentType == "接收机") {
-        Point2D position{deviceData.X_offset, deviceData.Y_offset};
+        Point3D position{deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset};
         equipment = std::make_unique<Receiver>(
             deviceData.equipmentID.toStdString(),
-            deviceData.recieverFrequency, // 使用新添加的频率字段
-            deviceData.recieverSensitive,
-            deviceData.recieverBandwidth,
-            deviceData.reciever_TransmiterID.toStdString(),
-            "", // transmitter_in_ship_id 需要确定如何获取
+            deviceData.CentralF_Reciever, // 使用新添加的频率字段
+            deviceData.Gain,
+            deviceData.Sensitive_reciever,
+            deviceData.Bandwidth_Reciever,
             deviceData.noiseFigure,
-            deviceData.SNRMargin,
+            deviceData.SINRMargin,
             deviceData.interferenceMargin,
             position
         );
     } 
     else if (deviceData.equipmentType == "收发一体机") {
-        Point2D position{deviceData.X_offset, deviceData.Y_offset};
+        Point3D position{deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset};
         // 对于收发一体机，可能需要创建特殊的设备类型或分别创建发射和接收部分
-        equipment = std::make_unique<Equipment>(
+        equipment = std::make_unique<Transceiver>(
             deviceData.equipmentID.toStdString(),
-            EquipmentType::TRANSCEIVER,
-            position
+            deviceData.Gain,
+            position,
+            // 创建发射部分
+            deviceData.CentralF_Transmitter,
+            deviceData.Bandwidth_Transmitter,
+            deviceData.Power_Transmitter,
+            deviceData.antennaPhi_Transmitter,
+            deviceData.Beamwidth_Transmitter,
+            deviceData.PolarizationMethod_Transmitter,
+            deviceData.antennaType_Transmitter,
+            // 创建接收部分
+            deviceData.CentralF_Reciever,
+            deviceData.Bandwidth_Reciever,
+            deviceData.Sensitive_reciever,
+            deviceData.noiseFigure,
+            deviceData.SINRMargin,
+            deviceData.interferenceMargin
         );
-        // 注意：收发一体机需要同时具备发射和接收功能，但当前的DataModel不支持存储这些信息
-        // 可以考虑扩展DeviceData结构以支持收发一体机的参数
-    }
-    
-    // 为设备添加天线
-    if (equipment) {
-        std::unique_ptr<Antenna> antenna = createAntennaForEquipment(deviceData);
-        if (antenna) {
-            equipment->setAntenna(std::move(antenna));
-        }
     }
     
     return equipment;
 }
 
-std::unique_ptr<Antenna> TransferToEngine::createAntennaForEquipment(const DeviceData& deviceData) {
+// TODO: 理论上不应该继承Equipment，设备和天线解耦
+// 但是创建时返回对象最好在同一个返回类型中
+std::unique_ptr<Antenna> TransferToEngine::createAntenna(const DeviceData& deviceData) {
     std::unique_ptr<Antenna> antenna = nullptr;
-    
-    if (deviceData.antennaType == "全向天线") {
-        antenna = std::make_unique<OmniAntenna>(
-            ("Antenna_" + deviceData.equipmentID).toStdString(),
-            deviceData.Gain
-        );
+    Point3D position{ deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset };
+    if (deviceData.equipmentType == "天线") {
+        if (deviceData.antennaType_Antenna == "喇叭天线") {
+            antenna = Antenna::create(
+                deviceData.equipmentID.toStdString(),
+                AntennaType::HORN,
+                deviceData.PolarizationMethod_Antenna,
+                position,
+                deviceData.Gain,
+                deviceData.antennaPhi_Antenna
+            );
+        }
+        if (deviceData.antennaType_Antenna == "赋形波束天线") {
+            antenna = Antenna::create(
+                deviceData.equipmentID.toStdString(),
+                AntennaType::ShapedBeam,
+                deviceData.PolarizationMethod_Antenna,
+                position,
+                deviceData.Gain,
+                deviceData.antennaPhi_Antenna
+            );
+        }
+        if (deviceData.antennaType_Antenna == "抛物面天线") {
+            antenna = Antenna::create(
+                deviceData.equipmentID.toStdString(),
+                AntennaType::Reflector,
+                deviceData.PolarizationMethod_Antenna,
+                position,
+                deviceData.Gain,
+                deviceData.antennaPhi_Antenna
+            );
+        }
     } 
-    else if (deviceData.antennaType == "定向天线") {
-        antenna = std::make_unique<DirectionalAntenna>(
-            ("Antenna_" + deviceData.equipmentID).toStdString(),
-            deviceData.Gain,
-            deviceData.antennaTheta,
-            deviceData.antennaPhi
-        );
-    }
     
     return antenna;
 }

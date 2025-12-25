@@ -28,7 +28,7 @@ struct DeviceData {
     // 接收机干扰阈值
     double interferenceMargin;
     // 信噪比阈值
-    double SNRMargin;
+    double SINRMargin;
     // 噪声系数
     double noiseFigure;
 
@@ -45,8 +45,8 @@ struct DeviceData {
     double Beamwidth_Transmitter;
     // 发射机极化方式
     QString PolarizationMethod_Transmitter;
-    //发射机垂直场分布
-    QString VerticalFieldDistribution_Transmitter;
+    // 天线类型
+    QString antennaType_Transmitter;
 
     // 天线参数
     // 天线中心频率
@@ -61,8 +61,8 @@ struct DeviceData {
     double Beamwidth_Antenna;
     // 天线极化方式
     QString PolarizationMethod_Antenna;
-    // 天线垂直场分布
-    QString VerticalFieldDistribution_Antenna;
+    // 天线类型
+    QString antennaType_Antenna;
 };
 //// 船上设备数据模型
 struct DeviceOnShipConfig {
