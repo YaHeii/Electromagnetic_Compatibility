@@ -132,3 +132,52 @@ private:
     std::string _transmitter_id;
     std::string _transmitter_in_ship_id;
 };
+
+class Transceiver : public Equipment {
+public:
+    Transceiver(const std::string& id,
+                // 发射参数
+                double tx_freq_mhz, double tx_power_dbm, double tx_bw_khz,
+                // 接收参数
+                double rx_freq_mhz, double rx_sens_dbm, double rx_bw_khz,
+                // 其他
+                std::string tx_id = "", std::string tx_ship_id = "",
+                const Point2D& relative_pos = {0,0})
+        : Equipment(id, EquipmentType::TRANSCEIVER, relative_pos, tx_power_dbm),
+          // 初始化所有私有成员
+          _tx_frequency_mhz(tx_freq_mhz), _tx_bandwidth_khz(tx_bw_khz),
+          _rx_frequency_mhz(rx_freq_mhz), _rx_sensitivity_dbm(rx_sens_dbm),
+          _rx_bandwidth_khz(rx_bw_khz), _noise_figure_db(3.0),
+          _target_tx_id(tx_id), _target_tx_ship_id(tx_ship_id)
+    {}
+
+    // --- 发射相关接口 ---
+    double getTxFrequencyMHz() const { return _tx_frequency_mhz; }
+    double getTxBandwidthKHz() const { return _tx_bandwidth_khz; }
+    // getPowerDBm() 直接复用基类的
+
+    // --- 接收相关接口 ---
+    double getRxFrequencyMHz() const { return _rx_frequency_mhz; }
+    double getSensitivityDBm() const { return _rx_sensitivity_dbm; }
+    double getRxBandwidthKHz() const { return _rx_bandwidth_khz; }
+    double getNoiseFigureDB() const { return _noise_figure_db; }
+    
+    // 同样需要拷贝一份底噪计算逻辑 (或者提取为静态辅助函数)
+    double getNoiseFloorDBm() const {
+        return -173.97 + 10.0 * std::log10(_rx_bandwidth_khz * 1000.0) + _noise_figure_db;
+    }
+
+private:
+    // 显式定义所有变量，不依赖继承
+    // 1. 发射部分
+    double _tx_frequency_mhz;
+    double _tx_bandwidth_khz;
+    
+    // 2. 接收部分
+    double _rx_frequency_mhz;
+    double _rx_sensitivity_dbm;
+    double _rx_bandwidth_khz;
+    double _noise_figure_db;
+    std::string _target_tx_id;
+    std::string _target_tx_ship_id;
+};
