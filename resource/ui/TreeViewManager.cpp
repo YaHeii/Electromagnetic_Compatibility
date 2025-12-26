@@ -39,7 +39,7 @@ void TreeViewManager::syncViewWithModel()
 // 填充所有舰船及其配置的设备
 void TreeViewManager::populateShips(QStandardItem *shipsRoot)
 {
-    const QList<ShipData>& ships = DataModel::instance()->allShips;
+    const std::vector<ShipData>& ships = DataModel::instance()->allShips;
 
     for (const ShipData &ship : ships) {
         // 创建代表一艘舰船的节点
@@ -64,7 +64,7 @@ void TreeViewManager::populateShips(QStandardItem *shipsRoot)
 // 填充设备库中的所有独立设备
 void TreeViewManager::populateDevices(QStandardItem *devicesRoot)
 {
-    const QList<DeviceData>& devices = DataModel::instance()->allDevices;
+    const std::vector<DeviceData>& devices = DataModel::instance()->allDevices;
     for (const DeviceData &device : devices) {
         // 创建代表一个独立设备的节点
         QStandardItem *deviceItem = new QStandardItem(device.equipmentID);

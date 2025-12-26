@@ -19,7 +19,7 @@ std::unique_ptr<Fleet> TransferToEngine::convertDataModelToFleet(const DataModel
     return fleet;
 }
 
-std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& shipData, const QList<DeviceData>& allDevices) {
+std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& shipData, const std::vector<DeviceData>& allDevices) {
     // 创建船只对象
     Point2D location{shipData.ship_X, shipData.ship_Y};
     auto shipObj = std::make_unique<ship>(
@@ -105,12 +105,10 @@ std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const 
             deviceData.interferenceMargin
         );
     }
-    
     return equipment;
 }
 
-// TODO: 理论上不应该继承Equipment，设备和天线解耦
-// 但是创建时返回对象最好在同一个返回类型中
+// 对外工具函数
 std::unique_ptr<Antenna> TransferToEngine::createAntenna(const DeviceData& deviceData) {
     std::unique_ptr<Antenna> antenna = nullptr;
     Point3D position{ deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset };
@@ -118,7 +116,7 @@ std::unique_ptr<Antenna> TransferToEngine::createAntenna(const DeviceData& devic
         if (deviceData.antennaType_Antenna == "喇叭天线") {
             antenna = Antenna::create(
                 deviceData.equipmentID.toStdString(),
-                AntennaType::HORN,
+                "喇叭天线",
                 deviceData.PolarizationMethod_Antenna,
                 position,
                 deviceData.Gain,
@@ -128,7 +126,7 @@ std::unique_ptr<Antenna> TransferToEngine::createAntenna(const DeviceData& devic
         if (deviceData.antennaType_Antenna == "赋形波束天线") {
             antenna = Antenna::create(
                 deviceData.equipmentID.toStdString(),
-                AntennaType::ShapedBeam,
+                "赋形波束天线",
                 deviceData.PolarizationMethod_Antenna,
                 position,
                 deviceData.Gain,
@@ -138,7 +136,7 @@ std::unique_ptr<Antenna> TransferToEngine::createAntenna(const DeviceData& devic
         if (deviceData.antennaType_Antenna == "抛物面天线") {
             antenna = Antenna::create(
                 deviceData.equipmentID.toStdString(),
-                AntennaType::Reflector,
+                "抛物面天线",
                 deviceData.PolarizationMethod_Antenna,
                 position,
                 deviceData.Gain,

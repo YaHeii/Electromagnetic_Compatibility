@@ -51,7 +51,7 @@ private:
     TreeViewManager *m_treeView;
     LogEmitter* m_logEmitter;// 日志发射器
 private  slots:
-    // 槽函数：用来接收日志并分发到不同的 TextEdit
+    // 接收日志并分发到不同的 TextEdit
     void onLogReceived(const QString& message, int level);
     void on_addShipButton_clicked();
     void on_addDeviceButton_clicked();

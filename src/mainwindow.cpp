@@ -57,13 +57,13 @@ void MainWindow::on_addDeviceButton_clicked()
     updateDeviceModelFromView();
 
     DeviceData newDevice;
-    newDevice.equipmentID = QString("NewDevice_%1").arg(DataModel::instance()->allDevices.count() + 1);
-    DataModel::instance()->allDevices.append(newDevice);
+    newDevice.equipmentID = QString("NewDevice_%1").arg(DataModel::instance()->allDevices.size() + 1);
+    DataModel::instance()->allDevices.push_back(newDevice);
 
     DeviceWidget *widget = new DeviceWidget(this);  // 修正：设置父对象
     widget->setData(newDevice); // 用新的空数据填充它
     ui->deviceLayout->addWidget(widget);
-    m_treeView->syncViewWithModel();  // 修正：调用TreeView同步方法
+    m_treeView->syncViewWithModel();
 }
 
 void MainWindow::on_addShipButton_clicked()
@@ -71,28 +71,28 @@ void MainWindow::on_addShipButton_clicked()
     updateShipModelFromView();
 
     ShipData newShip;
-    newShip.shipID = DataModel::instance()->allShips.count() + 1;
+    newShip.shipID = DataModel::instance()->allShips.size() + 1;
     newShip.shipName = QString("NewShip_%1").arg(newShip.shipID);
-    DataModel::instance()->allShips.append(newShip);
+    DataModel::instance()->allShips.push_back(newShip);
 
-    ShipWidget *widget = new ShipWidget(this);  // 修正：设置父对象
+    ShipWidget *widget = new ShipWidget(this); 
     widget->setData(newShip);
     ui->shipsLayout->addWidget(widget);
-    m_treeView->syncViewWithModel();  // 修正：调用TreeView同步方法
+    m_treeView->syncViewWithModel(); 
 }
 
 void MainWindow::on_DeviceSave_clicked()
 {
     updateDeviceModelFromView();
-    QMessageBox::information(this, "成功", "所有设备更改已应用到数据模型。");
     m_treeView->syncViewWithModel();
+    spdlog::debug("设备信息已保存");
 }
 
 void MainWindow::on_ShipSave_clicked()
 {
     updateShipModelFromView();
-    QMessageBox::information(this, "成功", "所有舰船更改已应用到数据模型。");
     m_treeView->syncViewWithModel();
+    spdlog::debug("舰船信息已保存");
 }
 
 void MainWindow::updateDeviceModelFromView()
@@ -133,7 +133,6 @@ void MainWindow::onLogReceived(const QString& message, int level)
     auto logLevel = static_cast<spdlog::level::level_enum>(level);
     std::cout << "UI Trace: Slot onLogReceived called. Msg: " << message.toStdString() << std::endl;
     // 1. 设置最大行数 (防止日志无限增长占满内存)
-    // 建议在构造函数里设置，但这里写是为了演示
     const int maxBlockCount = 5000;
     if (ui->Debug_Edit->maximumBlockCount() == 0) {
         ui->Debug_Edit->setMaximumBlockCount(maxBlockCount);

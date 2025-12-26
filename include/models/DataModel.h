@@ -1,7 +1,3 @@
-//
-// Created by lenovo on 25-10-6.
-//
-
 #ifndef DATAMODEL_H
 #define DATAMODEL_H
 #include <QString>
@@ -87,8 +83,8 @@ class DataModel : public QObject
 public:
     static DataModel* instance(); // 单例模式，方便全局访问
 
-    QList<DeviceData> allDevices;
-    QList<ShipData> allShips;
+    std::vector<DeviceData> allDevices;
+    std::vector<ShipData> allShips;
 
 private:
     DataModel(QObject *parent = nullptr);

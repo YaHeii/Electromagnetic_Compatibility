@@ -7,6 +7,10 @@ DeviceWidget::DeviceWidget(QWidget *parent) :
     ui(new Ui::DeviceWidget)
 {
     ui->setupUi(this);
+    resetTransmitterUI();
+    resetReceiverUI();
+    resetAntennaUI();
+    
     // 当设备类型改变时，自动填充默认参数
     connect(ui->equipmentType, QOverload<int>::of(&QComboBox::currentIndexChanged),
         this, &DeviceWidget::onEquipmentTypeChanged);

@@ -96,10 +96,10 @@ void ShipWidget::on_shipEquipmentPlus_clicked()
         if (ship.shipID == m_currentShipId) {
             DeviceOnShipConfig newConfig;
             // 默认可以不选择任何设备，或者选择第一个可用设备
-            if (!DataModel::instance()->allDevices.isEmpty()) {
-                newConfig.deviceID = DataModel::instance()->allDevices.first().equipmentID;
+            if (!DataModel::instance()->allDevices.empty()) {
+                newConfig.deviceID = DataModel::instance()->allDevices.front().equipmentID;
             }
-            ship.configuredDevices.append(newConfig);
+            ship.configuredDevices.push_back(newConfig);
             break; // 修改后退出循环
         }
     }

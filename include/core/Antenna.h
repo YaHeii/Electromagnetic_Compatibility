@@ -43,8 +43,8 @@ public:
 
     static std::unique_ptr<Antenna> create(
         const std::string& id,
-        AntennaType type,               // 决定创建哪个子类
-        QString polarization_method,    // 透传给基类
+        QString antenna_type_string,               // 决定创建哪个子类
+        QString polarization_method_string,    
         const Point3D& relative_pos = { 0,0,0 },
         double gain_dbm = 0.0,
         double tilt_deg = 0.0
@@ -125,27 +125,31 @@ public:
 
 inline std::unique_ptr<Antenna> Antenna::create(
     const std::string& id,
-    AntennaType type,
-    QString polarization_method,
+    QString antenna_type_string,
+    QString polarization_method_string,
     const Point3D& relative_pos,
     double gain_dbm,
     double tilt_deg)
 {
+    AntennaType type; 
+    if (antenna_type_string == "喇叭天线")  type = AntennaType::HORN;
+    else if (antenna_type_string == "赋型波束天线") type = AntennaType::ShapedBeam;
+    else if (antenna_type_string == "抛物面天线") type = AntennaType::Reflector;
+
     switch (type) {
     case AntennaType::HORN:
-        return std::make_unique<HornAntenna>(id, polarization_method, relative_pos, gain_dbm, tilt_deg);
-
+        return std::make_unique<HornAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
     case AntennaType::ShapedBeam:
-        return std::make_unique<ShapedBeamAntenna>(id, polarization_method, relative_pos, gain_dbm, tilt_deg);
+        return std::make_unique<ShapedBeamAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
 
     case AntennaType::Reflector:
-        return std::make_unique<ReflectorAntenna>(id, polarization_method, relative_pos, gain_dbm, tilt_deg);
+        return std::make_unique<ReflectorAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
 
     case AntennaType::OMNI:
-        return std::make_unique<OmniAntenna>(id, polarization_method, relative_pos, gain_dbm, tilt_deg);
+        return std::make_unique<OmniAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
 
     case AntennaType::DIRECTIONAL:
-        return std::make_unique<DirectionalAntenna>(id, polarization_method, relative_pos, gain_dbm, tilt_deg);
+        return std::make_unique<DirectionalAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
 
     default:
         // 默认处理：返回空指针或默认的全向天线

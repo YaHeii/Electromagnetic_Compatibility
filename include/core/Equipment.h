@@ -61,39 +61,32 @@ public:
                 double frequency_mhz,
                 double gain_dbm,
                 double bandwidth_khz,
+                double antennaPhi = 0,
+                double beamWidth = 0,
+                QString polarizationMethod = "",
+                QString antennaType_string = "",
                 const Point3D& relative_pos = {0,0,0})
-        : Equipment(id, EquipmentType::TRANSMITTER, relative_pos,nullptr, gain_dbm),
-          _centralF_mhz(frequency_mhz),
-          _bandwidth_khz(bandwidth_khz) {}
-
-    Transmitter(const std::string& id,
-        double frequency_mhz,
-        double gain_dbm,
-        double bandwidth_khz,
-        double antennaPhi,
-        double beamWidth,
-        QString polarizationMethod,
-        QString antennaType_string,
-        const Point3D& relative_pos = { 0,0,0 })
         : Equipment(id, EquipmentType::TRANSMITTER, relative_pos, nullptr, gain_dbm),
-        _centralF_mhz(frequency_mhz),
-        _bandwidth_khz(bandwidth_khz),
-        _antennaPhi(antennaPhi),
-        _beamWidth(beamWidth),
-        _antennaType_string(antennaType_string){
-    }
-
+          _centralF_mhz(frequency_mhz),
+          _bandwidth_khz(bandwidth_khz),
+          _antennaPhi(antennaPhi),
+          _beamWidth(beamWidth),
+          _polarizationMethod_string(polarizationMethod),
+          _antennaType_string(antennaType_string) {
+            // 创建天线对象
+            Antenna::create(_id, _antennaType_string, _polarizationMethod_string, _relative_position, _gain_dbm, _antennaPhi);
+          }
 
     double getFrequencyMHz() const { return _centralF_mhz; }
     double getBandWidthKHz() const { return _bandwidth_khz; }
     double getPowerDBm() const { return _power_dbm; }
     double getBeamWidth() const { return _beamWidth; }
     double getAntennaPhi() const { return _antennaPhi; }
-    PolarizationMethod getPolarizationMethod() const { 
+    PolarizationMethod getPolarizationMethod() const {
         if(_polarizationMethod_string == "垂直极化") return PolarizationMethod::VERTICAL;
         else if(_polarizationMethod_string == "水平极化") return PolarizationMethod::HORIZONTAL;
     }
-    AntennaType getAntennaType_string() const { 
+    AntennaType getAntennaType_string() const {
         if(_antennaType_string == "喇叭天线")  return AntennaType::HORN;
         else if(_antennaType_string == "赋型波束天线") return AntennaType::ShapedBeam;
         else if (_antennaType_string == "抛物面天线") return AntennaType::Reflector;
@@ -200,11 +193,11 @@ public:
                 // 发射参数
                 double tx_centralF_mhz = 0, double tx_bw_khz = 0,
                 double power_dbm = 0, double antennaPhi = 0, double beamWidth = 0,
-                QString polarizationMethod_string = 0, QString antennaType_string = 0,
+                QString polarizationMethod_string = "", QString antennaType_string = "",
 
                 // 接收参数
                 double rx_centralF_mhz = 0, double rx_bw_khz = 0, double rx_sens_dbm = 0,
-                double noise_figure_db = 0, double SINR_threshold_db = 0, 
+                double noise_figure_db = 0, double SINR_threshold_db = 0,
                 double interference_threshold_db = 0)
         : Equipment(id, EquipmentType::TRANSCEIVER, relative_pos, nullptr, gain_dbm),
           // 初始化所有私有成员
@@ -216,8 +209,7 @@ public:
         _rx_centralF_mhz(rx_centralF_mhz), _rx_bandwidth_khz(rx_bw_khz),
         _sensitivity_dbm(rx_sens_dbm), _noise_figure_db(noise_figure_db),
         _SINR_threshold_db(SINR_threshold_db),
-        _interference_threshold_db(interference_threshold_db)
-    {}
+        _interference_threshold_db(interference_threshold_db){}
 
     // --- 发射相关接口 ---
     double getTXFrequencyMHz() const { return _tx_centralF_mhz; }

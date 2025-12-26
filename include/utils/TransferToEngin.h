@@ -29,7 +29,7 @@ private:
      * @param allDevices 所有设备数据列表（用于查找船上设备的详细信息）
      * @return 转换后的ship对象唯一指针
      */
-    static std::unique_ptr<ship> convertShipDataToShip(const ShipData& shipData, const QList<DeviceData>& allDevices);
+    static std::unique_ptr<ship> convertShipDataToShip(const ShipData& shipData, const std::vector<DeviceData>& allDevices);
     
     /**
      * @brief 将DeviceData转换为Equipment对象
