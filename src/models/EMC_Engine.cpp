@@ -135,7 +135,6 @@ GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever
             coverage_map[y][x] = polar_data[az_idx][r_idx];
             std::cout << x / 1000.0 << " \t\t " << coverage_map[y][x];
         }
-        cout << endl;
     }
 
     return coverage_map;

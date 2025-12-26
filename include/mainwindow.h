@@ -4,12 +4,10 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
-#include "../include/utils/data_get.h"
 #include "../include/core/ship.h"
 #include "../include/core/equipment.h"
 #include "../include/utils/point_2D.h"
 #include "../include/models/Computing_distance.h"
-#include "../include/utils/data_get.h"
 #include "../include/utils/conversions.h"
 #include "../include/models/RayModel.h"
 #include "../include/core/fleet.h"

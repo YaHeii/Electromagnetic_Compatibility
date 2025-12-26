@@ -1,5 +1,7 @@
 ﻿#include "../include/mainwindow.h"
 #include <QApplication>
+#include <QDebug>
+#include <Windows.h>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -14,7 +16,6 @@ void init_logger() {
     try {
         // 1. 初始化线程池
         spdlog::init_thread_pool(8192, 1);
-
         // 2. 创建 Sinks
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/app_log.txt", true);
@@ -72,14 +73,17 @@ void qt_message_handler(QtMsgType type, const QMessageLogContext& context, const
 
 int main(int argc, char *argv[])
 {
+    SetConsoleOutputCP(65001);
     init_logger();
     qInstallMessageHandler(qt_message_handler);
-    spdlog::debug("Initializing");
+    spdlog::debug("正在初始化....");
+
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
     spdlog::info("MainWindow shown.");
     int exit_code = a.exec();
+
 
     spdlog::info("Application exiting with code {}", exit_code);
     spdlog::shutdown();

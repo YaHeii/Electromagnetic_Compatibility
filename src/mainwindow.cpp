@@ -120,7 +120,7 @@ void MainWindow::updateShipModelFromView()
 }
 
 void MainWindow::on_StartSimulate_clicked() {
-    string Model = "PEModel";
+    std::string Model = "PEModel";
     PE_data PEdata;
     Propagation_Engine PE(Model);
     GridMap Loss2D = PE.PEmodel_computing2D(PEdata, 25);

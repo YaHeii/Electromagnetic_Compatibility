@@ -5,14 +5,10 @@
 #include <string>
 #include <vector>
 #include <cmath>
-using namespace std;
-
-namespace Electromagnetic_compatibility {
-namespace models {
 
 // 计算船的距离矩阵（二维数组）
 // 将返回类型改为 double，因为距离通常是浮点数
-vector<std::vector<double>> calculate_distance(const unordered_map<string,pair<int,int>>& data) {
+    std::vector<std::vector<double>> calculate_distance(const std::unordered_map<std::string, std::pair<int,int>>& data) {
     std::vector<std::vector<double>> distance_arr; // 存储 double 类型距离
 
     int row_index = 0;
@@ -41,10 +37,10 @@ vector<std::vector<double>> calculate_distance(const unordered_map<string,pair<i
     return distance_arr;
 }
 //使用一个二维数组来表达干扰情况，距离在干扰范围内，设置为1
-vector<vector<int>> formation_distance(const vector<vector<double>>& distance_arr){
+    std::vector<std::vector<int>> formation_distance(const std::vector<std::vector<double>>& distance_arr){
     int rows = distance_arr.size();
     int cols = distance_arr[0].size();
-    vector<vector<int>> formation_distance_arr(rows,vector<int>(cols,0));
+    std::vector<std::vector<int>> formation_distance_arr(rows, std::vector<int>(cols,0));
     for(int i = 0;i < distance_arr.size();++i) {
         for (int j = 0; j < distance_arr[0].size(); ++j) {
             if (distance_arr[i][j] < 1002 && i!=j) {
@@ -55,5 +51,4 @@ vector<vector<int>> formation_distance(const vector<vector<double>>& distance_ar
     return formation_distance_arr;
 }
 
-}
-}
+

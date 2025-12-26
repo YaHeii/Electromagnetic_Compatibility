@@ -17,6 +17,10 @@ find_package(Eigen3 CONFIG REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 
+if(MSVC)
+    add_compile_options("/utf-8")
+endif()
+
 qt_standard_project_setup()
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/resource/ui)

@@ -8,7 +8,7 @@
 #include <unordered_map>
 
 
-ship::ship(string id,Point2D location, vector<double> distance,double orientation_deg,double speed)
+ship::ship(std::string id,Point2D location, std::vector<double> distance,double orientation_deg,double speed)
 : _id(id), // 使用初始化列表初始化 m_location  
 _location(location), // 使用初始化列表初始化 m_location  
 _distance(distance),  // 初始化 m_distance

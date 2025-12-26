@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include "Equipment.h"
 #include "../utils/point_2D.h"
-using namespace std;
+
 class Equipment;
 /// <summary>
 /// @param id 船只标识符
@@ -19,7 +19,7 @@ class Equipment;
 
 class ship{
 public:
-    ship(string id, Point2D location, vector<double> distance = {}, double orientation_deg = 30.0, double speed = 1.0);
+    ship(std::string id, Point2D location, std::vector<double> distance = {}, double orientation_deg = 30.0, double speed = 1.0);
 
     const std::string& getID() const { return _id; }
     Point2D getLocation() const {return _location; }
@@ -43,7 +43,7 @@ public:
     void setLocation(Point2D position_new);
 
 private:
-    string _id;
+    std::string _id;
     Point2D _location;
     std::vector<double> _distance;
     std::vector<std::unique_ptr<Equipment>>_equipmentList;

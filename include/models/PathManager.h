@@ -10,9 +10,9 @@ public:
     //获取指定时间的路径算法
     Path getPathsInTimeRange(int time_index,std::vector<Path> Path_list) const;
     //获取路径列表
-    vector<Path> getPathList() const;
+    std::vector<Path> getPathList() const;
     //设置路径列表
-    void setPathList(vector<Path> Path_list);
+    void setPathList(std::vector<Path> Path_list);
     //获取最大路径数
     int getMaxNumPath() const;
     //设置最大路径数

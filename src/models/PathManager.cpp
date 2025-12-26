@@ -39,10 +39,10 @@ bool PathManager::hasPathAtTime(int time) const {
         return false;
     }
 }
-vector<Path> PathManager::getPathList() const {
+std::vector<Path> PathManager::getPathList() const {
     return Path_list;
 }
-void PathManager::setPathList(vector<Path> Path_list) {
+void PathManager::setPathList(std::vector<Path> Path_list) {
     this->Path_list = Path_list;
 }
 int PathManager::getMaxNumPath() const {
