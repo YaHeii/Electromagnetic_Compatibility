@@ -21,7 +21,7 @@
 #include "utils/TransferToEngin.h"
 #include "utils/PaintImage.hpp"
 #include "models/PEModel.h"
-#include "utils/LogQueue.hpp"
+#include "utils/QtSpdlogSink.h"
 
 
 class ShipWidget;
@@ -51,8 +51,10 @@ private:
     // QList<ShipWidget*> m_shipList;
     Ui::MainWindow *ui;
     TreeViewManager *m_treeView;
+    LogEmitter* m_logEmitter;// 日志发射器
 private  slots:
-    void onNewLogMessage(const QString& message, LogLevel level);
+    // 槽函数：用来接收日志并分发到不同的 TextEdit
+    void onLogReceived(const QString& message, int level);
     void on_addShipButton_clicked();
     void on_addDeviceButton_clicked();
     void on_DeviceSave_clicked();

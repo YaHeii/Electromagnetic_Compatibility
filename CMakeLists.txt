@@ -15,6 +15,7 @@ find_package(Qt6 6.9.3 REQUIRED COMPONENTS Core Widgets Multimedia PrintSupport)
 find_package(FFTW3 CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED) 
 find_package(OpenMP REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
@@ -63,6 +64,7 @@ target_link_libraries(${APP_TARGET_NAME} PRIVATE
         FFTW3::fftw3
         Eigen3::Eigen
         Qt6::PrintSupport
+        spdlog::spdlog
 )
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${APP_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
