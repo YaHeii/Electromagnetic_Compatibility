@@ -12,25 +12,31 @@
 #include "log_global.h"
 
 //TODO:LogQueue不直接继承QTread，只负责管理和创建一个QTread实例和LogWorker
-class LogQueue : public QThread
-{
-public:
-    static LogQueue& GetInstance() {
-        static LogQueue instance; //懒汉式
-        return instance;
-    }
-    LogQueue(const LogQueue&) = delete;
-    LogQueue& operator=(const LogQueue&) = delete;
+class LogWorker;
 
-    void stopImmediately();
-    void print(const char* file, const char* func, int line, const char* fmt, ...);
+class LogQueue : public QObject
+{
+    Q_OBJECT
+public:
+    static LogQueue& GetInstance();
+    ~LogQueue();
+
+    void log(LogLevel level, const char* file, const char* func, int line, const char* fmt, ...);
+
+signals:
+    void newLogMessage(const QString& message, LogLevel level);
 
 private:
     explicit LogQueue(QObject *parent = nullptr);
-    void run();
-    QMutex m_lock;
-    volatile bool m_isCanRun;
-    QUEUE_DATA<Log> m_logQueue;
-    FILE *logfile;
+    LogQueue(const LogQueue&) = delete;
+    LogQueue& operator=(const LogQueue&) = delete;
+
+    void init();
+
+    QThread* m_workerThread;
+    LogWorker* m_worker;
 };
+
+#define LOG_ERROR(...) LogQueue::GetInstance().log(LOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+#define LOG_DEBUG(...) LogQueue::GetInstance().log(LOG_LEVEL_DEBUG, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 #endif // LOGQUEUE_H

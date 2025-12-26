@@ -21,6 +21,7 @@
 #include "utils/TransferToEngin.h"
 #include "utils/PaintImage.hpp"
 #include "models/PEModel.h"
+#include "utils/LogQueue.hpp"
 
 
 class ShipWidget;
@@ -51,6 +52,7 @@ private:
     Ui::MainWindow *ui;
     TreeViewManager *m_treeView;
 private  slots:
+    void onNewLogMessage(const QString& message, LogLevel level);
     void on_addShipButton_clicked();
     void on_addDeviceButton_clicked();
     void on_DeviceSave_clicked();

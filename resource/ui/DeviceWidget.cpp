@@ -136,13 +136,15 @@ void DeviceWidget::onEquipmentTypeChanged()
     QString equipmentType = ui->equipmentType->currentText();
     // 设置基础参数
     ui->Gain->setText("15");
-    ui->Power_Transmitter->setText("20");
-    ui->Bandwidth_Transmitter->setText("100");
-    ui->X_offset = 0;
-    ui->Y_offset = 0;
-    ui->Z_offset = 0;
+    ui->X_offset->setText("0");
+    ui->Y_offset->setText("0");
+    ui->Z_offset->setText("0");
 
     if (equipmentType == "发射机") {
+        ui->TransmitterWidget->setVisible(true);
+        ui->RecieverWidget->setVisible(false);
+        ui->AntennaWidget->setVisible(false);
+
         // 设置发射机默认参数
         ui->CentralF_Transmitter->setText("1000");
         ui->Bandwidth_Transmitter->setText("100");
@@ -153,12 +155,14 @@ void DeviceWidget::onEquipmentTypeChanged()
         // 清空其他参数
         resetReceiverUI();
         resetAntennaUI();
-        ui->RecieverWidget->setVisible(false);
-        ui->AntennaWidget->setVisible(false);
     }
     else if (equipmentType == "接收机") {
+        ui->TransmitterWidget->setVisible(false);
+        ui->RecieverWidget->setVisible(true);
+        ui->AntennaWidget->setVisible(false);
+
         // 设置接收机默认参数
-        ui->CentralF_Reciever->setText("1000");     
+        ui->CentralF_Reciever->setText("1000");
         ui->Bandwidth_Reciever->setText("100");
         ui->Sensitive_reciever->setText("-90");
         ui->interferenceMargin->setText("6");
@@ -168,11 +172,11 @@ void DeviceWidget::onEquipmentTypeChanged()
         // 清空其他参数
         resetTransmitterUI();
         resetAntennaUI();
-        ui->TransmitterWidget->setVisible(false);
-        ui->AntennaWidget->setVisible(false);
-
     }
     else if (equipmentType == "收发一体机") {
+        ui->TransmitterWidget->setVisible(true);
+        ui->RecieverWidget->setVisible(true);
+        ui->AntennaWidget->setVisible(false);
 
         ui->CentralF_Transmitter->setText("1000");
         ui->Bandwidth_Transmitter->setText("100");
@@ -181,7 +185,7 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->Beamwidth_Transmitter->setText("20");
         ui->PolarizationMethod_Transmitter->setCurrentIndex(0);
         
-        ui->CentralF_Reciever->setText("1000");     
+        ui->CentralF_Reciever->setText("1000");
         ui->Bandwidth_Reciever->setText("100");
         ui->Sensitive_reciever->setText("-90");
         ui->interferenceMargin->setText("6");
@@ -189,10 +193,13 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->noiseFigure->setText("3");
 
         resetAntennaUI();
-        ui->AntennaWidget->setVisible(false);
-
     }
     else if (equipmentType == "天线") {
+        ui->TransmitterWidget->setVisible(false);
+        ui->RecieverWidget->setVisible(false);
+        ui->AntennaWidget->setVisible(true);
+
+        // 设置天线默认参数
         ui->CentralF_Antenna->setText("1000");
         ui->Bandwidth_Antenna->setText("100");
         ui->Power_Antenna->setText("20");
@@ -200,6 +207,10 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->Beamwidth_Antenna->setText("20");
         ui->PolarizationMethod_Antenna->setCurrentIndex(0);
         ui->antennaType_Antenna->setCurrentIndex(0);
+
+        // 清空其他参数
+        resetTransmitterUI();
+        resetReceiverUI();
     }
     
     qDebug() << "Equipment type changed to:" << equipmentType;

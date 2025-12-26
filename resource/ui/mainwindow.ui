@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1032</width>
-    <height>735</height>
+    <width>1036</width>
+    <height>743</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -89,8 +89,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>765</width>
-                 <height>442</height>
+                 <width>768</width>
+                 <height>448</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -152,8 +152,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>777</width>
-                 <height>442</height>
+                 <width>780</width>
+                 <height>448</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -248,11 +248,31 @@
            <attribute name="title">
             <string>问题</string>
            </attribute>
+           <widget class="QTextEdit" name="Error_Edit">
+            <property name="geometry">
+             <rect>
+              <x>80</x>
+              <y>20</y>
+              <width>104</width>
+              <height>64</height>
+             </rect>
+            </property>
+           </widget>
           </widget>
           <widget class="QWidget" name="widget">
            <attribute name="title">
             <string>输出</string>
            </attribute>
+           <widget class="QTextEdit" name="Debug_Edit">
+            <property name="geometry">
+             <rect>
+              <x>110</x>
+              <y>10</y>
+              <width>104</width>
+              <height>64</height>
+             </rect>
+            </property>
+           </widget>
           </widget>
          </widget>
         </item>
