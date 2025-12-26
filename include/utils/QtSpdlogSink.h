@@ -36,9 +36,8 @@ public:
 protected:
     // spdlog 写入日志时会调用这个函数
     void sink_it_(const spdlog::details::log_msg& msg) override {
-        std::lock_guard<Mutex> lock(this->mutex_);
         if (!emitter_) return;
-
+        std::cout << "Sink Trace: sink_it_ called, emitting signal..." << std::endl;
         // 1. 格式化日志消息 (将 spdlog 的 buffer 转为 string)
         spdlog::memory_buf_t formatted;
         this->formatter_->format(msg, formatted);

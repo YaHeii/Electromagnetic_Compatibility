@@ -1,5 +1,6 @@
 #include "DeviceWidget.h"
 #include <QDebug>
+#include "spdlog/spdlog.h"
 
 DeviceWidget::DeviceWidget(QWidget *parent) :
     QWidget(parent),
@@ -59,8 +60,7 @@ void DeviceWidget::updateModelData() {
     bool ok;
     // 遍历全局数据列表找到当前设备
     for (DeviceData &data : DataModel::instance()->allDevices) {
-if(data.equipmentID == m_currentId){
-            
+        if(data.equipmentID == m_currentId){
             // --- 公共参数总是保存 ---
             data.equipmentID = ui->equipmentID->text();
             data.equipmentType = ui->equipmentType->currentText();
@@ -125,7 +125,7 @@ if(data.equipmentID == m_currentId){
                 data.antennaType_Antenna = "";
             }
 
-            qDebug() << "Data updated for ID:" << data.equipmentID;
+            spdlog::debug("设备 {} 参数已经保存", data.equipmentID.toStdString());
             break;
         }
     }
@@ -155,6 +155,7 @@ void DeviceWidget::onEquipmentTypeChanged()
         // 清空其他参数
         resetReceiverUI();
         resetAntennaUI();
+        spdlog::debug("正在设定{}参数", equipmentType.toStdString());
     }
     else if (equipmentType == "接收机") {
         ui->TransmitterWidget->setVisible(false);
@@ -172,6 +173,7 @@ void DeviceWidget::onEquipmentTypeChanged()
         // 清空其他参数
         resetTransmitterUI();
         resetAntennaUI();
+        spdlog::debug("正在设定{}参数", equipmentType.toStdString());
     }
     else if (equipmentType == "收发一体机") {
         ui->TransmitterWidget->setVisible(true);
@@ -193,6 +195,7 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->noiseFigure->setText("3");
 
         resetAntennaUI();
+        spdlog::debug("正在设定{}参数", equipmentType.toStdString());
     }
     else if (equipmentType == "天线") {
         ui->TransmitterWidget->setVisible(false);
@@ -211,9 +214,9 @@ void DeviceWidget::onEquipmentTypeChanged()
         // 清空其他参数
         resetTransmitterUI();
         resetReceiverUI();
+        spdlog::debug("正在设定{}参数", equipmentType.toStdString());
     }
     
-    qDebug() << "Equipment type changed to:" << equipmentType;
 }
 
 
@@ -221,8 +224,7 @@ void DeviceWidget::onEquipmentTypeChanged()
 void DeviceWidget::on_equipmentReduction_clicked()
 {
     delete this;
-    qDebug() << "DeviceWidget destroyed";
-    // qDebug().noquote() << "equipmentID:" << this->m_id;
+	spdlog::debug("{}设备控件已删除",this->m_currentId.toStdString());
 }
 
 void DeviceWidget::resetTransmitterUI() {

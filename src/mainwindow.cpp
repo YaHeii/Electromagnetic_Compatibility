@@ -13,7 +13,6 @@ MainWindow::MainWindow(QWidget *parent)
     
     ui->setupUi(this);
     m_treeView = new TreeViewManager(ui->treeView, this);  
-    ui->Debug_Edit->appendPlainText("=== DEBUG TEXT ===");
     m_logEmitter = new LogEmitter(this);
     connect(m_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
 
@@ -35,9 +34,6 @@ MainWindow::MainWindow(QWidget *parent)
         // 如果为空，说明 main.cpp 里的 init_logger 可能没执行或者名字写错了
         ui->Debug_Edit->appendHtml(QString("<font color='green'>Critical Error: Global logger not found!</font>"));
     }
-	//测试日志输出
-	ui->Debug_Edit->appendHtml(QString("<font color='green'>Logger initialized and UI Sink attached.</font>"));
-    
 }
 MainWindow::~MainWindow()
 {
@@ -45,11 +41,12 @@ MainWindow::~MainWindow()
     auto logger = spdlog::default_logger();
 
     // 遍历所有 sink，找到我们的 QtTextEditSink 并解绑
-    for (auto& sink : logger->sinks()) {
-        // dynamic_pointer_cast 尝试转换类型
-        auto qt_sink = std::dynamic_pointer_cast<QtTextEditSink_mt>(sink);
-        if (qt_sink) {
-            qt_sink->detach(); // 安全断开连接
+    if (logger) {
+        for (auto& sink : logger->sinks()) {
+            auto qt_sink = std::dynamic_pointer_cast<QtTextEditSink_mt>(sink);
+            if (qt_sink) {
+                qt_sink->detach();
+            }
         }
     }
     delete ui;
@@ -134,7 +131,7 @@ void MainWindow::on_StartSimulate_clicked() {
 void MainWindow::onLogReceived(const QString& message, int level)
 {
     auto logLevel = static_cast<spdlog::level::level_enum>(level);
-
+    std::cout << "UI Trace: Slot onLogReceived called. Msg: " << message.toStdString() << std::endl;
     // 1. 设置最大行数 (防止日志无限增长占满内存)
     // 建议在构造函数里设置，但这里写是为了演示
     const int maxBlockCount = 5000;
