@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "../../include/utils/point_2D.h"
-#include <QString>
+
 
 class HornAntenna;
 class ShapedBeamAntenna;
@@ -34,69 +34,63 @@ enum class PolarizationMethod {
 /// </summary>
 class Antenna {
 public:
-    Antenna(const std::string& id, QString antenna_type_string, 
-        QString polarization_method_string, const Point3D& relative_pos = { 0,0,0 }, 
+    Antenna(const std::string& id, AntennaType type,
+        PolarizationMethod pol, const Point3D& relative_pos = { 0,0,0 },
         double gain_dbm = 0, double tilt_deg = 0.0)
-        : _id(id), _antenna_type_string(antenna_type_string), _polarization_method_string(polarization_method_string),
-        _relative_position(relative_pos), _gain_dbm(gain_dbm), _tilt_deg(tilt_deg) {}
+        : _id(id), _type(type), _polarization(pol),
+        _relative_position(relative_pos), _gain_dbm(gain_dbm), _tilt_deg(tilt_deg) {
+    }
+
     virtual ~Antenna() = default;
 
+    // 工厂方法：接收 Enum
     static std::unique_ptr<Antenna> create(
         const std::string& id,
-        QString antenna_type_string,               // 决定创建哪个子类
-        QString polarization_method_string,    
+        AntennaType type,
+        PolarizationMethod pol,
         const Point3D& relative_pos = { 0,0,0 },
         double gain_dbm = 0.0,
         double tilt_deg = 0.0
     );
 
+    // Getters
     std::string getID() const { return _id; }
-    QString getAntennaTypeString() const { return _antenna_type_string; }
-    QString getPolarizationString() const { return _polarization_method_string; }
+    AntennaType getType() const { return _type; }
+    PolarizationMethod getPolarization() const { return _polarization; }
     Point3D getRelativePosition() const { return _relative_position; }
-    double getTiltDeg() const { return _tilt_deg; }
     double getGain() const { return _gain_dbm; }
-    PolarizationMethod getPolarizationMethod() const {
-        if (_polarization_method_string == "垂直极化") return PolarizationMethod::VERTICAL;
-        else if (_polarization_method_string == "水平极化") return PolarizationMethod::HORIZONTAL;
-    }
-    AntennaType getAntennaType_string() const {
-        if (_antenna_type_string == "喇叭天线")  return AntennaType::HORN;
-        else if (_antenna_type_string == "赋型波束天线") return AntennaType::ShapedBeam;
-        else if (_antenna_type_string == "抛物面天线") return AntennaType::Reflector;
-    }
-private:
+
+    // 虚函数：获取垂直场分布 (基类默认抛异常或返回默认)
+    virtual VerticalFieldDistribution getDistribution() const { return VerticalFieldDistribution::GAUSSIAN; }
+protected:
     std::string _id;
+    AntennaType _type;
+    PolarizationMethod _polarization;
     Point3D _relative_position;
     double _gain_dbm;
     double _tilt_deg;
-
-    QString _antenna_type_string;
-    AntennaType _type;
-    QString _polarization_method_string;
-    PolarizationMethod _polarization_method = PolarizationMethod::VERTICAL;
 };
 
 // 全向天线
 class OmniAntenna : public Antenna{
 public:
-    OmniAntenna(const std::string & id, QString polarization, const Point3D & pos, double gain, double tilt)
-        : Antenna(id, "全向天线", polarization, pos, gain, tilt) {}
+    OmniAntenna(const std::string & id, std::string pol, const Point3D & pos, double gain, double tilt)
+        : Antenna(id, AntennaType::OMNI, pol, pos, gain, tilt) {}
 };
 //定向天线
 class DirectionalAntenna : public Antenna {
 public:
-    DirectionalAntenna(const std::string& id, QString polarization, const Point3D& pos, double gain, double tilt)
-        : Antenna(id, "定向天线", polarization, pos, gain, tilt) {}
+    DirectionalAntenna(const std::string& id, std::string pol, const Point3D& pos, double gain, double tilt)
+        : Antenna(id, AntennaType::DIRECTIONAL, pol, pos, gain, tilt) {}
 };
 //喇叭天线
 class HornAntenna : public Antenna {
 public:
-    // 子类构造函数：自动将 "喇叭天线" 字符串传给基类
-    HornAntenna(const std::string& id, QString polarization, const Point3D& pos, double gain, double tilt)
-        : Antenna(id, "喇叭天线", polarization, pos, gain, tilt){}
+    HornAntenna(const std::string& id, PolarizationMethod pol, const Point3D& pos, double gain, double tilt)
+        : Antenna(id, AntennaType::HORN, pol, pos, gain, tilt) {
+    }
 
-    VerticalFieldDistribution getDistribution() const { return VerticalFieldDistribution::GAUSSIAN; }
+    VerticalFieldDistribution getDistribution() const override { return VerticalFieldDistribution::GAUSSIAN; }
 };
 
 
@@ -104,8 +98,8 @@ public:
 class ShapedBeamAntenna : public Antenna {
 public:
     // 自动传递 "赋形波束天线"
-    ShapedBeamAntenna(const std::string& id, QString polarization, const Point3D& pos, double gain, double tilt)
-        : Antenna(id, "赋形波束天线", polarization, pos, gain, tilt)
+    ShapedBeamAntenna(const std::string& id, std::string pol, const Point3D& pos, double gain, double tilt)
+        : Antenna(id, AntennaType::ShapedBeam, pol, pos, gain, tilt)
     {}
 
     VerticalFieldDistribution getDistribution() const { return VerticalFieldDistribution::SINC; }
@@ -116,41 +110,33 @@ public:
 class ReflectorAntenna : public Antenna {
 public:
     // 自动传递 "抛物面天线"
-    ReflectorAntenna(const std::string& id, QString polarization, const Point3D& pos, double gain, double tilt)
-        : Antenna(id, "抛物面天线", polarization, pos, gain, tilt)
+    ReflectorAntenna(const std::string& id, std::string pol, const Point3D& pos, double gain, double tilt)
+        : Antenna(id, AntennaType::Reflector, pol, pos, gain, tilt)
     {}
 
     VerticalFieldDistribution getDistribution() const { return VerticalFieldDistribution::COSINE; }
 };
 
 inline std::unique_ptr<Antenna> Antenna::create(
-    const std::string& id,
-    QString antenna_type_string,
-    QString polarization_method_string,
-    const Point3D& relative_pos,
-    double gain_dbm,
-    double tilt_deg)
+    const std::string& id, 
+    AntennaType type, 
+    PolarizationMethod pol, 
+    const Point3D& pos, 
+    double gain, 
+    double tilt) {
 {
-    AntennaType type; 
-    if (antenna_type_string == "喇叭天线")  type = AntennaType::HORN;
-    else if (antenna_type_string == "赋型波束天线") type = AntennaType::ShapedBeam;
-    else if (antenna_type_string == "抛物面天线") type = AntennaType::Reflector;
 
     switch (type) {
     case AntennaType::HORN:
-        return std::make_unique<HornAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
+        return std::make_unique<HornAntenna>(id, pol, pos, gain, tilt);
     case AntennaType::ShapedBeam:
-        return std::make_unique<ShapedBeamAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
-
+        return std::make_unique<ShapedBeamAntenna>(id, pol, pos, gain, tilt);
     case AntennaType::Reflector:
-        return std::make_unique<ReflectorAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
-
+        return std::make_unique<ReflectorAntenna>(id, pol, pos, gain, tilt);
     case AntennaType::OMNI:
-        return std::make_unique<OmniAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
-
+        return std::make_unique<OmniAntenna>(id, pol, pos, gain, tilt);
     case AntennaType::DIRECTIONAL:
-        return std::make_unique<DirectionalAntenna>(id, polarization_method_string, relative_pos, gain_dbm, tilt_deg);
-
+        return std::make_unique<DirectionalAntenna>(id, pol, pos, gain, tilt);
     default:
         // 默认处理：返回空指针或默认的全向天线
         return nullptr;
