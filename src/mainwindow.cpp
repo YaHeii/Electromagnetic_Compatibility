@@ -5,19 +5,22 @@
 #include "../resource/ui/DeviceWidget.h"
 #include <QMessageBox>
 #include "spdlog/spdlog.h"
-#include <QtConcurrent/QtConcurrent>
-#include <QFutureWatcher>
+#include <QMetaType> // 包含 QMetaType
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    m_simWatcher(nullptr) { // 初始化 m_simWatcher
+    ui(new Ui::MainWindow) {
     ui->setupUi(this);
     m_treeView = new TreeViewManager(ui->treeView, this);
 
-    // 设置日志控件最大行数，只需一次
+    // 设置日志控件最大行数
     ui->Debug_Edit->setMaximumBlockCount(5000);
     ui->Error_Edit->setMaximumBlockCount(5000);
+
+    // 注册GridMap类型，使其可在信号槽中传递
+    qRegisterMetaType<GridMap>("GridMap");
+    // 连接仿真完成信号到槽
+    connect(this, &MainWindow::simulationDone, this, &MainWindow::onSimulationFinished);
 
     m_logEmitter = new LogEmitter(this);
     connect(m_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
@@ -52,6 +55,7 @@ MainWindow::~MainWindow()
             }
         }
     }
+    delete m_engine;
     delete ui;
 }
 
@@ -201,70 +205,70 @@ void MainWindow::on_StartSimulate_clicked() {
     spdlog::info("Simulation requested...");
 
     // 1. 全局数据同步与校验
-    // 如果任意一个校验失败，直接返回，不启动仿真
-    if (!updateShipModelFromView()) return;
-    if (!updateDeviceModelFromView()) return;
+    if (!updateShipModelFromView() || !updateDeviceModelFromView()) {
+        return;
+    }
 
     // 2. 准备数据快照 (深拷贝以保证线程安全)
     auto dataSnapshot = DataModel::instance()->createSnapshot();
 
     // 3. UI 状态更新
     ui->StartSimulate->setEnabled(false);
-    ui->statusbar->showMessage("正在进行电磁仿真计算...", 0); // 0表示一直显示
-    
+    ui->statusbar->showMessage("正在进行电磁仿真计算...", 0);
+
     // 清空旧的绘图
     ui->PEmodel_2Dplot->clearPlottables();
     ui->PEmodel_2Dplot->replot();
 
-    // 4. 启动异步计算任务
-    QFuture<GridMap> future = QtConcurrent::run([dataSnapshot]() {
+    // 4. 使用 std::async 启动异步计算任务
+    std::future<GridMap> future = std::async(std::launch::async, [this, dataSnapshot]() {
         // --- 后台线程 ---
-        
-        // A. 转换数据
         auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
         if (!fleet) {
             spdlog::error("Fleet conversion failed (nullptr).");
             return GridMap();
         }
-
-        // B. 初始化引擎
-        std::string modelName = "PEModel"; // 或从 UI 获取
-        Propagation_Engine PE(modelName);
         
-        // 假设 PE 引擎有接口接收 Fleet 数据，例如:
-        // PE.loadScenario(std::move(fleet));
-        // 或者您原本的设计是传入 PE_data，那就需要在这里转换 fleet -> PE_data
-        PE_data PEdata;
-        // convertFleetToPEData(fleet.get(), PEdata); // 假设有这个转换
-
+        // 注意：m_engine是在主线程创建的，在后台线程使用需要确保线程安全
+        // 如果 m_engine 的方法是可重入的，则无需加锁
+        if (!m_engine) {
+            m_engine = new Propagation_Engine(ModelType::PE, std::move(fleet));
+        } else {
+            // 假设引擎有方法可以更新其内部状态
+            // m_engine->updateFleet(std::move(fleet));
+        }
+        
         spdlog::info("Engine computing 2D loss map...");
-        
-        // C. 执行耗时计算
-        // 这里的 25 可能是分辨率或范围参数
-        return PE.PEmodel_computing2D(PEdata, 25);
+        // return m_engine->PEmodel_computing2D(25); // 假设接口如此
+        return GridMap(); // 临时返回
     });
 
-    // 5. 关联监视器
-    if (!m_simWatcher) {
-        m_simWatcher = new QFutureWatcher<GridMap>(this);
-        connect(m_simWatcher, &QFutureWatcher<GridMap>::finished, this, &MainWindow::onSimulationFinished);
-    }
-    m_simWatcher->setFuture(future);
+    // 5. 创建一个分离的线程来等待结果，避免阻塞UI
+    std::thread(&MainWindow::simulationWaiter, this, std::move(future)).detach();
 }
 
-void MainWindow::onSimulationFinished() {
+void MainWindow::simulationWaiter(std::future<GridMap> future) {
+    // --- 等待线程 ---
+    try {
+        GridMap result = future.get(); // 阻塞直到计算完成
+        emit simulationDone(result);   // 发射信号，将结果传递给UI线程
+    } catch (const std::exception& e) {
+        spdlog::error("Exception in simulation thread: {}", e.what());
+        emit simulationDone(GridMap()); // 发射空结果表示失败
+    }
+}
+
+void MainWindow::onSimulationFinished(const GridMap& result) {
     // --- UI 线程 ---
     
     // 1. 恢复 UI
     ui->StartSimulate->setEnabled(true);
     ui->statusbar->showMessage("仿真完成", 5000);
 
-    // 2. 获取结果
-    GridMap result = m_simWatcher->result();
-
-    if (result.empty() || result[0].empty()) {
-        spdlog::warn("Simulation returned empty result.");
-        QMessageBox::warning(this, "仿真警告", "仿真结果为空，无法绘图。");
+    // 2. 检查结果
+    if (result.empty() || (result.size() > 0 && result[0].empty())) {
+        spdlog::warn("Simulation returned empty or invalid result.");
+        QMessageBox::warning(this, "仿真警告", "仿真结果为空或无效，无法绘图。");
         return;
     }
 

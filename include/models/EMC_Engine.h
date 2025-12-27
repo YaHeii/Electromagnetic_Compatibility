@@ -31,24 +31,29 @@ struct PE_data {
 	double duct_height = 20.0; // 蒸发波导高度 H0 (m)
     double wind_speed = 7.0;   // 风速 (m/s)，用于计算 Miller-Brown 粗糙度
 };  
+enum class ModelType {
+    PE,
+    RayModel
+};
 using GridMap = std::vector<std::vector<double>>;
 using LineMap = std::vector<double>;
 class Propagation_Engine {
 public:
-    Propagation_Engine(std::string Model_type)
-        : _model_type(Model_type) {
-        if (_model_type == "PEModel") {
+    Propagation_Engine(ModelType model_type, std::unique_ptr<Fleet> fleet)
+        : _model_type(model_type), _fleet(fleet) {
+        if (_model_type == ModelType::PE) {
             //初始化PEModel
 
         }
-        else if (_model_type == "RayModel") {
+        else if (_model_type == ModelType::RayModel) {
             //初始化RayModel
         }
     }
     LineMap PEmodel_computing1D(PE_data _PEdata, double reciever_antenna_height);
     GridMap PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height);
 private:
-    std::string _model_type;
+    std::unique_ptr<Fleet> _fleet;
+    ModelType _model_type;
 	PE_data _PEdata;
     GridMap _LossGrid;
     LineMap _LossLine;

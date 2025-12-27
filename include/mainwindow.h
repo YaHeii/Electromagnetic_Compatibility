@@ -4,8 +4,8 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
-#include <QFuture>
-#include <QFutureWatcher>
+#include <future>   // 包含 std::future 和 std::async
+#include <thread>   // 包含 std::thread
 #include "core/ship.h"
 #include "core/equipment.h"
 #include "utils/point_2D.h"
@@ -36,24 +36,32 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    // void onCollectAllDeviceData();
+
+signals:
+    // 用于从工作线程安全地将结果传递到UI线程
+    void simulationDone(const GridMap& result);
+
 private:
     static QRect pos;
     bool updateDeviceModelFromView();
     bool updateShipModelFromView();
     Ui::MainWindow *ui;
     TreeViewManager *m_treeView;
-    LogEmitter* m_logEmitter;// 日志发射器
-    QFutureWatcher<GridMap> *m_simWatcher = nullptr; // 仿真任务监视器
-private  slots:
-    // 接收日志并分发到不同的 TextEdit
+    Propagation_Engine *m_engine;
+    LogEmitter* m_logEmitter; // 日志发射器
+
+    // 在后台线程中等待仿真结果
+    void simulationWaiter(std::future<GridMap> future);
+
+private slots:
     void onLogReceived(const QString& message, int level);
     void on_addShipButton_clicked();
     void on_addDeviceButton_clicked();
     void on_DeviceSave_clicked();
     void on_ShipSave_clicked();
-    void on_StartSimulate_clicked(); // 添加仿真开始函数声明
-    void onSimulationFinished();
+    void on_StartSimulate_clicked();
+    // 槽函数现在接收GridMap作为参数
+    void onSimulationFinished(const GridMap& result);
 };
 
 
