@@ -124,9 +124,22 @@ struct ShipData {
 class DataModel : public QObject {
     Q_OBJECT
 public:
+    // 定义一个可拷贝的数据快照结构体
+    struct DataSnapshot {
+        std::vector<EquipmentData> allEquipments;
+        std::vector<ShipData> allShips;
+    };
+
     static DataModel* instance() {
         static DataModel _instance;
         return &_instance;
+    }
+
+    // 创建数据快照的成员函数
+    DataSnapshot createSnapshot() const {
+        // 这里可以加锁（如果需要的话），保证创建快照时的原子性
+        // std::lock_guard<std::mutex> lock(m_mutex);
+        return { allEquipments, allShips };
     }
 
     // 全局数据存储
@@ -142,7 +155,7 @@ public:
     }
 
 private:
-    DataModel() = default; 
+    DataModel() = default;
     ~DataModel() = default;
     DataModel(const DataModel&) = delete;
     DataModel& operator=(const DataModel&) = delete;

@@ -1,14 +1,32 @@
 #include "../../include/utils/TransferToEngin.h"
 #include <iostream>
+#include <spdlog/spdlog.h>
 
-std::unique_ptr<Fleet> TransferToEngine::convertDataModelToFleet(const DataModel* dataModel) {
-    if (!dataModel) {
-        return nullptr;
-    }
+AntennaType TransferToEngine::stringToAntennaType(const QString& typeStr) {
+    if (typeStr == "喇叭天线") return AntennaType::HORN;
+    if (typeStr == "赋形波束天线") return AntennaType::ShapedBeam;
+    if (typeStr == "抛物面天线") return AntennaType::Reflector;
+    return AntennaType::OMNI; // 默认
+}
+
+PolarizationMethod TransferToEngine::stringToPolarization(const QString& polStr) {
+    if (polStr == "水平极化") return PolarizationMethod::HORIZONTAL;
+    return PolarizationMethod::VERTICAL; // 默认
+}
+
+std::unique_ptr<Fleet> TransferToEngine::convertDataModelToFleet(const DataModel::DataSnapshot& dataSnapshot) {
     auto fleet = std::make_unique<Fleet>();
-    // 遍历所有船只数据并转换
-    for (const ShipData& shipData : dataModel->allShips) {
-        std::unique_ptr<ship> convertedShip = convertShipDataToShip(shipData, dataModel->allEquipments);
+
+    // 建立哈希索引，避免双重循环查找
+    // Key: EquipmentID (std::string), Value: EquipmentData指针
+    std::unordered_map<std::string, const EquipmentData*> equipMap;
+    for (const auto& eq : dataSnapshot.allEquipments) {
+        equipMap[eq.equipmentID.toStdString()] = &eq;
+    }
+
+    for (const ShipData& shipData : dataSnapshot.allShips) {
+        // 传入 Map 进行快速查找
+        std::unique_ptr<ship> convertedShip = convertShipDataToShip(shipData, equipMap);
         if (convertedShip) {
             fleet->addShip(std::move(convertedShip));
         }
@@ -16,129 +34,134 @@ std::unique_ptr<Fleet> TransferToEngine::convertDataModelToFleet(const DataModel
     return fleet;
 }
 
-std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& shipData, const std::vector<EquipmentData>& allEquipments) {
-    // 创建船只对象
-    Point3D location{shipData.X_offset, shipData.Y_offset, shipData.Z_offset};
+std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(
+    const ShipData& shipData,
+    const std::unordered_map<std::string, const EquipmentData*>& equipMap)
+{
+    Point3D location{ shipData.X_offset, shipData.Y_offset, shipData.Z_offset };
+
     auto shipObj = std::make_unique<ship>(
-        shipData.shipName.toStdString(), 
-        location, 
-        shipData.ship_Orienteation, 
+        shipData.shipName.toStdString(),
+        location,
+        shipData.ship_Orienteation,
         shipData.ship_Speed
     );
-    
-    // 添加船只上的设备
-    //// TODO:使用双重循环匹配，考虑优化
-    for (const EquipmentOnShip& equipment : shipData.Equipments) {
-        // 在设备库中查找对应的设备
-        for (const EquipmentData& deviceData : allEquipments) {
-            if (deviceData.equipmentID == equipment.equipmentID) {
-                std::unique_ptr<Equipment> equipment = convertDeviceDataToEquipment(deviceData);
-                if (equipment) {
-                    // 设置设备在船上的相对位置
-                    //Point2D relativePos{deviceConfig.device_X_offset, deviceConfig.device_Y_offset};
-                    //equipment->setRelativePosition(relativePos);
-                    shipObj->addEquipment(std::move(equipment));
-                }
-                break;
+
+    // O(1) 查找设备
+    for (const EquipmentOnShip& shipEq : shipData.Equipments) {
+        std::string id = shipEq.equipmentID.toStdString();
+        auto it = equipMap.find(id);
+
+        if (it != equipMap.end()) {
+            // 找到设备数据，开始转换
+            std::unique_ptr<Equipment> deviceObj = convertDeviceDataToEquipment(*(it->second));
+            if (deviceObj) {
+                shipObj->addEquipment(std::move(deviceObj));
             }
+        }
+        else {
+            // 警告船上挂载了不存在的设备
+             spdlog::debug("Ship {} has unknown equipment ID: {}", shipData.shipName.toStdString(), id);
         }
     }
     return shipObj;
 }
 
-std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const EquipmentData& deviceData) {
-    std::unique_ptr<Equipment> equipment = nullptr;
-    
-    if (deviceData.equipmentType == "发射机") {
-        Point3D position{deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset};
-        equipment = std::make_unique<Transmitter>(
-            deviceData.equipmentID.toStdString(),
-            deviceData.CentralF_Transmitter,
-            deviceData.Gain,
-            deviceData.Bandwidth_Transmitter,
-            deviceData.antennaPhi_Transmitter,
-            deviceData.Beamwidth_Transmitter,
-            deviceData.PolarizationMethod_Transmitter,
-            deviceData.antennaType_Transmitter,
-            position 
-        );
-    } 
-    else if (deviceData.equipmentType == "接收机") {
-        Point3D position{deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset};
-        equipment = std::make_unique<Receiver>(
-            deviceData.equipmentID.toStdString(),
-            deviceData.CentralF_Reciever, 
-            deviceData.Gain,
-            deviceData.Sensitive_reciever,
-            deviceData.Bandwidth_Reciever,
-            deviceData.noiseFigure,
-            deviceData.SINRMargin,
-            deviceData.interferenceMargin,
-            position
-        );
-    } 
-    else if (deviceData.equipmentType == "收发一体机") {
-        Point3D position{deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset};
-        // 对于收发一体机，可能需要创建特殊的设备类型或分别创建发射和接收部分
-        equipment = std::make_unique<Transceiver>(
-            deviceData.equipmentID.toStdString(),
-            deviceData.Gain,
-            position,
-            // 创建发射部分
-            deviceData.CentralF_Transmitter,
-            deviceData.Bandwidth_Transmitter,
-            deviceData.Power_Transmitter,
-            deviceData.antennaPhi_Transmitter,
-            deviceData.Beamwidth_Transmitter,
-            deviceData.PolarizationMethod_Transmitter,
-            deviceData.antennaType_Transmitter,
-            // 创建接收部分
-            deviceData.CentralF_Reciever,
-            deviceData.Bandwidth_Reciever,
-            deviceData.Sensitive_reciever,
-            deviceData.noiseFigure,
-            deviceData.SINRMargin,
-            deviceData.interferenceMargin
-        );
+std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const EquipmentData& d) {
+    std::string id = d.equipmentID.toStdString();
+    Point3D pos{ d.X_offset, d.Y_offset, d.Z_offset }; // 相对坐标
+
+    // --- 发射机 ---
+    if (d.equipmentType == "发射机") {
+        TxParams params;
+        params._centralF_mhz = d.CentralF_Transmitter;
+        params._bandwidth_khz = d.Bandwidth_Transmitter;
+        params._power_dbm = d.Power_Transmitter;
+        params._antennaPhi = d.antennaPhi_Transmitter;
+        params._beamWidth = d.Beamwidth_Transmitter;
+
+        // 转换 Enum
+        params._polarization = stringToPolarization(d.PolarizationMethod_Transmitter);
+        params._antennaType = stringToAntennaType(d.antennaType_Transmitter);
+
+        return std::make_unique<Transmitter>(id, params, pos);
     }
-    return equipment;
+
+    // --- 接收机 ---
+    else if (d.equipmentType == "接收机") {
+        RxParams params;
+        params._centralF_mhz = d.CentralF_Reciever;
+        params._bandwidth_khz = d.Bandwidth_Reciever;
+        params._sensitivity_dbm = d.Sensitive_reciever;
+        params._noise_figure_db = d.noiseFigure;
+        params._SINR_threshold_db = d.SINRMargin;
+        params._interference_threshold_db = d.interferenceMargin;
+
+        return std::make_unique<Receiver>(id, params, "", pos);
+    }
+
+    // --- 收发一体机 ---
+    else if (d.equipmentType == "收发一体机") {
+        // 同时构建两套参数
+        TxParams txParams;
+        txParams._centralF_mhz = d.CentralF_Transmitter;
+        txParams._bandwidth_khz = d.Bandwidth_Transmitter;
+        txParams._power_dbm = d.Power_Transmitter;
+        txParams._antennaPhi = d.antennaPhi_Transmitter;
+        txParams._beamWidth = d.Beamwidth_Transmitter;
+        txParams._polarization = stringToPolarization(d.PolarizationMethod_Transmitter);
+        txParams._antennaType = stringToAntennaType(d.antennaType_Transmitter);
+
+        RxParams rxParams;
+        rxParams._centralF_mhz = d.CentralF_Reciever;
+        rxParams._bandwidth_khz = d.Bandwidth_Reciever;
+        rxParams._sensitivity_dbm = d.Sensitive_reciever;
+        rxParams._noise_figure_db = d.noiseFigure;
+        rxParams._SINR_threshold_db = d.SINRMargin;
+        rxParams._interference_threshold_db = d.interferenceMargin;
+
+        return std::make_unique<Transceiver>(id, txParams, rxParams, pos);
+    }
+
+    // 暂不支持纯天线作为独立 Equipment，或者需要为其定义专门的 Equipment 子类
+    return nullptr;
 }
 
-// 对外工具函数
-std::unique_ptr<Antenna> TransferToEngine::createAntenna(const EquipmentData& deviceData) {
-    std::unique_ptr<Antenna> antenna = nullptr;
-    Point3D position{ deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset };
-    if (deviceData.equipmentType == "天线") {
-        if (deviceData.antennaType_Antenna == "喇叭天线") {
-            antenna = Antenna::create(
-                deviceData.equipmentID.toStdString(),
-                "喇叭天线",
-                deviceData.PolarizationMethod_Antenna,
-                position,
-                deviceData.Gain,
-                deviceData.antennaPhi_Antenna
-            );
-        }
-        if (deviceData.antennaType_Antenna == "赋形波束天线") {
-            antenna = Antenna::create(
-                deviceData.equipmentID.toStdString(),
-                "赋形波束天线",
-                deviceData.PolarizationMethod_Antenna,
-                position,
-                deviceData.Gain,
-                deviceData.antennaPhi_Antenna
-            );
-        }
-        if (deviceData.antennaType_Antenna == "抛物面天线") {
-            antenna = Antenna::create(
-                deviceData.equipmentID.toStdString(),
-                "抛物面天线",
-                deviceData.PolarizationMethod_Antenna,
-                position,
-                deviceData.Gain,
-                deviceData.antennaPhi_Antenna
-            );
-        }
-    } 
-    return antenna;
-}
+// // 对外工具函数
+// std::unique_ptr<Antenna> TransferToEngine::createAntenna(const EquipmentData& deviceData) {
+//     std::unique_ptr<Antenna> antenna = nullptr;
+//     Point3D position{ deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset };
+//     if (deviceData.equipmentType == "天线") {
+//         if (deviceData.antennaType_Antenna == "喇叭天线") {
+//             antenna = Antenna::create(
+//                 deviceData.equipmentID.toStdString(),
+//                 "喇叭天线",
+//                 deviceData.PolarizationMethod_Antenna,
+//                 position,
+//                 deviceData.Gain,
+//                 deviceData.antennaPhi_Antenna
+//             );
+//         }
+//         if (deviceData.antennaType_Antenna == "赋形波束天线") {
+//             antenna = Antenna::create(
+//                 deviceData.equipmentID.toStdString(),
+//                 "赋形波束天线",
+//                 deviceData.PolarizationMethod_Antenna,
+//                 position,
+//                 deviceData.Gain,
+//                 deviceData.antennaPhi_Antenna
+//             );
+//         }
+//         if (deviceData.antennaType_Antenna == "抛物面天线") {
+//             antenna = Antenna::create(
+//                 deviceData.equipmentID.toStdString(),
+//                 "抛物面天线",
+//                 deviceData.PolarizationMethod_Antenna,
+//                 position,
+//                 deviceData.Gain,
+//                 deviceData.antennaPhi_Antenna
+//             );
+//         }
+//     } 
+//     return antenna;
+// }

@@ -60,10 +60,6 @@ public:
     void setRelativePosition(const Point3D& position) { _relative_position = position; }
     void setRelativePosition(double x, double y, double z) { _relative_position._x = x; _relative_position._y = y; _relative_position._z = z; }
 
-    void setAntenna(std::unique_ptr<Antenna> antenna) {
-        _antenna = std::move(antenna);
-    }
-
 protected:
     std::string _id;
     EquipmentType _type;
@@ -99,14 +95,13 @@ public:
 
 
     std::string getID() const { return _id; };
-    double getFrequencyMHz()  { return _params._centralF_mhz; }
-    double getBandWidthKHz()  { return _params._bandwidth_khz; }
-    double getPowerDBm()  { return _params._power_dbm; }
-    double getBeamWidth()  { return _params._beamWidth; }
-    double getAntennaPhi()  { return _params._antennaPhi; }
-    PolarizationMethod getPolarizationMethod()  { return _params._polarization; }
-    AntennaType getAntennaType_string()  { return _params._antennaType; }
-    double getAntennaPhi()  { return _params._antennaPhi;  }
+    double getFrequencyMHz() const { return _params._centralF_mhz; }
+    double getBandWidthKHz() const { return _params._bandwidth_khz; }
+    double getPowerDBm() const { return _params._power_dbm; }
+    double getBeamWidth() const { return _params._beamWidth; }
+    double getAntennaPhi() const { return _params._antennaPhi; }
+    PolarizationMethod getPolarizationMethod() const { return _params._polarization; }
+    AntennaType getAntennaType_string() const { return _params._antennaType; }
 
 private:
     TxParams _params;
@@ -122,14 +117,14 @@ public:
         : Equipment(id, EquipmentType::RECEIVER, pos, 0),
         _params(params), _transmitter_in_ship_id(tx_id) {}
 
-    double getFrequencyMHz()  { return _params._centralF_mhz; }
-    double getSensitivityDBm()  { return _params._sensitivity_dbm; }
-    double getBandwidthKHz()  { return _params._bandwidth_khz; }
-    double getNoiseFigureDB()  { return _params._noise_figure_db; }
-    double getSINRThresholdDB()  { return _params._SINR_threshold_db; }
-    double getInterferenceThresholdDB()  { return _params._interference_threshold_db; }
-    std::string getTransmitterID()  { return _transmitter_id; }
-    std::string getTransmitterInShipID()  { return _transmitter_in_ship_id; }
+    double getFrequencyMHz() const { return _params._centralF_mhz; }
+    double getSensitivityDBm() const { return _params._sensitivity_dbm; }
+    double getBandwidthKHz() const { return _params._bandwidth_khz; }
+    double getNoiseFigureDB() const { return _params._noise_figure_db; }
+    double getSINRThresholdDB() const { return _params._SINR_threshold_db; }
+    double getInterferenceThresholdDB() const { return _params._interference_threshold_db; }
+    std::string getTransmitterID() const { return _transmitter_id; }
+    std::string getTransmitterInShipID() const { return _transmitter_in_ship_id; }
     // 计算接收机内部噪声基底 (dBm)
     // N = k * T0 * B * NF_linear, k = 1.380649e-23 J/K (Boltzmann constant)
     // T0 = 290 K (standard temperature)
@@ -172,30 +167,29 @@ public:
 
     // --- 发射相关接口 ---
     std::string getID() const { return _id; };
-    double getFrequencyMHz()  { return _tx_params._centralF_mhz; }
-    double getBandWidthKHz()  { return _tx_params._bandwidth_khz; }
-    double getPowerDBm()  { return _tx_params._power_dbm; }
-    double getBeamWidth()  { return _tx_params._beamWidth; }
-    double getAntennaPhi()  { return _tx_params._antennaPhi; }
-    PolarizationMethod getPolarizationMethod()  { return _tx_params._polarization; }
-    AntennaType getAntennaType_string()  { return _tx_params._antennaType; }
-    double getAntennaPhi()  { return _tx_params._antennaPhi; }
+    double getTXFrequencyMHz() const { return _tx_params._centralF_mhz; }
+    double getTXBandWidthKHz() const { return _tx_params._bandwidth_khz; }
+    double getPowerDBm() const { return _tx_params._power_dbm; }
+    double getBeamWidth() const { return _tx_params._beamWidth; }
+    double getAntennaPhi() const { return _tx_params._antennaPhi; }
+    PolarizationMethod getPolarizationMethod() const { return _tx_params._polarization; }
+    AntennaType getAntennaType_string() const { return _tx_params._antennaType; }
 
     // --- 接收相关接口 ---
-    double getFrequencyMHz()  { return _rx_params._centralF_mhz; }
-    double getSensitivityDBm()  { return _rx_params._sensitivity_dbm; }
-    double getBandwidthKHz()  { return _rx_params._bandwidth_khz; }
-    double getNoiseFigureDB()  { return _rx_params._noise_figure_db; }
-    double getSINRThresholdDB()  { return _rx_params._SINR_threshold_db; }
-    double getInterferenceThresholdDB()  { return _rx_params._interference_threshold_db; }
-    std::string getTransmitterID()  { return _transmitter_id; }
-    std::string getTransmitterInShipID()  { return _transmitter_in_ship_id; }
+    double getRXFrequencyMHz() const { return _rx_params._centralF_mhz; }
+    double getSensitivityDBm() const { return _rx_params._sensitivity_dbm; }
+    double getRXBandwidthKHz() const { return _rx_params._bandwidth_khz; }
+    double getNoiseFigureDB() const { return _rx_params._noise_figure_db; }
+    double getSINRThresholdDB() const { return _rx_params._SINR_threshold_db; }
+    double getInterferenceThresholdDB() const { return _rx_params._interference_threshold_db; }
+    std::string getTransmitterID() const { return _transmitter_id; }
+    std::string getTransmitterInShipID() const { return _transmitter_in_ship_id; }
 
     // 计算接收机内部噪声基底 (dBm)
     // N = k * T0 * B * NF_linear, k = 1.380649e-23 J/K (Boltzmann constant)
     // T0 = 290 K (standard temperature)
     // k*T0 in dBm/Hz = -173.97 dBm/Hz
-    double getNoiseFloorDBm()  {
+    double getNoiseFloorDBm() const {
         return Receiver::calculateNoiseFloor(_rx_params._bandwidth_khz, _rx_params._noise_figure_db);
     }
 

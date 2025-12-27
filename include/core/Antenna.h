@@ -38,8 +38,7 @@ public:
         PolarizationMethod pol, const Point3D& relative_pos = { 0,0,0 },
         double gain_dbm = 0, double tilt_deg = 0.0)
         : _id(id), _type(type), _polarization(pol),
-        _relative_position(relative_pos), _gain_dbm(gain_dbm), _tilt_deg(tilt_deg) {
-    }
+        _relative_position(relative_pos), _gain_dbm(gain_dbm), _tilt_deg(tilt_deg) {}
 
     virtual ~Antenna() = default;
 
@@ -74,13 +73,13 @@ protected:
 // 全向天线
 class OmniAntenna : public Antenna{
 public:
-    OmniAntenna(const std::string & id, std::string pol, const Point3D & pos, double gain, double tilt)
+    OmniAntenna(const std::string& id, PolarizationMethod pol, const Point3D & pos, double gain, double tilt)
         : Antenna(id, AntennaType::OMNI, pol, pos, gain, tilt) {}
 };
 //定向天线
 class DirectionalAntenna : public Antenna {
 public:
-    DirectionalAntenna(const std::string& id, std::string pol, const Point3D& pos, double gain, double tilt)
+    DirectionalAntenna(const std::string& id, PolarizationMethod pol, const Point3D& pos, double gain, double tilt)
         : Antenna(id, AntennaType::DIRECTIONAL, pol, pos, gain, tilt) {}
 };
 //喇叭天线
@@ -98,7 +97,7 @@ public:
 class ShapedBeamAntenna : public Antenna {
 public:
     // 自动传递 "赋形波束天线"
-    ShapedBeamAntenna(const std::string& id, std::string pol, const Point3D& pos, double gain, double tilt)
+    ShapedBeamAntenna(const std::string& id, PolarizationMethod pol, const Point3D& pos, double gain, double tilt)
         : Antenna(id, AntennaType::ShapedBeam, pol, pos, gain, tilt)
     {}
 
@@ -110,7 +109,7 @@ public:
 class ReflectorAntenna : public Antenna {
 public:
     // 自动传递 "抛物面天线"
-    ReflectorAntenna(const std::string& id, std::string pol, const Point3D& pos, double gain, double tilt)
+    ReflectorAntenna(const std::string& id, PolarizationMethod pol, const Point3D& pos, double gain, double tilt)
         : Antenna(id, AntennaType::Reflector, pol, pos, gain, tilt)
     {}
 
@@ -124,7 +123,6 @@ inline std::unique_ptr<Antenna> Antenna::create(
     const Point3D& pos, 
     double gain, 
     double tilt) {
-{
 
     switch (type) {
     case AntennaType::HORN:

@@ -20,28 +20,30 @@ public:
  * @param dataModel 前端数据模型指针
  * @return 转换后的Fleet对象唯一指针，如果输入为空则返回nullptr
  */
-    static std::unique_ptr<Fleet> convertDataModelToFleet(const DataModel* dataModel);
+    static std::unique_ptr<Fleet> convertDataModelToFleet(const DataModel::DataSnapshot& dataSnapshot);
     
 private:
     /**
      * @brief 将ShipData转换为ship对象
      * @param shipData 船只数据
+	 * @param equipMap 设备ID到设备数据的映射表
      * @param allDevices 所有设备数据列表（用于查找船上设备的详细信息）
      * @return 转换后的ship对象唯一指针
      */
-    static std::unique_ptr<ship> convertShipDataToShip(const ShipData& shipData, const std::vector<EquipmentData>& allEquipments);
+    static std::unique_ptr<ship> convertShipDataToShip(
+        const ShipData& shipData, 
+        const std::unordered_map<std::string, const EquipmentData*>& equipMap);
     
     /**
      * @brief 将DeviceData转换为Equipment对象
      * @param deviceData 设备数据
      * @return 转换后的Equipment对象唯一指针
      */
-    static std::unique_ptr<Equipment> convertDeviceDataToEquipment(const EquipmentData& deviceData);
-    
-    /**
-     * @brief 为设备创建对应的天线对象
-     * @param deviceData 设备数据
-     * @return 创建的天线对象唯一指针
-     */
-    static std::unique_ptr<Antenna> createAntenna(const EquipmentData& deviceData);
+    static std::unique_ptr<Equipment> convertDeviceDataToEquipment(
+        const EquipmentData& equipmentData);
+
+
+    // --- 辅助转换函数 (String -> Enum) ---
+    static AntennaType stringToAntennaType(const QString& typeStr);
+    static PolarizationMethod stringToPolarization(const QString& polStr);
 };

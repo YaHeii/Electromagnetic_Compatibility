@@ -4,30 +4,28 @@
 #include "../resource/ui/shipwidget.h"
 #include "../resource/ui/DeviceWidget.h"
 #include <QMessageBox>
-#include "../include/utils/TransferToEngin.h"
 #include "spdlog/spdlog.h"
+#include "spdlog/spdlog.h"
+#include <QtConcurrent/QtConcurrent>
+#include <QFutureWatcher>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MainWindow) {
-    
     ui->setupUi(this);
     m_treeView = new TreeViewManager(ui->treeView, this);  
+
     m_logEmitter = new LogEmitter(this);
     connect(m_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
-
     // 获取现有的全局 Logger
     // spdlog::default_logger() 返回的是 main.cpp 中 set_default_logger 设置的那个指针
 	auto logger = spdlog::default_logger();
-
     if (logger) {
         // 创建并挂载 UI Sink
         auto qt_sink = std::make_shared<QtTextEditSink_mt>(m_logEmitter);
         qt_sink->set_pattern("[%H:%M:%S.%e] %v");
-
         // 将 Sink 加到 logger 的接收列表中
         logger->sinks().push_back(qt_sink);
-
         spdlog::debug("UI Sink attached successfully via spdlog::get!");
     }
     else {
@@ -35,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->Debug_Edit->appendHtml(QString("<font color='green'>Critical Error: Global logger not found!</font>"));
     }
 }
+
 MainWindow::~MainWindow()
 {
     // 获取 logger
@@ -108,43 +107,58 @@ void MainWindow::on_addShipButton_clicked()
     m_treeView->syncViewWithModel(); 
 }
 
-void MainWindow::updateShipModelFromView()
-{
-    for (int i = 0; i < ui->shipsLayout->count(); ++i) {
-        ShipWidget* widget = qobject_cast<ShipWidget*>(ui->shipsLayout->itemAt(i)->widget());
-        if (widget) {
-            // 让每个Widget用自己UI上的当前值去更新数据模型
-            // 存入DataModel::instance()->allShips
-            widget->updateShipModelData();
-        }
-    }
-    m_treeView->syncViewWithModel();
-}
-
-void MainWindow::on_StartSimulate_clicked() {
-    std::string Model = "PEModel";
-    PE_data PEdata;
-    Propagation_Engine PE(Model);
-    GridMap Loss2D = PE.PEmodel_computing2D(PEdata, 25);
-    PEmodel_Painting2D(Loss2D, ui->PEmodel_2Dplot);
-}
-
 void MainWindow::on_DeviceSave_clicked()
 {
-    updateDeviceModelFromView();
-    m_treeView->syncViewWithModel();
-    spdlog::debug("设备信息已保存");
+    if (updateDeviceModelFromView()) {
+        QMessageBox::information(this, "成功", "设备信息已保存并校验通过。");
+        spdlog::info("Device data saved and validated.");
+    }
 }
 
 void MainWindow::on_ShipSave_clicked()
 {
-    updateShipModelFromView();
-    m_treeView->syncViewWithModel();
-    spdlog::debug("舰船信息已保存");
+    if (updateShipModelFromView()) {
+        QMessageBox::information(this, "成功", "舰船信息已保存并校验通过。");
+        spdlog::info("Ship data saved and validated.");
+    }
 }
 
-void MainWindow::updateDeviceModelFromView()
+bool MainWindow::updateShipModelFromView()
 {
+    // 1. 从 View 同步到 Model
+    for (int i = 0; i < ui->shipsLayout->count(); ++i) {
+        ShipWidget* widget = qobject_cast<ShipWidget*>(ui->shipsLayout->itemAt(i)->widget());
+        if (widget) {
+            widget->updateShipModelData(); // 这是一个 void 函数，只负责赋值
+        }
+    }
+
+    // 2. 执行校验逻辑
+    // 遍历 DataModel 中的所有船只进行检查
+    auto& ships = DataModel::instance()->allShips;
+    for (int i = 0; i < ships.size(); ++i) {
+        auto result = ships[i].validate(); // 调用 validate
+        if (!result.first) {
+            // 校验失败，弹出警告
+            QString errorMsg = QString("船只数据错误 (第 %1 个):\n%2").arg(i + 1).arg(result.second);
+            QMessageBox::critical(this, "校验失败", errorMsg);
+            spdlog::error("Validation failed for ship {}: {}", i, result.second.toStdString());
+            return false; // 中断
+        }
+    }
+
+    // 3. 同步 TreeView (如果校验通过)
+    m_treeView->syncViewWithModel();
+    return true;
+}
+
+
+
+bool MainWindow::updateDeviceModelFromView()
+{
+    // 1. 从 View 同步到 Model (这部分逻辑可能分散在各个 DeviceWidget 中，或者您有统一列表)
+    // 假设您有机制遍历所有 DeviceWidget，或者 DeviceWidget 已经实时更新了 Model
+    // 如果没有统一遍历列表，这里假设 DataModel 已经是 UI 上的最新值（或者您可以在这里遍历 m_deviceList）
     for (int i = 0; i < ui->deviceLayout->count(); ++i) {
         DeviceWidget* widget = qobject_cast<DeviceWidget*>(ui->deviceLayout->itemAt(i)->widget());
         if (widget) {
@@ -153,7 +167,120 @@ void MainWindow::updateDeviceModelFromView()
             widget->updateModelData();
         }
     }
-    m_treeView->syncViewWithModel();  // 修正：调用TreeView同步方法
+    
+    // 2. 执行校验逻辑
+    auto& equipments = DataModel::instance()->allEquipments;
+    for (int i = 0; i < equipments.size(); ++i) {
+        auto result = equipments[i].validate();
+        if (!result.first) {
+            QString errorMsg = QString("设备数据错误 (ID: %1):\n%2")
+                                .arg(equipments[i].equipmentID)
+                                .arg(result.second);
+            QMessageBox::critical(this, "校验失败", errorMsg);
+            spdlog::error("Validation failed for equipment {}: {}", 
+                          equipments[i].equipmentID.toStdString(), result.second.toStdString());
+            return false;
+        }
+    }
+
+    m_treeView->syncViewWithModel();
+    return true;
 }
 
 
+
+// void MainWindow::on_StartSimulate_clicked() {
+//     std::string Model = "PEModel";
+//     PE_data PEdata;
+//     Propagation_Engine PE(Model);
+//     GridMap Loss2D = PE.PEmodel_computing2D(PEdata, 25);
+//     PEmodel_Painting2D(Loss2D, ui->PEmodel_2Dplot);
+// }
+
+void MainWindow::on_StartSimulate_clicked() {
+    spdlog::info("Simulation requested...");
+
+    // 1. 全局数据同步与校验
+    // 如果任意一个校验失败，直接返回，不启动仿真
+    if (!updateShipModelFromView()) return;
+    if (!updateDeviceModelFromView()) return;
+
+    // 2. 准备数据快照 (深拷贝以保证线程安全)
+    auto dataSnapshot = DataModel::instance()->createSnapshot();
+
+    // 3. UI 状态更新
+    ui->StartSimulate->setEnabled(false);
+    ui->statusbar->showMessage("正在进行电磁仿真计算...", 0); // 0表示一直显示
+    
+    // 清空旧的绘图
+    ui->PEmodel_2Dplot->clearPlottables();
+    ui->PEmodel_2Dplot->replot();
+
+    // 4. 启动异步计算任务
+    QFuture<GridMap> future = QtConcurrent::run([dataSnapshot]() {
+        // --- 后台线程 ---
+        
+        // A. 转换数据
+        auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
+        if (!fleet) {
+            spdlog::error("Fleet conversion failed (nullptr).");
+            return GridMap();
+        }
+
+        // B. 初始化引擎
+        std::string modelName = "PEModel"; // 或从 UI 获取
+        Propagation_Engine PE(modelName);
+        
+        // 假设 PE 引擎有接口接收 Fleet 数据，例如:
+        // PE.loadScenario(std::move(fleet));
+        // 或者您原本的设计是传入 PE_data，那就需要在这里转换 fleet -> PE_data
+        PE_data PEdata;
+        // convertFleetToPEData(fleet.get(), PEdata); // 假设有这个转换
+
+        spdlog::info("Engine computing 2D loss map...");
+        
+        // C. 执行耗时计算
+        // 这里的 25 可能是分辨率或范围参数
+        return PE.PEmodel_computing2D(PEdata, 25);
+    });
+
+    // 5. 关联监视器
+    if (!m_simWatcher) {
+        m_simWatcher = new QFutureWatcher<GridMap>(this);
+        connect(m_simWatcher, &QFutureWatcher<GridMap>::finished, this, &MainWindow::onSimulationFinished);
+    }
+    m_simWatcher->setFuture(future);
+}
+
+void MainWindow::onSimulationFinished() {
+    // --- UI 线程 ---
+    
+    // 1. 恢复 UI
+    ui->StartSimulate->setEnabled(true);
+    ui->statusbar->showMessage("仿真完成", 5000);
+
+    // 2. 获取结果
+    GridMap result = m_simWatcher->result();
+
+    if (result.empty() || result[0].empty()) {
+        spdlog::warn("Simulation returned empty result.");
+        QMessageBox::warning(this, "仿真警告", "仿真结果为空，无法绘图。");
+        return;
+    }
+
+    // 3. 调用 PaintImage.hpp 中的函数进行绘图
+    // 注意：ui->PEmodel_2Dplot 必须是在 .ui 文件中提升为 QCustomPlot 的 Widget
+    try {
+        spdlog::info("Painting results to QCustomPlot...");
+        
+        // 直接调用提供的内联函数
+        PEmodel_Painting2D(result, ui->PEmodel_2Dplot);
+        
+        // 强制刷新显示
+        ui->PEmodel_2Dplot->replot();
+        
+    } catch (const std::exception& e) {
+        spdlog::error("Error during painting: {}", e.what());
+        QMessageBox::critical(this, "绘图错误", QString("绘图时发生异常: %1").arg(e.what()));
+    }
+}
