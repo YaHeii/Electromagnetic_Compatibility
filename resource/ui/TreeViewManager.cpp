@@ -48,13 +48,13 @@ void TreeViewManager::populateShips(QStandardItem *shipsRoot)
         shipsRoot->appendRow({shipItem, shipIdItem});
 
         // 如果舰船上有配置设备，则为其创建一个子分类
-        if (!ship.configuredDevices.isEmpty()) {
+        if (!ship.Equipments.empty()) {
             QStandardItem *configuredDevicesCategory = new QStandardItem("配置的设备");
             shipItem->appendRow(configuredDevicesCategory);
 
-            for (const DeviceOnShipConfig &config : ship.configuredDevices) {
+            for (const EquipmentOnShip &config : ship.Equipments) {
                 // 创建代表一个已配置设备的子节点
-                QStandardItem *deviceOnShipItem = new QStandardItem(config.deviceID);
+                QStandardItem *deviceOnShipItem = new QStandardItem(config.equipmentID);
                 configuredDevicesCategory->appendRow(deviceOnShipItem);
             }
         }
@@ -64,8 +64,8 @@ void TreeViewManager::populateShips(QStandardItem *shipsRoot)
 // 填充设备库中的所有独立设备
 void TreeViewManager::populateDevices(QStandardItem *devicesRoot)
 {
-    const std::vector<DeviceData>& devices = DataModel::instance()->allDevices;
-    for (const DeviceData &device : devices) {
+    const std::vector<EquipmentData>& devices = DataModel::instance()->allEquipments;
+    for (const EquipmentData &device : devices) {
         // 创建代表一个独立设备的节点
         QStandardItem *deviceItem = new QStandardItem(device.equipmentID);
         QStandardItem *deviceTypeItem = new QStandardItem(device.equipmentType);

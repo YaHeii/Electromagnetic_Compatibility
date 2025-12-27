@@ -5,41 +5,37 @@ std::unique_ptr<Fleet> TransferToEngine::convertDataModelToFleet(const DataModel
     if (!dataModel) {
         return nullptr;
     }
-    
     auto fleet = std::make_unique<Fleet>();
-    
     // 遍历所有船只数据并转换
     for (const ShipData& shipData : dataModel->allShips) {
-        std::unique_ptr<ship> convertedShip = convertShipDataToShip(shipData, dataModel->allDevices);
+        std::unique_ptr<ship> convertedShip = convertShipDataToShip(shipData, dataModel->allEquipments);
         if (convertedShip) {
             fleet->addShip(std::move(convertedShip));
         }
     }
-    
     return fleet;
 }
 
-std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& shipData, const std::vector<DeviceData>& allDevices) {
+std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& shipData, const std::vector<EquipmentData>& allEquipments) {
     // 创建船只对象
-    Point2D location{shipData.ship_X, shipData.ship_Y};
+    Point3D location{shipData.X_offset, shipData.Y_offset, shipData.Z_offset};
     auto shipObj = std::make_unique<ship>(
         shipData.shipName.toStdString(), 
         location, 
-        std::vector<double>(), // distance 暂时为空
         shipData.ship_Orienteation, 
         shipData.ship_Speed
     );
     
     // 添加船只上的设备
     //// TODO:使用双重循环匹配，考虑优化
-    for (const DeviceOnShipConfig& deviceConfig : shipData.configuredDevices) {
+    for (const EquipmentOnShip& equipment : shipData.Equipments) {
         // 在设备库中查找对应的设备
-        for (const DeviceData& deviceData : allDevices) {
-            if (deviceData.equipmentID == deviceConfig.deviceID) {
+        for (const EquipmentData& deviceData : allEquipments) {
+            if (deviceData.equipmentID == equipment.equipmentID) {
                 std::unique_ptr<Equipment> equipment = convertDeviceDataToEquipment(deviceData);
                 if (equipment) {
                     // 设置设备在船上的相对位置
-                    Point2D relativePos{deviceConfig.device_X_offset, deviceConfig.device_Y_offset};
+                    //Point2D relativePos{deviceConfig.device_X_offset, deviceConfig.device_Y_offset};
                     //equipment->setRelativePosition(relativePos);
                     shipObj->addEquipment(std::move(equipment));
                 }
@@ -50,7 +46,7 @@ std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(const ShipData& sh
     return shipObj;
 }
 
-std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const DeviceData& deviceData) {
+std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const EquipmentData& deviceData) {
     std::unique_ptr<Equipment> equipment = nullptr;
     
     if (deviceData.equipmentType == "发射机") {
@@ -64,14 +60,14 @@ std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const 
             deviceData.Beamwidth_Transmitter,
             deviceData.PolarizationMethod_Transmitter,
             deviceData.antennaType_Transmitter,
-            position // 使用新添加的频率字段
+            position 
         );
     } 
     else if (deviceData.equipmentType == "接收机") {
         Point3D position{deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset};
         equipment = std::make_unique<Receiver>(
             deviceData.equipmentID.toStdString(),
-            deviceData.CentralF_Reciever, // 使用新添加的频率字段
+            deviceData.CentralF_Reciever, 
             deviceData.Gain,
             deviceData.Sensitive_reciever,
             deviceData.Bandwidth_Reciever,
@@ -109,7 +105,7 @@ std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const 
 }
 
 // 对外工具函数
-std::unique_ptr<Antenna> TransferToEngine::createAntenna(const DeviceData& deviceData) {
+std::unique_ptr<Antenna> TransferToEngine::createAntenna(const EquipmentData& deviceData) {
     std::unique_ptr<Antenna> antenna = nullptr;
     Point3D position{ deviceData.X_offset, deviceData.Y_offset, deviceData.Z_offset };
     if (deviceData.equipmentType == "天线") {
@@ -144,6 +140,5 @@ std::unique_ptr<Antenna> TransferToEngine::createAntenna(const DeviceData& devic
             );
         }
     } 
-    
     return antenna;
 }

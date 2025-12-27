@@ -56,9 +56,9 @@ void MainWindow::on_addDeviceButton_clicked()
     //在添加新控件前，先将UI上所有未保存的修改更新到数据模型中
     updateDeviceModelFromView();
 
-    DeviceData newDevice;
-    newDevice.equipmentID = QString("NewDevice_%1").arg(DataModel::instance()->allDevices.size() + 1);
-    DataModel::instance()->allDevices.push_back(newDevice);
+    EquipmentData newDevice;
+    newDevice.equipmentID = QString("NewDevice_%1").arg(DataModel::instance()->allEquipments.size() + 1);
+    DataModel::instance()->allEquipments.push_back(newDevice);
 
     DeviceWidget *widget = new DeviceWidget(this);  // 修正：设置父对象
     widget->setData(newDevice); // 用新的空数据填充它
@@ -101,6 +101,7 @@ void MainWindow::updateDeviceModelFromView()
         DeviceWidget* widget = qobject_cast<DeviceWidget*>(ui->deviceLayout->itemAt(i)->widget());
         if (widget) {
             // 让每个Widget用自己UI上的当前值去更新数据模型
+            // 存入DataModel::instance()->allDevices
             widget->updateModelData();
         }
     }
@@ -113,6 +114,7 @@ void MainWindow::updateShipModelFromView()
         ShipWidget *widget = qobject_cast<ShipWidget*>(ui->shipsLayout->itemAt(i)->widget());
         if (widget) {
             // 让每个Widget用自己UI上的当前值去更新数据模型
+            // 存入DataModel::instance()->allShips
             widget->updateShipModelData();
         }
     }
@@ -125,7 +127,6 @@ void MainWindow::on_StartSimulate_clicked() {
     Propagation_Engine PE(Model);
     GridMap Loss2D = PE.PEmodel_computing2D(PEdata, 25);
 	PEmodel_Painting2D(Loss2D, ui->PEmodel_2Dplot);
-
 }
 
 void MainWindow::onLogReceived(const QString& message, int level)

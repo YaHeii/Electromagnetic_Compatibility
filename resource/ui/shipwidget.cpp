@@ -1,11 +1,8 @@
-//
-// Created by lenovo on 25-10-5.
-//
-
 #include "shipwidget.h"
 #include "ui_shipwidget.h"
 #include <QLayout>
 #include "deviceonship.h"
+#include "spdlog/spdlog.h"
 
 ShipWidget::ShipWidget(QWidget *parent) :
     QWidget(parent),
@@ -25,8 +22,9 @@ void ShipWidget::setData(const ShipData& data)
 
     // 填充舰船的基本信息
     // ui->ship_Name->setText(data.shipName); // 假设UI中有个叫ship_Name的QLineEdit
-    ui->ship_X->setText(QString::number(data.ship_X));
-    ui->ship_Y->setText(QString::number(data.ship_Y));
+    ui->X_offset->setText(QString::number(data.X_offset));
+    ui->Y_offset->setText(QString::number(data.Y_offset));
+	ui->Z_offset->setText(QString::number(data.Z_offset));
     ui->ship_Orienteation->setText(QString::number(data.ship_Orienteation));
     ui->ship_Speed->setText(QString::number(data.ship_Speed));
 
@@ -52,17 +50,22 @@ void ShipWidget::updateShipModelData()
             double value = 0.0;
             
             // 更新ship_X
-            value = ui->ship_X->text().toDouble(&ok);
+            value = ui->X_offset->text().toDouble(&ok);
             if (ok) {
-                ship.ship_X = value;
+                ship.X_offset = value;
             }
             
             // 更新ship_Y
-            value = ui->ship_Y->text().toDouble(&ok);
+            value = ui->Y_offset->text().toDouble(&ok);
             if (ok) {
-                ship.ship_Y = value;
+                ship.Y_offset = value;
             }
             
+            value = ui->Z_offset->text().toDouble(&ok);
+            if (ok) {
+                ship.Z_offset = value;
+            }
+
             // 更新ship_Orienteation
             value = ui->ship_Orienteation->text().toDouble(&ok);
             if (ok) {
@@ -85,7 +88,7 @@ void ShipWidget::updateShipModelData()
 
 void ShipWidget::on_deleteShip_clicked() {
     delete this;
-    qDebug() << "ShipWidget destroyed";
+	spdlog::debug("无人船 {} 已删除", this->m_currentShipId);
 }
 
 
@@ -94,12 +97,12 @@ void ShipWidget::on_shipEquipmentPlus_clicked()
     // 在数据模型中为当前舰船添加一个空的设备配置
     for (ShipData &ship : DataModel::instance()->allShips) {
         if (ship.shipID == m_currentShipId) {
-            DeviceOnShipConfig newConfig;
+            EquipmentOnShip newConfig;
             // 默认可以不选择任何设备，或者选择第一个可用设备
-            if (!DataModel::instance()->allDevices.empty()) {
-                newConfig.deviceID = DataModel::instance()->allDevices.front().equipmentID;
+            if (!DataModel::instance()->allEquipments.empty()) {
+                newConfig.equipmentID = DataModel::instance()->allEquipments.front().equipmentID;
             }
-            ship.configuredDevices.push_back(newConfig);
+            ship.Equipments.push_back(newConfig);
             break; // 修改后退出循环
         }
     }
@@ -121,12 +124,12 @@ void ShipWidget::syncDeviceListWithModel()
         if (ship.shipID == m_currentShipId) {
             // 获取所有已定义设备的ID列表，用于下拉框
             QStringList availableDeviceIDs;
-            for(const DeviceData &device : DataModel::instance()->allDevices) {
+            for(const EquipmentData &device : DataModel::instance()->allEquipments) {
                 availableDeviceIDs.append(device.equipmentID);
             }
 
             // 遍历这艘船上配置的每一个设备
-            for (const DeviceOnShipConfig &config : ship.configuredDevices) {
+            for (const EquipmentOnShip &config : ship.Equipments) {
                 DeviceonShip *deviceEntryUi = new DeviceonShip();
 
                 // 填充下拉框，并设置当前选中的项
@@ -134,7 +137,7 @@ void ShipWidget::syncDeviceListWithModel()
                     QComboBox* equipmentComboBox = deviceEntryUi->findChild<QComboBox*>("EquipmentID");
                     if (equipmentComboBox) {
                         equipmentComboBox->addItems(availableDeviceIDs);
-                        equipmentComboBox->setCurrentText(config.deviceID);
+                        equipmentComboBox->setCurrentText(config.equipmentID);
                     }
                 }
 

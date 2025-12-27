@@ -4,7 +4,7 @@
 #include <QList>
 #include <QObject>
 //// 设备数据模型
-struct DeviceData {
+struct EquipmentData {
     // 基本参数
     QString equipmentID;
     QString equipmentType;
@@ -61,20 +61,19 @@ struct DeviceData {
     QString antennaType_Antenna;
 };
 //// 船上设备数据模型
-struct DeviceOnShipConfig {
-    QString deviceID;
-    double device_X_offset;
-    double device_Y_offset;
+struct EquipmentOnShip {
+    QString equipmentID;
 };
 //// 舰船模型
 struct ShipData {
     int shipID;
     QString shipName;
-    double ship_X;
-    double ship_Y;
+    double X_offset;
+    double Y_offset;
+	double Z_offset;
     double ship_Orienteation;
     double ship_Speed;
-    QList<DeviceOnShipConfig> configuredDevices;
+    std::vector<EquipmentOnShip> Equipments;
 };
 //// 数据模型
 class DataModel : public QObject
@@ -83,13 +82,10 @@ class DataModel : public QObject
 public:
     static DataModel* instance(); // 单例模式，方便全局访问
 
-    std::vector<DeviceData> allDevices;
+    std::vector<EquipmentData> allEquipments;
     std::vector<ShipData> allShips;
 
 private:
     DataModel(QObject *parent = nullptr);
 };
-
-
-
 #endif //DATAMODEL_H

@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>776</width>
-    <height>337</height>
+    <width>991</width>
+    <height>271</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>0</width>
-    <height>150</height>
+    <height>200</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -24,54 +24,95 @@
     <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
       <widget class="QGroupBox" name="groupBox">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>200</height>
+        </size>
+       </property>
        <property name="title">
         <string>船只1</string>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,2">
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
-         <layout class="QGridLayout" name="gridLayout">
-          <property name="sizeConstraint">
-           <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
-          </property>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="ship_X"/>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>X坐标</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="X_offset"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Y坐标</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="Y_offset"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Z坐标</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="Z_offset"/>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
-          <item row="0" column="3">
-           <widget class="QLineEdit" name="ship_Orienteation"/>
-          </item>
-          <item row="1" column="3">
-           <widget class="QLineEdit" name="ship_Speed"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="ship_Y"/>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>X坐标</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Y坐标</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="label_39">
-            <property name="text">
-             <string>船速</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_38">
-            <property name="text">
-             <string>朝向</string>
-            </property>
-           </widget>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QLabel" name="label_39">
+                <property name="text">
+                 <string>船速</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="ship_Speed"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QLabel" name="label_38">
+                <property name="text">
+                 <string>朝向</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="ship_Orienteation"/>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -87,8 +128,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>361</width>
-               <height>218</height>
+               <width>468</width>
+               <height>152</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_2">

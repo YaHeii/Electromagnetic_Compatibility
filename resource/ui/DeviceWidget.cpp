@@ -9,7 +9,6 @@ DeviceWidget::DeviceWidget(QWidget *parent) :
     ui->setupUi(this);
     resetTransmitterUI();
     resetReceiverUI();
-    resetAntennaUI();
     
     // 当设备类型改变时，自动填充默认参数
     connect(ui->equipmentType, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -20,7 +19,7 @@ DeviceWidget::~DeviceWidget()
     delete ui;
 }
 
-void DeviceWidget::setData(const DeviceData &data)
+void DeviceWidget::setData(const EquipmentData &data)
 {
     m_currentId = data.equipmentID;
 
@@ -50,20 +49,12 @@ void DeviceWidget::setData(const DeviceData &data)
     ui->PolarizationMethod_Transmitter->setCurrentText(data.PolarizationMethod_Transmitter);
     ui->antennaType_Transmitter->setCurrentText(data.antennaType_Transmitter);
 
-    // --- 4. 天线参数 ---
-    ui->CentralF_Antenna->setText(QString::number(data.CentralF_Antenna));
-    ui->Bandwidth_Antenna->setText(QString::number(data.Bandwidth_Antenna));
-    ui->Power_Antenna->setText(QString::number(data.Power_Antenna));
-    ui->antennaPhi_Antenna->setText(QString::number(data.antennaPhi_Antenna));
-    ui->Beamwidth_Antenna->setText(QString::number(data.Beamwidth_Antenna));
-    ui->PolarizationMethod_Antenna->setCurrentText(data.PolarizationMethod_Antenna);
-    ui->antennaType_Antenna->setCurrentText(data.antennaType_Antenna);
 }
 
 void DeviceWidget::updateModelData() {
     bool ok;
     // 遍历全局数据列表找到当前设备
-    for (DeviceData &data : DataModel::instance()->allDevices) {
+    for (EquipmentData &data : DataModel::instance()->allEquipments) {
         if(data.equipmentID == m_currentId){
             // --- 公共参数总是保存 ---
             data.equipmentID = ui->equipmentID->text();
@@ -110,25 +101,6 @@ void DeviceWidget::updateModelData() {
                 data.SINRMargin = 0;
                 data.noiseFigure = 0;
             }
-            // --- 天线参数处理 ---
-            if (ui->AntennaWidget->isVisible()) {
-                data.CentralF_Antenna = ui->CentralF_Antenna->text().toDouble(&ok);
-                data.Bandwidth_Antenna = ui->Bandwidth_Antenna->text().toDouble(&ok);
-                data.Power_Antenna = ui->Power_Antenna->text().toDouble(&ok);
-                data.antennaPhi_Antenna = ui->antennaPhi_Antenna->text().toDouble(&ok);
-                data.Beamwidth_Antenna = ui->Beamwidth_Antenna->text().toDouble(&ok);
-                data.PolarizationMethod_Antenna = ui->PolarizationMethod_Antenna->currentText();
-                data.antennaType_Antenna = ui->antennaType_Antenna->currentText();
-            } else {
-                data.CentralF_Antenna = 0;
-                data.Bandwidth_Antenna = 0;
-                data.Power_Antenna = 0;
-                data.antennaPhi_Antenna = 0;
-                data.Beamwidth_Antenna = 0;
-                data.PolarizationMethod_Antenna = "";
-                data.antennaType_Antenna = "";
-            }
-
             spdlog::debug("设备 {} 参数已经保存", data.equipmentID.toStdString());
             break;
         }
@@ -147,7 +119,6 @@ void DeviceWidget::onEquipmentTypeChanged()
     if (equipmentType == "发射机") {
         ui->TransmitterWidget->setVisible(true);
         ui->RecieverWidget->setVisible(false);
-        ui->AntennaWidget->setVisible(false);
 
         // 设置发射机默认参数
         ui->CentralF_Transmitter->setText("1000");
@@ -158,13 +129,11 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->PolarizationMethod_Transmitter->setCurrentIndex(0);
         // 清空其他参数
         resetReceiverUI();
-        resetAntennaUI();
         spdlog::debug("正在设定{}参数", equipmentType.toStdString());
     }
     else if (equipmentType == "接收机") {
         ui->TransmitterWidget->setVisible(false);
         ui->RecieverWidget->setVisible(true);
-        ui->AntennaWidget->setVisible(false);
 
         // 设置接收机默认参数
         ui->CentralF_Reciever->setText("1000");
@@ -176,13 +145,11 @@ void DeviceWidget::onEquipmentTypeChanged()
 
         // 清空其他参数
         resetTransmitterUI();
-        resetAntennaUI();
         spdlog::debug("正在设定{}参数", equipmentType.toStdString());
     }
     else if (equipmentType == "收发一体机") {
         ui->TransmitterWidget->setVisible(true);
         ui->RecieverWidget->setVisible(true);
-        ui->AntennaWidget->setVisible(false);
 
         ui->CentralF_Transmitter->setText("1000");
         ui->Bandwidth_Transmitter->setText("100");
@@ -198,26 +165,7 @@ void DeviceWidget::onEquipmentTypeChanged()
         ui->SINRMargin->setText("10");
         ui->noiseFigure->setText("3");
 
-        resetAntennaUI();
-        spdlog::debug("正在设定{}参数", equipmentType.toStdString());
-    }
-    else if (equipmentType == "天线") {
-        ui->TransmitterWidget->setVisible(false);
-        ui->RecieverWidget->setVisible(false);
-        ui->AntennaWidget->setVisible(true);
 
-        // 设置天线默认参数
-        ui->CentralF_Antenna->setText("1000");
-        ui->Bandwidth_Antenna->setText("100");
-        ui->Power_Antenna->setText("20");
-        ui->antennaPhi_Antenna->setText("30");
-        ui->Beamwidth_Antenna->setText("20");
-        ui->PolarizationMethod_Antenna->setCurrentIndex(0);
-        ui->antennaType_Antenna->setCurrentIndex(0);
-
-        // 清空其他参数
-        resetTransmitterUI();
-        resetReceiverUI();
         spdlog::debug("正在设定{}参数", equipmentType.toStdString());
     }
     
@@ -249,14 +197,4 @@ void DeviceWidget::resetReceiverUI() {
     ui->interferenceMargin->setText("0");
     ui->SINRMargin->setText("0");
     ui->noiseFigure->setText("0");
-}
-
-void DeviceWidget::resetAntennaUI() {
-    ui->CentralF_Antenna->setText("0");
-    ui->Bandwidth_Antenna->setText("0");
-    ui->Power_Antenna->setText("0");
-    ui->antennaPhi_Antenna->setText("0");
-    ui->Beamwidth_Antenna->setText("0");
-    ui->PolarizationMethod_Antenna->setCurrentIndex(0);
-    ui->antennaType_Antenna->setCurrentIndex(0);
 }

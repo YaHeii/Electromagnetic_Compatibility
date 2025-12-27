@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>871</width>
-    <height>708</height>
+    <height>469</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>0</width>
-    <height>700</height>
+    <height>450</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -28,7 +28,7 @@
   <layout class="QVBoxLayout" name="verticalLayout_10">
    <item>
     <widget class="QWidget" name="Mainwidget" native="true">
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,1,0,1">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,1,1">
       <item>
        <widget class="QGroupBox" name="groupBox_2">
         <property name="title">
@@ -446,180 +446,6 @@
                 </item>
                 <item>
                  <widget class="QComboBox" name="PolarizationMethod_Transmitter">
-                  <item>
-                   <property name="text">
-                    <string>垂直极化</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>水平极化</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="QWidget" name="AntennaWidget" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_9">
-         <item>
-          <widget class="QGroupBox" name="groupBox_5">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="title">
-            <string>天线参数</string>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_8">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,1,1">
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_18">
-                <item>
-                 <widget class="QLabel" name="centralBandwidth_3">
-                  <property name="text">
-                   <string>中心频率</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="CentralF_Antenna">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_26">
-                <item>
-                 <widget class="QLabel" name="label_31">
-                  <property name="text">
-                   <string>发射带宽</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="Bandwidth_Antenna">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_11">
-                <item>
-                 <widget class="QLabel" name="label_45">
-                  <property name="text">
-                   <string>发射功率</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="Power_Antenna">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QGridLayout" name="gridLayout_9">
-              <item row="0" column="1">
-               <layout class="QHBoxLayout" name="horizontalLayout_28">
-                <item>
-                 <widget class="QLabel" name="label_40">
-                  <property name="text">
-                   <string>波束宽度</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="Beamwidth_Antenna">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="2" column="1">
-               <layout class="QHBoxLayout" name="horizontalLayout_29" stretch="1,6">
-                <item>
-                 <widget class="QLabel" name="label_41">
-                  <property name="text">
-                   <string>天线类型</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="antennaType_Antenna">
-                  <item>
-                   <property name="text">
-                    <string>喇叭天线</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>赋型波束天线</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>抛物面天线</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="0" column="0">
-               <layout class="QHBoxLayout" name="horizontalLayout_30">
-                <item>
-                 <widget class="QLabel" name="label_42">
-                  <property name="text">
-                   <string>天线指向角</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="antennaPhi_Antenna">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="2" column="0">
-               <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="1,7">
-                <item>
-                 <widget class="QLabel" name="label_44">
-                  <property name="text">
-                   <string>极化方式</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="PolarizationMethod_Antenna">
                   <item>
                    <property name="text">
                     <string>垂直极化</string>

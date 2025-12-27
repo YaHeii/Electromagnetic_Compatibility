@@ -76,7 +76,7 @@ public:
             // 创建天线对象
             Antenna::create(_id, _antennaType_string, _polarizationMethod_string, _relative_position, _gain_dbm, _antennaPhi);
           }
-
+    std::string getID() const { return _id; };
     double getFrequencyMHz() const { return _centralF_mhz; }
     double getBandWidthKHz() const { return _bandwidth_khz; }
     double getPowerDBm() const { return _power_dbm; }

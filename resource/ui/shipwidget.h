@@ -1,6 +1,6 @@
 #ifndef SHIPWIDGET_H
 #define SHIPWIDGET_H
-
+#include "spdlog/spdlog.h"
 #include <QWidget>
 #include "DeviceWidget.h"
 #include "deviceonship.h"
