@@ -5,15 +5,19 @@
 #include "../resource/ui/DeviceWidget.h"
 #include <QMessageBox>
 #include "spdlog/spdlog.h"
-#include "spdlog/spdlog.h"
 #include <QtConcurrent/QtConcurrent>
 #include <QFutureWatcher>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-    ui(new Ui::MainWindow) {
+    ui(new Ui::MainWindow),
+    m_simWatcher(nullptr) { // 初始化 m_simWatcher
     ui->setupUi(this);
-    m_treeView = new TreeViewManager(ui->treeView, this);  
+    m_treeView = new TreeViewManager(ui->treeView, this);
+
+    // 设置日志控件最大行数，只需一次
+    ui->Debug_Edit->setMaximumBlockCount(5000);
+    ui->Error_Edit->setMaximumBlockCount(5000);
 
     m_logEmitter = new LogEmitter(this);
     connect(m_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
@@ -56,12 +60,6 @@ void MainWindow::onLogReceived(const QString& message, int level)
     auto logLevel = static_cast<spdlog::level::level_enum>(level);
     std::cout << "UI Trace: Slot onLogReceived called. Msg: " << message.toStdString() << std::endl;
     // 1. 设置最大行数 (防止日志无限增长占满内存)
-    const int maxBlockCount = 5000;
-    if (ui->Debug_Edit->maximumBlockCount() == 0) {
-        ui->Debug_Edit->setMaximumBlockCount(maxBlockCount);
-        ui->Error_Edit->setMaximumBlockCount(maxBlockCount);
-    }
-
     // 2. 根据级别输出
     if (logLevel == spdlog::level::err || logLevel == spdlog::level::critical) {
         // Error 级别 -> 红色高亮
@@ -80,15 +78,16 @@ void MainWindow::onLogReceived(const QString& message, int level)
 
 void MainWindow::on_addDeviceButton_clicked()
 {
-    ////在添加新控件前，先将UI上所有未保存的修改更新到数据模型中
-    //updateDeviceModelFromView();
+    //在添加新控件前，先将UI上所有未保存的修改更新到数据模型中
+    updateDeviceModelFromView();
     
     EquipmentData newDevice;
     newDevice.equipmentID = QString("NewDevice_%1").arg(DataModel::instance()->allEquipments.size() + 1);
     // 首先在DataModel中占位
     DataModel::instance()->allEquipments.push_back(newDevice);
 	// 然后创建新的DeviceWidget并添加到UI
-    DeviceWidget *widget = new DeviceWidget(this); 
+    DeviceWidget *widget = new DeviceWidget(this);
+    widget->setData(newDevice); // 关联UI与数据
     ui->deviceLayout->addWidget(widget);
     //同步treeView
     m_treeView->syncViewWithModel();
@@ -96,15 +95,16 @@ void MainWindow::on_addDeviceButton_clicked()
 
 void MainWindow::on_addShipButton_clicked()
 {
-    //updateShipModelFromView();
+    updateShipModelFromView();
 
     ShipData newShip;
     newShip.shipID = DataModel::instance()->allShips.size() + 1;
     newShip.shipName = QString("NewShip_%1").arg(newShip.shipID);
     DataModel::instance()->allShips.push_back(newShip);
-    ShipWidget *widget = new ShipWidget(this); 
+    ShipWidget *widget = new ShipWidget(this);
+    widget->setData(newShip); // 关联UI与数据
     ui->shipsLayout->addWidget(widget);
-    m_treeView->syncViewWithModel(); 
+    m_treeView->syncViewWithModel();
 }
 
 void MainWindow::on_DeviceSave_clicked()

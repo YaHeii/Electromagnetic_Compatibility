@@ -1,7 +1,7 @@
 # IDE specific files
 .idea/
 .vscode/
-
+logs/
 # Cache and language server files
 .cache/
 .clangd/

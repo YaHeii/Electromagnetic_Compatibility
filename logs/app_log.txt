@@ -1,9 +1,4 @@
-[2025-12-27 00:17:36.124] [global_logger] [debug] 正在初始化....
-[2025-12-27 00:17:36.197] [global_logger] [debug] UI Sink attached successfully via spdlog::get!
-[2025-12-27 00:17:36.403] [global_logger] [info] MainWindow shown.
-[2025-12-27 00:17:47.793] [global_logger] [debug] 设备 NewDevice_1 参数已经保存
-[2025-12-27 00:18:06.009] [global_logger] [debug] 设备 NewDevice_1 参数已经保存
-[2025-12-27 00:18:06.009] [global_logger] [debug] 设备 NewDevice_2 参数已经保存
-[2025-12-27 00:18:06.014] [global_logger] [debug] 设备信息已保存
-[2025-12-27 00:18:09.222] [global_logger] [debug] 舰船信息已保存
-[2025-12-27 00:18:13.187] [global_logger] [info] Application exiting with code 0
+[2025-12-27 15:38:44.357] [global_logger] [debug] 正在初始化....
+[2025-12-27 15:38:44.422] [global_logger] [debug] UI Sink attached successfully via spdlog::get!
+[2025-12-27 15:38:44.647] [global_logger] [info] MainWindow shown.
+[2025-12-27 15:38:50.568] [global_logger] [info] Application exiting with code 0
