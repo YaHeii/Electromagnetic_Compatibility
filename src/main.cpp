@@ -12,15 +12,18 @@
 #include "spdlog/sinks/stdout_color_sinks.h" // 控制台输出
 #include "spdlog/sinks/basic_file_sink.h"    // 文件输出
 
-void init_logger() {
+// 将 MainWindow 作为参数，以便从中获取 GUI sink
+void init_logger(MainWindow& w) {
     try {
         // 1. 初始化线程池
         spdlog::init_thread_pool(8192, 1);
+
         // 2. 创建 Sinks
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/app_log.txt", true);
+        auto gui_sink = w.createGuiLogSink(); // 从 MainWindow 获取 GUI sink
 
-        std::vector<spdlog::sink_ptr> sinks{ console_sink, file_sink };
+        std::vector<spdlog::sink_ptr> sinks{ console_sink, file_sink, gui_sink };
 
         // 3. 创建异步 Logger
         auto logger = std::make_shared<spdlog::async_logger>(
@@ -40,7 +43,7 @@ void init_logger() {
 
     }
     catch (const spdlog::spdlog_ex& ex) {
-        fprintf(stderr, "Log initialization failed: %s\n", ex.what());
+        fprintf(stderr, "Log initialization failed: %s", ex.what());
     }
 }
 
@@ -69,17 +72,20 @@ void qt_message_handler(QtMsgType type, const QMessageLogContext& context, const
     }
 }
 
-// 在 main 函数中，init_logger() 之后调用：
-
 int main(int argc, char *argv[])
 {
     SetConsoleOutputCP(65001);
-    init_logger();
+    
+    QApplication a(argc, argv);
+    qRegisterMetaType<GridMap>("GridMap");
+    MainWindow w;
+
+    // 在创建 MainWindow 之后，初始化日志系统
+    init_logger(w);
     qInstallMessageHandler(qt_message_handler);
+    
     spdlog::debug("正在初始化....");
 
-    QApplication a(argc, argv);
-    MainWindow w;
     w.show();
     spdlog::info("MainWindow shown.");
     int exit_code = a.exec();

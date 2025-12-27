@@ -37,10 +37,12 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    // 创建并返回一个指向UI日志接收器的指针
+    std::shared_ptr<spdlog::sinks::sink> createGuiLogSink();
 signals:
     // 用于从工作线程安全地将结果传递到UI线程
     void simulationDone(const GridMap& result);
-
+ 
 private:
     static QRect pos;
     bool updateDeviceModelFromView();
@@ -52,7 +54,7 @@ private:
     // 在后台线程中等待仿真结果
     void simulationWaiter(std::future<GridMap> future);
 
-private slots:
+public slots:
     void onLogReceived(const QString& message, int level);
     void on_addShipButton_clicked();
     void on_addDeviceButton_clicked();
@@ -61,6 +63,8 @@ private slots:
     void on_StartSimulate_clicked();
     // 槽函数现在接收GridMap作为参数
     void onSimulationFinished(const GridMap& result);
+    //单张图返回
+    void onSingleGridMapReady(const std::string& shipName, const std::string& equipmentName, const GridMap& lossGrid);
 };
 
 

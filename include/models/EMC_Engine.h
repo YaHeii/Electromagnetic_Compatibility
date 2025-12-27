@@ -72,7 +72,8 @@ private:
     LineMap _LossLine;
 };
 
-class EMC_Engine {
+class EMC_Engine : public QObject {
+    Q_OBJECT
 public:
     EMC_Engine(ModelType modelType, std::unique_ptr<Fleet> fleet)
         : _modelType(modelType),
@@ -88,10 +89,13 @@ public:
     void do_PE_computing();
     //std::vector<InterferenceResult> EMC_computing(const Fleet& fleet);//返回受扰计算结果数组
 private:
+    GridMap _LossGrid;
     std::vector<PE_data> _peDataList;
     using DataSnapshot = DataModel::DataSnapshot; // Use the snapshot from DataModel
 	std::unique_ptr<Fleet> _fleet;
 	DataSnapshot _dataSnapshot;
     ModelType _modelType;
     Propagation_Engine* _propagationEngine; // Consider using std::unique_ptr here as well
+signals:
+    void peComputationFinished(const std::string& shipName, const std::string& equipmentName, const GridMap& lossGrid);
 };

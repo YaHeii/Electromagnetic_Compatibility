@@ -46,7 +46,7 @@ inline void PEmodel_Painting2D(const GridMap& Loss_2D, QCustomPlot* PEmodel_2Dpl
     // 7. 设置颜色梯度（配色方案）
     // gpJet 是经典的彩虹色，gpThermal 是热成像色，gpGrayscale 是灰度
     colorMap->setGradient(QCPColorGradient::gpJet);
-    colorMap->setDataRange(QCPRange(140, 160));
+    colorMap->setDataRange(QCPRange(-30, -10));
     // 保持纵横比（可选，如果是地图或物理场通常需要）
     // customPlot->rescaleAxes(); 
     //colorMap->rescaleDataRange(true);

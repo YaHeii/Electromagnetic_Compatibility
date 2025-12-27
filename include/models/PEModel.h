@@ -140,7 +140,7 @@ public:
     PEModel(double centralF_Ghz, double dx, double dz, int nz)
         : _freq(centralF_Ghz), _dx(dx), _dz(dz), _nz(nz) {
 
-        _k0 = 2.0 * M_PI * _freq / 299792458.0;
+        _k0 = 2.0 * M_PI * _freq / 299792458.0 * 1e9; // 转换为 Hz 后计算波数
 
         // 使用镜像法：FFT 大小为 2 * nz
         // 索引 0 ~ nz-1 : 物理空间 (z > 0)

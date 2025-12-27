@@ -12,33 +12,26 @@ MainWindow::MainWindow(QWidget *parent)
     ui(new Ui::MainWindow) {
     ui->setupUi(this);
     _treeView = new TreeViewManager(ui->treeView, this);
-
+ 
     // 设置日志控件最大行数
     ui->Debug_Edit->setMaximumBlockCount(5000);
     ui->Error_Edit->setMaximumBlockCount(5000);
-
+ 
     // 注册GridMap类型，使其可在信号槽中传递
     qRegisterMetaType<GridMap>("GridMap");
     // 连接仿真完成信号到槽
     connect(this, &MainWindow::simulationDone, this, &MainWindow::onSimulationFinished);
-
+ 
+    // 初始化日志发射器并连接信号
     _logEmitter = new LogEmitter(this);
     connect(_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
-    // 获取现有的全局 Logger
-    // spdlog::default_logger() 返回的是 main.cpp 中 set_default_logger 设置的那个指针
-	auto logger = spdlog::default_logger();
-    if (logger) {
-        // 创建并挂载 UI Sink
-        auto qt_sink = std::make_shared<QtTextEditSink_mt>(_logEmitter);
-        qt_sink->set_pattern("[%H:%M:%S.%e] %v");
-        // 将 Sink 加到 logger 的接收列表中
-        logger->sinks().push_back(qt_sink);
-        spdlog::debug("UI Sink attached successfully via spdlog::get!");
-    }
-    else {
-        // 如果为空，说明 main.cpp 里的 init_logger 可能没执行或者名字写错了
-        ui->Debug_Edit->appendHtml(QString("<font color='green'>Critical Error: Global logger not found!</font>"));
-    }
+}
+ 
+std::shared_ptr<spdlog::sinks::sink> MainWindow::createGuiLogSink() {
+    // 创建并配置 UI Sink
+    auto qt_sink = std::make_shared<QtTextEditSink_mt>(_logEmitter);
+    qt_sink->set_pattern("[%H:%M:%S.%e] %v");
+    return qt_sink;
 }
 
 MainWindow::~MainWindow()
@@ -222,9 +215,9 @@ void MainWindow::on_StartSimulate_clicked() {
 
     // 4. 使用 std::async 启动异步计算任务
     // 使用数据快照来进行仿真，防止仿真过程中数据更改导致崩溃
-    std::future<GridMap> future = std::async(std::launch::async, [this]() {
+    std::future<GridMap> future = std::async(std::launch::async, [this, dataSnapshot]() {
         // --- 后台线程 ---
-        auto fleet = TransferToEngine::convertDataModelToFleet(DataModel::instance());
+        auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
         if (!fleet) {
             spdlog::error("Fleet conversion failed (nullptr).");
             return GridMap();
@@ -233,8 +226,9 @@ void MainWindow::on_StartSimulate_clicked() {
         // 注意：_emcengine是在主线程创建的，在后台线程使用需要确保线程安全
         // 如果 _emcengine 的方法是可重入的，则无需加锁
         _emcEngine = new EMC_Engine(ModelType::PE, std::move(fleet));
+        connect(_emcEngine, &EMC_Engine::peComputationFinished, this, &MainWindow::onSingleGridMapReady);
         spdlog::info("Engine computing 2D loss map...");
-        // return m_engine->PEmodel_computing2D(25); // 假设接口如此
+		_emcEngine->do_PE_computing();
         return GridMap(); // 临时返回
     });
 
@@ -282,4 +276,15 @@ void MainWindow::onSimulationFinished(const GridMap& result) {
         spdlog::error("Error during painting: {}", e.what());
         QMessageBox::critical(this, "绘图错误", QString("绘图时发生异常: %1").arg(e.what()));
     }
+}
+
+void MainWindow::onSingleGridMapReady(const std::string& shipName, const std::string& equipmentName, const GridMap& lossGrid) {
+        // 直接调用提供的内联函数
+    PEmodel_Painting2D(lossGrid, ui->PEmodel_2Dplot);
+    
+    // 强制刷新显示
+    ui->PEmodel_2Dplot->replot();
+    // 这里可以处理单张图返回的逻辑，比如更新某个特定的UI组件
+    spdlog::debug("Received single GridMap for ship: {}, equipment: {}", shipName, equipmentName);
+    // 您可以选择将其绘制在一个新的窗口或特定的绘图区域
 }

@@ -2,7 +2,7 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
+#include <spdlog/spdlog.h>
 
 LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_antenna_height) {
     // 初始化大气模型：蒸发波导高度 20m
@@ -45,6 +45,9 @@ LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_
 }
 
 GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height) {
+    spdlog::info("Starting 2D PE model computation for equipment: {}", _PEdata.equipmenName);
+    spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
+		_PEdata.centralF_Ghz / 1e9, _PEdata.max_range, _PEdata.duct_height, _PEdata.wind_speed);
     // 1. 定义地图网格参数
     double map_size_km = 20.0;
     double grid_res_m = 50.0; // 50米一个像素
@@ -69,7 +72,7 @@ GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever
     // polar_data[angle_idx][range_idx]
     std::vector<std::vector<double>> polar_data(num_angles, std::vector<double>(num_ranges));
 
-    std::cout << "Starting 360-degree scan..." << std::endl;
+    spdlog::info("Starting 360-degree scan...");
     // 创建每个线程专用的 solver 池，避免在并行循环中反复创建/销毁 FFTW 计划
     int num_threads = omp_get_max_threads();
     std::vector<std::unique_ptr<PEModel>> solvers;
@@ -145,7 +148,7 @@ GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever
 
 std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet) {
     std::vector<PE_data> pe_data_list;
-
+    spdlog::info("Converting Fleet to PE_data list...");
     for (const auto& ship_ptr : fleet->getShips()) {
         const ship& current_ship = *ship_ptr;
 
@@ -190,10 +193,11 @@ std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_pt
 void EMC_Engine::do_PE_computing() {
     // 将所有船只和设备转换为 PE_data 列表
     _peDataList = _propagationEngine->EquipmentConvertToMatrix(std::move(_fleet));
-
+	spdlog::info("Starting PE computations for {} equipment items...", _peDataList.size());
     // 对每个 PE_data 进行传播计算
     for (const auto& pe_data : _peDataList) {
-        GridMap _LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 25.0); // 假设接收天线高度为 25m
+        _LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 25.0); // 假设接收天线高度为 25m
         // 这里可以存储或处理 loss_line 数据
+        emit peComputationFinished(pe_data.shipName, pe_data.equipmenName, _LossGrid);
     }
 }

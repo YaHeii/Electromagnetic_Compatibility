@@ -22,7 +22,7 @@ public:
  */
   // 使用数据快照来返回fleet，目前仅有仿真过程需要fleet
   //TODO: 未来可扩展为直接传入DataModel*
-    static std::unique_ptr<Fleet> convertDataModelToFleet(const DataModel& dataSnapshot);
+    static std::unique_ptr<Fleet> convertDataModelToFleet(const DataModel::DataSnapshot& dataSnapshot);
     
 private:
     /**
