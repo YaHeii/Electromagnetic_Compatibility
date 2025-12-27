@@ -18,11 +18,11 @@ LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_
     }
 
     // 初始化求解器
-    PEModel solver(_PEdata.freq, _PEdata.dx, _PEdata.dz, _PEdata.nz);
+    PEModel solver(_PEdata.centralF_Ghz, _PEdata.dx, _PEdata.dz, _PEdata.nz);
 
     // 初始化高斯波束：天线高度 25m
-    solver.initializeGaussian(_PEdata.sender_antenna_height,_PEdata.beam_width_deg
-        , _PEdata.elevation_deg);
+    solver.initializeGaussian(_PEdata.sender_antenna_height,_PEdata.beamWidth_deg
+        , _PEdata.antennaPhi_deg);
 
     // 开始步进仿真
     std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
@@ -75,8 +75,8 @@ GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever
     std::vector<std::unique_ptr<PEModel>> solvers;
     solvers.reserve(num_threads);
     for (int t = 0; t < num_threads; ++t) {
-        solvers.emplace_back(std::make_unique<PEModel>(_PEdata.freq, _PEdata.dx, _PEdata.dz, _PEdata.nz));
-        solvers.back()->initializeGaussian(_PEdata.sender_antenna_height, _PEdata.beam_width_deg, _PEdata.elevation_deg);
+        solvers.emplace_back(std::make_unique<PEModel>(_PEdata.centralF_Ghz, _PEdata.dx, _PEdata.dz, _PEdata.nz));
+        solvers.back()->initializeGaussian(_PEdata.sender_antenna_height, _PEdata.beamWidth_deg, _PEdata.antennaPhi_deg);
     }
     // --- 核心循环：旋转扫描 ---
 #pragma omp parallel for // 并行计算各个角度 (OpenMP)
@@ -87,7 +87,7 @@ GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever
         int tid = omp_get_thread_num();
         PEModel* solver = solvers[tid].get();
 
-        solver->initializeGaussian(_PEdata.sender_antenna_height, _PEdata.beam_width_deg, _PEdata.elevation_deg);
+        solver->initializeGaussian(_PEdata.sender_antenna_height, _PEdata.beamWidth_deg, _PEdata.antennaPhi_deg);
 
         int range_idx = 0;
         for (double r = _PEdata.dx; r < _PEdata.max_range; r += _PEdata.dx) {
@@ -142,3 +142,58 @@ GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever
 //std::vector<InterferenceResult> EMC_Engine::EMC_computing(const Fleet& fleet) {//返回受扰计算结果数组
 //
 //}
+
+std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet) {
+    std::vector<PE_data> pe_data_list;
+
+    for (const auto& ship_ptr : fleet->getShips()) {
+        const ship& current_ship = *ship_ptr;
+
+        for (const auto& equip_ptr : current_ship.getEquipmentList()) {
+            Equipment* equipment = equip_ptr.get();
+            
+            // 尝试将 Equipment* 动态转换为 Transmitter* 或 Transceiver*
+            Transmitter* tx = dynamic_cast<Transmitter*>(equipment);
+            Transceiver* trx = dynamic_cast<Transceiver*>(equipment);
+
+            if (tx || trx) {
+                PE_data pe_data;
+
+                pe_data.shipName = current_ship.getID();
+                pe_data.equipmenName = equipment->getID();
+
+                // 获取天线和位置信息
+                Point3D ship_pos = current_ship.getLocation();
+                Point3D equip_pos = equipment->getRelativePosition();
+                pe_data.sender_antenna_height = ship_pos._z + equip_pos._z;
+
+                if (tx) {
+                    pe_data.antennaType = tx->getAntennaType_string();
+                    pe_data.beamWidth_deg = tx->getBeamWidth();
+                    pe_data.antennaPhi_deg = tx->getAntennaPhi();
+                    pe_data.centralF_Ghz = tx->getFrequencyMHz() / 1000.0;
+                } else { // trx
+                    pe_data.antennaType = trx->getAntennaType_string();
+                    pe_data.beamWidth_deg = trx->getBeamWidth();
+                    pe_data.antennaPhi_deg = trx->getAntennaPhi();
+                    pe_data.centralF_Ghz = trx->getTXFrequencyMHz() / 1000.0;
+                }
+                
+                pe_data_list.push_back(pe_data);
+            }
+        }
+    }
+
+    return pe_data_list;
+}
+
+void EMC_Engine::do_PE_computing() {
+    // 将所有船只和设备转换为 PE_data 列表
+    _peDataList = _propagationEngine->EquipmentConvertToMatrix(std::move(_fleet));
+
+    // 对每个 PE_data 进行传播计算
+    for (const auto& pe_data : _peDataList) {
+        GridMap _LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 25.0); // 假设接收天线高度为 25m
+        // 这里可以存储或处理 loss_line 数据
+    }
+}

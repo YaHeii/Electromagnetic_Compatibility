@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    m_treeView = new TreeViewManager(ui->treeView, this);
+    _treeView = new TreeViewManager(ui->treeView, this);
 
     // 设置日志控件最大行数
     ui->Debug_Edit->setMaximumBlockCount(5000);
@@ -22,14 +22,14 @@ MainWindow::MainWindow(QWidget *parent)
     // 连接仿真完成信号到槽
     connect(this, &MainWindow::simulationDone, this, &MainWindow::onSimulationFinished);
 
-    m_logEmitter = new LogEmitter(this);
-    connect(m_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
+    _logEmitter = new LogEmitter(this);
+    connect(_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
     // 获取现有的全局 Logger
     // spdlog::default_logger() 返回的是 main.cpp 中 set_default_logger 设置的那个指针
 	auto logger = spdlog::default_logger();
     if (logger) {
         // 创建并挂载 UI Sink
-        auto qt_sink = std::make_shared<QtTextEditSink_mt>(m_logEmitter);
+        auto qt_sink = std::make_shared<QtTextEditSink_mt>(_logEmitter);
         qt_sink->set_pattern("[%H:%M:%S.%e] %v");
         // 将 Sink 加到 logger 的接收列表中
         logger->sinks().push_back(qt_sink);
@@ -55,7 +55,7 @@ MainWindow::~MainWindow()
             }
         }
     }
-    delete m_engine;
+    delete _emcEngine;
     delete ui;
 }
 
@@ -94,7 +94,7 @@ void MainWindow::on_addDeviceButton_clicked()
     widget->setData(newDevice); // 关联UI与数据
     ui->deviceLayout->addWidget(widget);
     //同步treeView
-    m_treeView->syncViewWithModel();
+    _treeView->syncViewWithModel();
 }
 
 void MainWindow::on_addShipButton_clicked()
@@ -108,7 +108,7 @@ void MainWindow::on_addShipButton_clicked()
     ShipWidget *widget = new ShipWidget(this);
     widget->setData(newShip); // 关联UI与数据
     ui->shipsLayout->addWidget(widget);
-    m_treeView->syncViewWithModel();
+    _treeView->syncViewWithModel();
 }
 
 void MainWindow::on_DeviceSave_clicked()
@@ -152,7 +152,7 @@ bool MainWindow::updateShipModelFromView()
     }
 
     // 3. 同步 TreeView (如果校验通过)
-    m_treeView->syncViewWithModel();
+    _treeView->syncViewWithModel();
     return true;
 }
 
@@ -187,7 +187,7 @@ bool MainWindow::updateDeviceModelFromView()
         }
     }
 
-    m_treeView->syncViewWithModel();
+    _treeView->syncViewWithModel();
     return true;
 }
 
@@ -221,23 +221,18 @@ void MainWindow::on_StartSimulate_clicked() {
     ui->PEmodel_2Dplot->replot();
 
     // 4. 使用 std::async 启动异步计算任务
-    std::future<GridMap> future = std::async(std::launch::async, [this, dataSnapshot]() {
+    // 使用数据快照来进行仿真，防止仿真过程中数据更改导致崩溃
+    std::future<GridMap> future = std::async(std::launch::async, [this]() {
         // --- 后台线程 ---
-        auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
+        auto fleet = TransferToEngine::convertDataModelToFleet(DataModel::instance());
         if (!fleet) {
             spdlog::error("Fleet conversion failed (nullptr).");
             return GridMap();
         }
-        
-        // 注意：m_engine是在主线程创建的，在后台线程使用需要确保线程安全
-        // 如果 m_engine 的方法是可重入的，则无需加锁
-        if (!m_engine) {
-            m_engine = new Propagation_Engine(ModelType::PE, std::move(fleet));
-        } else {
-            // 假设引擎有方法可以更新其内部状态
-            // m_engine->updateFleet(std::move(fleet));
-        }
-        
+
+        // 注意：_emcengine是在主线程创建的，在后台线程使用需要确保线程安全
+        // 如果 _emcengine 的方法是可重入的，则无需加锁
+        _emcEngine = new EMC_Engine(ModelType::PE, std::move(fleet));
         spdlog::info("Engine computing 2D loss map...");
         // return m_engine->PEmodel_computing2D(25); // 假设接口如此
         return GridMap(); // 临时返回

@@ -20,7 +20,9 @@ public:
  * @param dataModel 前端数据模型指针
  * @return 转换后的Fleet对象唯一指针，如果输入为空则返回nullptr
  */
-    static std::unique_ptr<Fleet> convertDataModelToFleet(const DataModel::DataSnapshot& dataSnapshot);
+  // 使用数据快照来返回fleet，目前仅有仿真过程需要fleet
+  //TODO: 未来可扩展为直接传入DataModel*
+    static std::unique_ptr<Fleet> convertDataModelToFleet(const DataModel& dataSnapshot);
     
 private:
     /**

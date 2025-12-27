@@ -46,10 +46,9 @@ private:
     bool updateDeviceModelFromView();
     bool updateShipModelFromView();
     Ui::MainWindow *ui;
-    TreeViewManager *m_treeView;
-    Propagation_Engine *m_engine;
-    LogEmitter* m_logEmitter; // 日志发射器
-
+    TreeViewManager *_treeView;
+    LogEmitter* _logEmitter; // 日志发射器
+    EMC_Engine* _emcEngine;
     // 在后台线程中等待仿真结果
     void simulationWaiter(std::future<GridMap> future);
 

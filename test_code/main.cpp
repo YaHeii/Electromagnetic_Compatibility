@@ -142,7 +142,7 @@ std::vector<InterferenceResult> EMC_Engine::EMC_computing(const Fleet& fleet) {/
 #include "../include/models/PEModel.h"
 int main() {
     // 1. 仿真参数设置
-    double freq = 9.4e9;       // 9.4 GHz (X-band)
+    double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
     double dx = 50.0;          // 步进 50m
     double dz = 0.2;           // 垂直分辨率 0.2m (越高越好，建议 <= lambda/2)
     int nz = 2048;             // 物理高度网格 (总高度 ~400m)
@@ -161,7 +161,7 @@ int main() {
     }
 
     // 4. 初始化求解器 (包含 FFTW3 和 镜像法)
-    PEModel solver(freq, dx, dz, nz);
+    PEModel solver(centralF_Ghz, dx, dz, nz);
 
     // 初始化高斯波束：天线高度 25m
     solver.PEmodel_computing2D(25.0, 2.0, 0.0);

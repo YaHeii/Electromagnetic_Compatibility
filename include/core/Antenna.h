@@ -28,7 +28,7 @@ enum class PolarizationMethod {
 /// <summary>
 /// @param id 天线标识符
 /// @param relative_height 天线相对高度（相对于地面或海平面）
-/// @param beam_width_deg 天线波束宽度（度）
+/// @param beamWidth_deg 天线波束宽度（度）
 /// @param tilt_deg 天线倾斜角（度），默认为0
 /// @brief 天线基类
 /// </summary>

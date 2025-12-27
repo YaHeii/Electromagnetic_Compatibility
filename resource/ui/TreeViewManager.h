@@ -6,7 +6,7 @@
 #include "../include/models/DataModel.h"
 
 
-// 前置声明
+//// 前置声明
 class QTreeView;
 class QStandardItem;
 
@@ -21,7 +21,7 @@ private:
     void populateShips(QStandardItem *rootItem);
     void populateDevices(QStandardItem *rootItem);
 
-    QTreeView *m_treeView;
+    QTreeView *_treeView;
     QStandardItemModel *m_model;
 };
 

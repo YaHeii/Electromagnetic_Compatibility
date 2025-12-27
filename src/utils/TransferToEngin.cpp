@@ -14,7 +14,7 @@ PolarizationMethod TransferToEngine::stringToPolarization(const QString& polStr)
     return PolarizationMethod::VERTICAL; // 默认
 }
 
-std::unique_ptr<Fleet> TransferToEngine::convertDataModelToFleet(const DataModel::DataSnapshot& dataSnapshot) {
+std::unique_ptr<Fleet> TransferToEngine::convertDataModelToFleet(const DataModel& dataSnapshot) {
     auto fleet = std::make_unique<Fleet>();
 
     // 建立哈希索引，避免双重循环查找

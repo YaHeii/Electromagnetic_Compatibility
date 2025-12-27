@@ -137,8 +137,8 @@ private:
     std::vector<Complex> _diffraction_term; // 衍射因子 (k-space)
     std::vector<double> _absorber;          // 顶部吸收窗
 public:
-    PEModel(double freq, double dx, double dz, int nz)
-        : _freq(freq), _dx(dx), _dz(dz), _nz(nz) {
+    PEModel(double centralF_Ghz, double dx, double dz, int nz)
+        : _freq(centralF_Ghz), _dx(dx), _dz(dz), _nz(nz) {
 
         _k0 = 2.0 * M_PI * _freq / 299792458.0;
 
@@ -199,7 +199,7 @@ public:
     // $$u(0, z) = \text{sinc}\left( \frac{z - z_a}{w} \right) \cdot e^{i k z \sin\theta_{tilt}}$$
     // 阵列因子
     // $$u(0, z) = \sum_{n=0}^{N-1} A_n \cdot \exp\left(-\frac{(z - z_n)^2}{w^2}\right) \cdot e^{i \phi_n}$$
-    void initializeGaussian(double antenna_height, double beam_width_deg, double elevation_deg);
+    void initializeGaussian(double antenna_height, double beamWidth_deg, double antennaPhi_deg);
     
 
 

@@ -441,10 +441,10 @@ void PEModel::step_PLST(double current_range, double azimuth_rad, const std::vec
     u_space /= (double)_fft_size;
 }
 
-void PEModel::initializeGaussian(double antenna_height, double beam_width_deg, double tilt_deg) {
+void PEModel::initializeGaussian(double antenna_height, double beamWidth_deg, double tilt_deg) {
     // 将波束宽度（角度）转换为高斯函数的空间宽度参数 w0
     // 公式推导：高斯波束的半功率波束宽度 (HPBW) 与 w0 的关系近似为 w0 = 2 / (k * sin(HPBW/2))
-    double w0 = 2.0 / (_k0 * std::sin(beam_width_deg * M_PI / 360.0));
+    double w0 = 2.0 / (_k0 * std::sin(beamWidth_deg * M_PI / 360.0));
     // 将仰角转换为弧度，用于计算相位
     double tilt_rad = std::sin(tilt_deg * M_PI / 180.0);
     for (int i = 0; i < _fft_size; ++i) {
@@ -459,7 +459,7 @@ void PEModel::initializeGaussian(double antenna_height, double beam_width_deg, d
         // 相位部分 (Phase): 线性相位倾斜
         // 对应公式：exp(i * k * z * sin(theta))
         // 物理含义：通过改变相位梯度来控制波束的传播方向（仰角）
-        // 如果 elevation_deg = 0，则相位为 0，波束水平传播
+        // 如果 antennaPhi_deg = 0，则相位为 0，波束水平传播
         Complex phase = std::exp(J * _k0 * z * tilt_rad);
         Complex val = amp * phase;
         // 填充物理空间

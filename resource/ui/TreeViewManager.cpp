@@ -3,12 +3,12 @@
 #include <QStandardItem>
 
 TreeViewManager::TreeViewManager(QTreeView *treeView, QObject *parent)
-    : QObject(parent), m_treeView(treeView)
+    : QObject(parent), _treeView(treeView)
 {
     // 创建一个标准的item模型
     m_model = new QStandardItemModel(this);
     // 将模型设置给TreeView
-    m_treeView->setModel(m_model);
+    _treeView->setModel(m_model);
 }
 void TreeViewManager::syncViewWithModel()
 {
@@ -32,8 +32,8 @@ void TreeViewManager::syncViewWithModel()
     populateDevices(devicesRoot);
 
     // 6. （可选）默认展开顶层节点
-    m_treeView->expand(shipsRoot->index());
-    m_treeView->expand(devicesRoot->index());
+    _treeView->expand(shipsRoot->index());
+    _treeView->expand(devicesRoot->index());
 }
 
 // 填充所有舰船及其配置的设备
