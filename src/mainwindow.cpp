@@ -16,12 +16,12 @@ MainWindow::MainWindow(QWidget *parent)
     m_logEmitter = new LogEmitter(this);
     connect(m_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
 
-    // 2. 【核心修改】获取现有的全局 Logger
+    // 获取现有的全局 Logger
     // spdlog::default_logger() 返回的是 main.cpp 中 set_default_logger 设置的那个指针
 	auto logger = spdlog::default_logger();
 
     if (logger) {
-        // 3. 创建并挂载 UI Sink
+        // 创建并挂载 UI Sink
         auto qt_sink = std::make_shared<QtTextEditSink_mt>(m_logEmitter);
         qt_sink->set_pattern("[%H:%M:%S.%e] %v");
 
@@ -51,6 +51,34 @@ MainWindow::~MainWindow()
     }
     delete ui;
 }
+
+void MainWindow::onLogReceived(const QString& message, int level)
+{
+    auto logLevel = static_cast<spdlog::level::level_enum>(level);
+    std::cout << "UI Trace: Slot onLogReceived called. Msg: " << message.toStdString() << std::endl;
+    // 1. 设置最大行数 (防止日志无限增长占满内存)
+    const int maxBlockCount = 5000;
+    if (ui->Debug_Edit->maximumBlockCount() == 0) {
+        ui->Debug_Edit->setMaximumBlockCount(maxBlockCount);
+        ui->Error_Edit->setMaximumBlockCount(maxBlockCount);
+    }
+
+    // 2. 根据级别输出
+    if (logLevel == spdlog::level::err || logLevel == spdlog::level::critical) {
+        // Error 级别 -> 红色高亮
+        // QPlainTextEdit 支持 appendHtml 来显示颜色
+        ui->Error_Edit->appendHtml(QString("<font color='#FF0000'>%1</font>").arg(message));
+    }
+    else if (logLevel == spdlog::level::debug) {
+        // Debug 级别 -> 纯文本 (性能最高)
+        ui->Debug_Edit->appendPlainText(message);
+    }
+    else if (logLevel == spdlog::level::info) {
+        // Info 级别 -> 绿色高亮
+        ui->Debug_Edit->appendHtml(QString("<font color='green'>%1</font>").arg(message));
+    }
+}
+
 void MainWindow::on_addDeviceButton_clicked()
 {
     ////在添加新控件前，先将UI上所有未保存的修改更新到数据模型中
@@ -76,9 +104,29 @@ void MainWindow::on_addShipButton_clicked()
     newShip.shipName = QString("NewShip_%1").arg(newShip.shipID);
     DataModel::instance()->allShips.push_back(newShip);
     ShipWidget *widget = new ShipWidget(this); 
-    //widget->setData(newShip);
     ui->shipsLayout->addWidget(widget);
     m_treeView->syncViewWithModel(); 
+}
+
+void MainWindow::updateShipModelFromView()
+{
+    for (int i = 0; i < ui->shipsLayout->count(); ++i) {
+        ShipWidget* widget = qobject_cast<ShipWidget*>(ui->shipsLayout->itemAt(i)->widget());
+        if (widget) {
+            // 让每个Widget用自己UI上的当前值去更新数据模型
+            // 存入DataModel::instance()->allShips
+            widget->updateShipModelData();
+        }
+    }
+    m_treeView->syncViewWithModel();
+}
+
+void MainWindow::on_StartSimulate_clicked() {
+    std::string Model = "PEModel";
+    PE_data PEdata;
+    Propagation_Engine PE(Model);
+    GridMap Loss2D = PE.PEmodel_computing2D(PEdata, 25);
+    PEmodel_Painting2D(Loss2D, ui->PEmodel_2Dplot);
 }
 
 void MainWindow::on_DeviceSave_clicked()
@@ -108,50 +156,4 @@ void MainWindow::updateDeviceModelFromView()
     m_treeView->syncViewWithModel();  // 修正：调用TreeView同步方法
 }
 
-void MainWindow::updateShipModelFromView()
-{
-    for (int i = 0; i < ui->shipsLayout->count(); ++i) {
-        ShipWidget *widget = qobject_cast<ShipWidget*>(ui->shipsLayout->itemAt(i)->widget());
-        if (widget) {
-            // 让每个Widget用自己UI上的当前值去更新数据模型
-            // 存入DataModel::instance()->allShips
-            widget->updateShipModelData();
-        }
-    }
-    m_treeView->syncViewWithModel();  // 修正：调用TreeView同步方法
-}
 
-void MainWindow::on_StartSimulate_clicked() {
-    std::string Model = "PEModel";
-    PE_data PEdata;
-    Propagation_Engine PE(Model);
-    GridMap Loss2D = PE.PEmodel_computing2D(PEdata, 25);
-	PEmodel_Painting2D(Loss2D, ui->PEmodel_2Dplot);
-}
-
-void MainWindow::onLogReceived(const QString& message, int level)
-{
-    auto logLevel = static_cast<spdlog::level::level_enum>(level);
-    std::cout << "UI Trace: Slot onLogReceived called. Msg: " << message.toStdString() << std::endl;
-    // 1. 设置最大行数 (防止日志无限增长占满内存)
-    const int maxBlockCount = 5000;
-    if (ui->Debug_Edit->maximumBlockCount() == 0) {
-        ui->Debug_Edit->setMaximumBlockCount(maxBlockCount);
-        ui->Error_Edit->setMaximumBlockCount(maxBlockCount);
-    }
-
-    // 2. 根据级别输出
-    if (logLevel == spdlog::level::err || logLevel == spdlog::level::critical) {
-        // Error 级别 -> 红色高亮
-        // QPlainTextEdit 支持 appendHtml 来显示颜色
-        ui->Error_Edit->appendHtml(QString("<font color='#FF0000'>%1</font>").arg(message));
-    }
-    else if (logLevel == spdlog::level::debug) {
-        // Debug 级别 -> 纯文本 (性能最高)
-        ui->Debug_Edit->appendPlainText(message);
-    }
-    else if (logLevel == spdlog::level::info) {
-        // Info 级别 -> 绿色高亮
-        ui->Debug_Edit->appendHtml(QString("<font color='green'>%1</font>").arg(message));
-    }
-}
