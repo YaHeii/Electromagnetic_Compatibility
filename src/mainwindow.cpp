@@ -53,30 +53,30 @@ MainWindow::~MainWindow()
 }
 void MainWindow::on_addDeviceButton_clicked()
 {
-    //在添加新控件前，先将UI上所有未保存的修改更新到数据模型中
-    updateDeviceModelFromView();
-
+    ////在添加新控件前，先将UI上所有未保存的修改更新到数据模型中
+    //updateDeviceModelFromView();
+    
     EquipmentData newDevice;
     newDevice.equipmentID = QString("NewDevice_%1").arg(DataModel::instance()->allEquipments.size() + 1);
+    // 首先在DataModel中占位
     DataModel::instance()->allEquipments.push_back(newDevice);
-
-    DeviceWidget *widget = new DeviceWidget(this);  // 修正：设置父对象
-    widget->setData(newDevice); // 用新的空数据填充它
+	// 然后创建新的DeviceWidget并添加到UI
+    DeviceWidget *widget = new DeviceWidget(this); 
     ui->deviceLayout->addWidget(widget);
+    //同步treeView
     m_treeView->syncViewWithModel();
 }
 
 void MainWindow::on_addShipButton_clicked()
 {
-    updateShipModelFromView();
+    //updateShipModelFromView();
 
     ShipData newShip;
     newShip.shipID = DataModel::instance()->allShips.size() + 1;
     newShip.shipName = QString("NewShip_%1").arg(newShip.shipID);
     DataModel::instance()->allShips.push_back(newShip);
-
     ShipWidget *widget = new ShipWidget(this); 
-    widget->setData(newShip);
+    //widget->setData(newShip);
     ui->shipsLayout->addWidget(widget);
     m_treeView->syncViewWithModel(); 
 }
