@@ -8,6 +8,7 @@
 #include "DataModel.h"
 #include <stdexcept>
 #include <spdlog/spdlog.h>
+#include "../utils/PaintImage.hpp"
 
 struct InterferenceResult {
     std::string aggressor_ship_id;//干扰源船ID
@@ -87,6 +88,7 @@ public:
     }
 
     void do_PE_computing();
+    GridMap do_PE_test();
     //std::vector<InterferenceResult> EMC_computing(const Fleet& fleet);//返回受扰计算结果数组
 private:
     GridMap _LossGrid;

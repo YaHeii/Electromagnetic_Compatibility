@@ -48,7 +48,6 @@ MainWindow::~MainWindow()
             }
         }
     }
-    delete _emcEngine;
     delete ui;
 }
 
@@ -213,27 +212,41 @@ void MainWindow::on_StartSimulate_clicked() {
     ui->PEmodel_2Dplot->clearPlottables();
     ui->PEmodel_2Dplot->replot();
 
-    // 4. 使用 std::async 启动异步计算任务
-    // 使用数据快照来进行仿真，防止仿真过程中数据更改导致崩溃
-    std::future<GridMap> future = std::async(std::launch::async, [this, dataSnapshot]() {
-        // --- 后台线程 ---
-        auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
-        if (!fleet) {
-            spdlog::error("Fleet conversion failed (nullptr).");
-            return GridMap();
-        }
+  //  // 4. 使用 std::async 启动异步计算任务
+  //  // 使用数据快照来进行仿真，防止仿真过程中数据更改导致崩溃
+  //  std::future<GridMap> future = std::async(std::launch::async, [this, dataSnapshot]() {
+  //      // --- 后台线程 ---
+  //      auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
+  //      if (!fleet) {
+  //          spdlog::error("Fleet conversion failed (nullptr).");
+  //          return GridMap();
+  //      }
 
-        // 注意：_emcengine是在主线程创建的，在后台线程使用需要确保线程安全
-        // 如果 _emcengine 的方法是可重入的，则无需加锁
-        _emcEngine = new EMC_Engine(ModelType::PE, std::move(fleet));
-        connect(_emcEngine, &EMC_Engine::peComputationFinished, this, &MainWindow::onSingleGridMapReady);
-        spdlog::info("Engine computing 2D loss map...");
-		_emcEngine->do_PE_computing();
-        return GridMap(); // 临时返回
-    });
+  //      // 注意：_emcengine是在主线程创建的，在后台线程使用需要确保线程安全
+  //      // 如果 _emcengine 的方法是可重入的，则无需加锁
+  //      _emcEngine = new EMC_Engine(ModelType::PE, std::move(fleet));
+  //      connect(_emcEngine, &EMC_Engine::peComputationFinished, this, &MainWindow::onSingleGridMapReady);
+  //      spdlog::info("Engine computing 2D loss map...");
+		//_emcEngine->do_PE_test();
+  //      return GridMap(); // 临时返回
+  //  });
 
-    // 5. 创建一个分离的线程来等待结果，避免阻塞UI
-    std::thread(&MainWindow::simulationWaiter, this, std::move(future)).detach();
+  //  // 5. 创建一个分离的线程来等待结果，避免阻塞UI
+  //  std::thread(&MainWindow::simulationWaiter, this, std::move(future)).detach();
+
+    //阻塞实现
+	auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
+    if (!fleet) {
+        spdlog::error("Fleet conversion failed (nullptr).");
+        return;
+	}
+    // 注意：_emcengine是在主线程创建的，在后台线程使用需要确保线程安全
+    // 如果 _emcengine 的方法是可重入的，则无需加锁
+    _emcEngine = new EMC_Engine(ModelType::PE, std::move(fleet));
+    connect(_emcEngine, &EMC_Engine::peComputationFinished, this, &MainWindow::onSingleGridMapReady);
+	spdlog::info("Engine computing 2D loss map...");
+	GridMap lossGrid = _emcEngine->do_PE_test();
+    PEmodel_Painting2D(lossGrid, ui->PEmodel_2Dplot);
 }
 
 void MainWindow::simulationWaiter(std::future<GridMap> future) {
@@ -279,11 +292,11 @@ void MainWindow::onSimulationFinished(const GridMap& result) {
 }
 
 void MainWindow::onSingleGridMapReady(const std::string& shipName, const std::string& equipmentName, const GridMap& lossGrid) {
-        // 直接调用提供的内联函数
-    PEmodel_Painting2D(lossGrid, ui->PEmodel_2Dplot);
-    
-    // 强制刷新显示
-    ui->PEmodel_2Dplot->replot();
+    //    // 直接调用提供的内联函数
+    //PEmodel_Painting2D(lossGrid, ui->PEmodel_2Dplot);
+    //
+    //// 强制刷新显示
+    //ui->PEmodel_2Dplot->replot();
     // 这里可以处理单张图返回的逻辑，比如更新某个特定的UI组件
     spdlog::debug("Received single GridMap for ship: {}, equipment: {}", shipName, equipmentName);
     // 您可以选择将其绘制在一个新的窗口或特定的绘图区域

@@ -47,7 +47,7 @@ LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_
 GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height) {
     spdlog::info("Starting 2D PE model computation for equipment: {}", _PEdata.equipmenName);
     spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
-		_PEdata.centralF_Ghz / 1e9, _PEdata.max_range, _PEdata.duct_height, _PEdata.wind_speed);
+		_PEdata.centralF_Ghz, _PEdata.max_range, _PEdata.duct_height, _PEdata.wind_speed);
     // 1. 定义地图网格参数
     double map_size_km = 20.0;
     double grid_res_m = 50.0; // 50米一个像素
@@ -110,6 +110,8 @@ GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever
     // 遍历地图上的每一个像素点 (x, y)
     double center_idx = grid_dim / 2.0;
 
+    int last_percent = -1;
+    std::cout << "Mapping Polar to Cartesian Grid..." << std::endl;
 #pragma omp parallel for collapse(2)
     for (int y = 0; y < grid_dim; ++y) {
         for (int x = 0; x < grid_dim; ++x) {
@@ -136,7 +138,22 @@ GridMap Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever
 
             // 填值
             coverage_map[y][x] = polar_data[az_idx][r_idx];
-            std::cout << x / 1000.0 << " \t\t " << coverage_map[y][x];
+            if (y == grid_dim / 2) {
+                // 限制打印频率，每隔 10 个点打一次，防止刷屏
+                if (x % 10 == 0) {
+                    // 格式化输出：坐标(km) -> 损耗(dB)
+                    printf("X: %6.2f km, Y: %6.2f km | Loss: %6.2f dB\n",
+                        px / 1000.0, py / 1000.0, coverage_map[y][x]);
+                }
+            }
+        }
+        // 进度条逻辑 (仅在主线程打印，避免乱序)
+        if (omp_get_thread_num() == 0) {
+            int percent = (y * 100) / grid_dim;
+            if (percent != last_percent && percent % 10 == 0) { // 每10%提示一次
+                std::cout << "[Progress] Grid Mapping: " << percent << "%" << std::endl;
+                last_percent = percent;
+            }
         }
     }
 
@@ -200,4 +217,22 @@ void EMC_Engine::do_PE_computing() {
         // 这里可以存储或处理 loss_line 数据
         emit peComputationFinished(pe_data.shipName, pe_data.equipmenName, _LossGrid);
     }
+}
+GridMap EMC_Engine::do_PE_test() {
+    spdlog::info("Starting PE test computation...");
+        PE_data pe_data;
+        pe_data.centralF_Ghz = 1;          // 1 GHz (确保单位正确)
+        pe_data.sender_antenna_height = 25.0;
+        pe_data.beamWidth_deg = 2.0;      // 波束宽度
+        pe_data.antennaPhi_deg = 0.0;     // 【关键】仰角改为0，确保照射海面
+        pe_data.dx = 10.0;                // 【关键】减小步长以捕捉 7m/s 的海浪
+        pe_data.dz = 0.1;                 // 适配 1GHz 波长
+        pe_data.nz = 4096;                // 保证计算域高度 ~400m
+        pe_data.max_range = 20000.0;      // 20km
+        pe_data.duct_height = 20.0;       // 蒸发波导
+        pe_data.wind_speed = 7.0;
+
+    _LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 5.0); // 接收天线高度 25m
+    return _LossGrid;
+    emit peComputationFinished(pe_data.shipName, pe_data.equipmenName, _LossGrid);
 }

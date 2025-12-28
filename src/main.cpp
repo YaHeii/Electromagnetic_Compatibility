@@ -12,6 +12,14 @@
 #include "spdlog/sinks/stdout_color_sinks.h" // 控制台输出
 #include "spdlog/sinks/basic_file_sink.h"    // 文件输出
 
+
+using GridMap = std::vector<std::vector<double>>;
+using Matrix = std::vector<std::vector<double>>;
+using LineMap = std::vector<double>;
+// 注册自定义类型以便在 Qt 信号槽中使用
+Q_DECLARE_METATYPE(GridMap)
+Q_DECLARE_METATYPE(LineMap)
+
 // 将 MainWindow 作为参数，以便从中获取 GUI sink
 void init_logger(MainWindow& w) {
     try {
@@ -78,6 +86,8 @@ int main(int argc, char *argv[])
     
     QApplication a(argc, argv);
     qRegisterMetaType<GridMap>("GridMap");
+    qRegisterMetaType<Matrix>("Matrix");
+    qRegisterMetaType<LineMap>("LineMap");
     MainWindow w;
 
     // 在创建 MainWindow 之后，初始化日志系统
