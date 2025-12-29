@@ -197,11 +197,6 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="Path">
-           <attribute name="title">
-            <string>路径规划</string>
-           </attribute>
-          </widget>
           <widget class="QWidget" name="simulate_tab">
            <attribute name="title">
             <string>开始仿真</string>
