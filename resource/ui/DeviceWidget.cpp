@@ -175,9 +175,7 @@ void DeviceWidget::onEquipmentTypeChanged()
 
 void DeviceWidget::on_equipmentReduction_clicked()
 {
-    spdlog::debug("{}设备控件已删除", this->m_currentId.toStdString());
-    delete this;
-	
+    emit removalRequested(m_currentId);
 }
 
 void DeviceWidget::resetTransmitterUI() {

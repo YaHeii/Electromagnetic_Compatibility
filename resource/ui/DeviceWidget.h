@@ -13,6 +13,8 @@
 
 class DeviceWidget: public QWidget {
     Q_OBJECT
+signals:
+    void removalRequested(const QString &id);
 public:
     explicit DeviceWidget(QWidget *parent =  nullptr);
     ~DeviceWidget();
@@ -21,6 +23,7 @@ public:
     
     // 将UI界面的数据保存回模型
     void updateModelData();
+    QString getID() const { return m_currentId; }
 private:
     Ui::DeviceWidget *ui;
     QString m_currentId;

@@ -65,6 +65,7 @@ public slots:
     void onSimulationFinished(const GridMap& result);
     //单张图返回
     void onSingleGridMapReady(const std::string& shipName, const std::string& equipmentName, const GridMap& lossGrid);
+    void onDeviceWidgetRemovalRequested(const QString &id);
 };
 
 

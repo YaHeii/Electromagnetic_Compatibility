@@ -142,9 +142,40 @@ void ShipWidget::syncDeviceListWithModel()
                 }
 
                 ui->DeviceonShipLayout->addWidget(deviceEntryUi);
+                connect(deviceEntryUi, &DeviceonShip::removalRequested, this, &ShipWidget::onDeviceOnShipRemovalRequested);
             }
-
+ 
             break; // 找到舰船后即可退出
+        }
+    }
+}
+ 
+void ShipWidget::onDeviceOnShipRemovalRequested()
+{
+    // 获取发出信号的DeviceonShip小部件
+    DeviceonShip* deviceWidget = qobject_cast<DeviceonShip*>(sender());
+    if (!deviceWidget) {
+        return;
+    }
+ 
+    // 在布局中找到该小部件的索引
+    int index = ui->DeviceonShipLayout->indexOf(deviceWidget);
+    if (index == -1) {
+        return;
+    }
+ 
+    // 从数据模型中移除对应的设备配置
+    for (ShipData &ship : DataModel::instance()->allShips) {
+        if (ship.shipID == m_currentShipId) {
+            if (index < ship.Equipments.size()) {
+                ship.Equipments.erase(ship.Equipments.begin() + index);
+                spdlog::debug("从舰船 {} 中删除了索引为 {} 的设备", m_currentShipId, index);
+ 
+                // 从布局中移除并删除小部件
+                ui->DeviceonShipLayout->removeWidget(deviceWidget);
+                deviceWidget->deleteLater();
+            }
+            break;
         }
     }
 }

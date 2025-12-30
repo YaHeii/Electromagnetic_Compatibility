@@ -85,6 +85,53 @@ int main(int argc, char *argv[])
     SetConsoleOutputCP(65001);
     
     QApplication a(argc, argv);
+
+// 1. 设置应用风格为 Fusion
+    // Fusion 是 Qt 自带的跨平台风格，对 QPalette 的支持最好
+    a.setStyle(QStyleFactory::create("Fusion"));
+
+    // 2. 初始化调色板
+    QPalette lightPalette;
+
+    // --- 背景色设置 ---
+    // Window: 窗口的一般背景色 (设为极浅的灰色，比纯白更有质感)
+    lightPalette.setColor(QPalette::Window, QColor(240, 240, 240));
+    // WindowText: 窗口上的文字颜色
+    lightPalette.setColor(QPalette::WindowText, Qt::black);
+
+    // --- 输入控件背景色 (QLineEdit, QTextEdit 等) ---
+    // Base: 主要用于输入框的背景 (通常设为纯白)
+    lightPalette.setColor(QPalette::Base, Qt::white);
+    // AlternateBase: 用于列表控件(QTableWidget)的交替行背景
+    lightPalette.setColor(QPalette::AlternateBase, QColor(233, 233, 233));
+    // Text: 输入框内的文字颜色
+    lightPalette.setColor(QPalette::Text, Qt::black);
+    // ToolTipBase: 提示框背景
+    lightPalette.setColor(QPalette::ToolTipBase, Qt::white);
+    lightPalette.setColor(QPalette::ToolTipText, Qt::black);
+
+    // --- 按钮设置 ---
+    // Button: 按钮背景色 (通常与 Window 颜色一致或稍深)
+    lightPalette.setColor(QPalette::Button, QColor(240, 240, 240));
+    lightPalette.setColor(QPalette::ButtonText, Qt::black);
+    
+    // --- 禁用状态 (Disabled) ---
+    // 设置禁用状态下的文字颜色为灰色，体现"不可点"的感觉
+    lightPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(120, 120, 120));
+    lightPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(120, 120, 120));
+    lightPalette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor(120, 120, 120));
+
+    // --- 高亮/选中状态 (Highlight) ---
+    // Link: 超链接颜色 (类似于浏览器蓝)
+    lightPalette.setColor(QPalette::Link, QColor(0, 122, 204));
+    // Highlight: 选中项目时的背景色 (经典蓝)
+    lightPalette.setColor(QPalette::Highlight, QColor(0, 120, 215));
+    // HighlightedText: 选中项目时的文字颜色 (通常为白)
+    lightPalette.setColor(QPalette::HighlightedText, Qt::white);
+
+    // 3. 应用调色板
+    a.setPalette(lightPalette);
+
     qRegisterMetaType<GridMap>("GridMap");
     qRegisterMetaType<Matrix>("Matrix");
     qRegisterMetaType<LineMap>("LineMap");

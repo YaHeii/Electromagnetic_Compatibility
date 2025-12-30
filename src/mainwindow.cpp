@@ -78,13 +78,15 @@ void MainWindow::on_addDeviceButton_clicked()
     updateDeviceModelFromView();
     
     EquipmentData newDevice;
-    newDevice.equipmentID = QString("NewDevice_%1").arg(DataModel::instance()->allEquipments.size() + 1);
+    newDevice.equipmentID = QString("NewDevice%1").arg(DataModel::instance()->allEquipments.size() + 1);
     // 首先在DataModel中占位
     DataModel::instance()->allEquipments.push_back(newDevice);
 	// 然后创建新的DeviceWidget并添加到UI
     DeviceWidget *widget = new DeviceWidget(this);
     widget->setData(newDevice); // 关联UI与数据
     ui->deviceLayout->addWidget(widget);
+    connect(widget, &DeviceWidget::removalRequested, this, &MainWindow::onDeviceWidgetRemovalRequested);
+    connect(widget, &DeviceWidget::removalRequested, this, &MainWindow::onDeviceWidgetRemovalRequested);
     //同步treeView
     _treeView->syncViewWithModel();
 }
@@ -300,4 +302,37 @@ void MainWindow::onSingleGridMapReady(const std::string& shipName, const std::st
     // 这里可以处理单张图返回的逻辑，比如更新某个特定的UI组件
     spdlog::debug("Received single GridMap for ship: {}, equipment: {}", shipName, equipmentName);
     // 您可以选择将其绘制在一个新的窗口或特定的绘图区域
+}
+
+void MainWindow::onDeviceWidgetRemovalRequested(const QString &id)
+{
+    // 1. 从DataModel中移除对应的数据
+    auto& equipments = DataModel::instance()->allEquipments;
+    auto it = std::remove_if(equipments.begin(), equipments.end(),
+        [&](const EquipmentData& ed) { return ed.equipmentID == id; });
+    
+    if (it != equipments.end()) {
+        equipments.erase(it, equipments.end());
+        spdlog::info("设备 {} 的数据已从模型中删除。", id.toStdString());
+
+        // 2. 遍历布局，找到并删除对应的UI控件
+        for (int i = 0; i < ui->deviceLayout->count(); ++i) {
+            QLayoutItem* item = ui->deviceLayout->itemAt(i);
+            if (item && item->widget()) {
+                DeviceWidget* widget = qobject_cast<DeviceWidget*>(item->widget());
+                // 假设DeviceWidget有方法可以获取其ID
+                if (widget && widget->getID() == id) {
+                    ui->deviceLayout->removeWidget(widget);
+                    widget->deleteLater();
+                    spdlog::info("设备 {} 的UI控件已删除。", id.toStdString());
+                    break; // 找到并删除后即可退出循环
+                }
+            }
+        }
+
+        // 3. 更新TreeView
+        _treeView->syncViewWithModel();
+    } else {
+        spdlog::warn("请求删除设备 {}，但在数据模型中未找到。", id.toStdString());
+    }
 }

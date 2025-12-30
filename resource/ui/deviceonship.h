@@ -16,6 +16,8 @@ public:
     ~DeviceonShip() override;
 
 // Ui::DeviceonShip *getUI();
+signals:
+    void removalRequested();
 private:
     Ui::DeviceonShip *ui;
 private slots:

@@ -12,5 +12,5 @@ DeviceonShip::~DeviceonShip() {
 }
 
 void DeviceonShip::on_deleteDeviceonShip_clicked() {
-    delete this;
+    emit removalRequested();
 }
