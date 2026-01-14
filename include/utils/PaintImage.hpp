@@ -8,9 +8,18 @@ inline void PEmodel_Painting2D(const GridMap& Loss_2D, QCustomPlot* PEmodel_2Dpl
     int nx = Loss_2D.size();       // X轴方向的数据量
     int ny = Loss_2D[0].size();    // Y轴方向的数据量
 
+    // // 计算数据的最小值和最大值，用于设置颜色范围
+    // double minLoss = Loss_2D[0][0];
+    // double maxLoss = Loss_2D[0][0];
+    // for (int x = 0; x < nx; ++x) {
+    //     for (int y = 0; y < ny; ++y) {
+    //         if (Loss_2D[x][y] < minLoss) minLoss = Loss_2D[x][y];
+    //         if (Loss_2D[x][y] > maxLoss) maxLoss = Loss_2D[x][y];
+    //     }
+    // }
+
     // 2. 清除之前的图层（如果多次调用此函数，需要防止图层叠加）
     PEmodel_2Dplot->clearPlottables();
-
     // 3. 创建颜色图对象 (ColorMap)
     QCPColorMap* colorMap = new QCPColorMap(PEmodel_2Dplot->xAxis, PEmodel_2Dplot->yAxis);
 
@@ -46,9 +55,11 @@ inline void PEmodel_Painting2D(const GridMap& Loss_2D, QCustomPlot* PEmodel_2Dpl
     // 7. 设置颜色梯度（配色方案）
     // gpJet 是经典的彩虹色，gpThermal 是热成像色，gpGrayscale 是灰度
     colorMap->setGradient(QCPColorGradient::gpJet);
-    //colorMap->setDataRange(QCPRange(-30, -10));
-    // 保持纵横比（可选，如果是地图或物理场通常需要）
-    // customPlot->rescaleAxes(); 
-    //colorMap->rescaleDataRange(true);
+
+    // 8. 设置颜色数据范围，增强梯度对比
+    // colorMap->setDataRange(QCPRange(minLoss, maxLoss));
+    colorMap->setDataRange(QCPRange(60.0, 140.0));
+    colorMap->rescaleAxes();
+    // 9. 重新绘制
     PEmodel_2Dplot->replot();
 }

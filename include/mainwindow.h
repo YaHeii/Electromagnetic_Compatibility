@@ -4,15 +4,14 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
-#include <future>   // 包含 std::future 和 std::async
-#include <thread>   // 包含 std::thread
+#include <future>   
+#include <thread>   
 #include "core/ship.h"
-#include "core/equipment.h"
+#include "core/Equipment.h"
 #include "utils/point_2D.h"
 #include "utils/conversions.h"
 #include "core/fleet.h"
 #include "models/EMC_Engine.h"
-#include "models/datamodel.h"
 #include "../resource/ui/TreeViewManager.h"
 #include "utils/TransferToEngin.h"
 #include "utils/PaintImage.hpp"
