@@ -89,6 +89,7 @@ public:
 
     void do_PE_computing();
     GridMap do_PE_test();
+    void do_Validation_TwoRay();
     //std::vector<InterferenceResult> EMC_computing(const Fleet& fleet);//返回受扰计算结果数组
 private:
     GridMap _LossGrid;

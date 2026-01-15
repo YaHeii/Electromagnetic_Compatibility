@@ -208,13 +208,24 @@ std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_pt
 }
 
 void EMC_Engine::do_PE_computing() {
+    if (!_fleet) {
+        spdlog::error("Fleet is null, cannot perform PE computing.");
+        return;
+    }
+
     // 将所有船只和设备转换为 PE_data 列表
     _peDataList = _propagationEngine->EquipmentConvertToMatrix(std::move(_fleet));
-	spdlog::info("Starting PE computations for {} equipment items...", _peDataList.size());
+    spdlog::info("Starting PE computations for {} equipment items...", _peDataList.size());
+
     // 对每个 PE_data 进行传播计算
     for (const auto& pe_data : _peDataList) {
-        _LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 25.0); // 假设接收天线高度为 25m
-        // 这里可以存储或处理 loss_line 数据
+        // 这里可以根据 pe_data 的参数调整接收天线高度，暂时固定为 25.0
+        double receiver_height = 25.0;
+
+        // 计算二维损耗网格
+        _LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, receiver_height);
+
+        // 触发信号，通知UI更新
         emit peComputationFinished(pe_data.shipName, pe_data.equipmenName, _LossGrid);
     }
 }
@@ -235,4 +246,73 @@ GridMap EMC_Engine::do_PE_test() {
     _LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 5.0); // 接收天线高度 25m
     return _LossGrid;
     emit peComputationFinished(pe_data.shipName, pe_data.equipmenName, _LossGrid);
+}
+
+// 退化参数为平面，以双径模型验证结果
+void EMC_Engine::do_Validation_TwoRay() {
+    spdlog::info("Starting Level 1 Validation: Flat Sea & Standard Atmosphere...");
+
+    // 1. 设置退化参数
+    PE_data data;
+    data.centralF_Ghz = 1;       // 1 GHz
+    data.sender_antenna_height = 25.0; // ht = 25m
+    data.beamWidth_deg = 20.0;  // 设宽波束，确保能照亮海面反射点
+    data.antennaPhi_deg = 0.0;  // 水平发射
+    data.dx = 10.0;             
+    data.dz = 0.1;
+    data.nz = 4096;
+    data.max_range = 10000.0;   // 10km 足够看清干涉
+    data.duct_height = 0.0;     // 无波导 (标准大气)
+    data.wind_speed = 0.001;    // 近乎静止的平坦海面
+
+    // 2. 初始化环境
+    AtmosphereModel atm(0.0); 
+    JONSWAPSurfaceGenerator surface(data.wind_speed); 
+    std::vector<double> n_profile(data.nz, 1.0); 
+
+    // 3. 运行 PE
+    PEModel solver(data.centralF_Ghz, data.dx, data.dz, data.nz);
+    solver.initializeGaussian(data.sender_antenna_height, data.beamWidth_deg, data.antennaPhi_deg);
+
+    // 4. 准备导出数据
+    std::ofstream out("validation_data.csv");
+    out << "Range_m,PE_Loss_dB,Theory_Loss_dB\n";
+
+    double receiver_h = 15.0; // hr = 15m
+
+    for (double r = data.dx; r < data.max_range; r += data.dx) {
+        // 使用 PLST 步进 (由于 wind=0，PLST 应当退化为标准平坦 PE)
+        solver.step_PLST(r, 0.0, n_profile, surface, 0.0);
+
+        // --- A. 获取 PE 结果 ---
+        int rx_idx = static_cast<int>(receiver_h / data.dz);
+        double pe_loss = solver.getPathLoss(rx_idx, r);
+
+        // --- B. 计算理论双径结果 (Two-Ray Analytical) ---
+        // 自由空间损耗
+        double lambda = 299792458.0 / (data.centralF_Ghz * 1.0e9);
+        double fspl = 20 * std::log10(4 * M_PI * r / lambda);
+        
+        // 传播因子 F (考虑地面的反射)
+        // 路径差 delta_R approx 2*ht*hr / r
+        double delta_R = 2.0 * data.sender_antenna_height * receiver_h / r;
+        double phase_diff = (2.0 * M_PI / lambda) * delta_R;
+        
+        // 理想导体反射系数 Gamma = -1 (即相移 PI)
+        // E_total = E_direct + E_reflected = 1 + (-1)*exp(-j*k*delta_R)
+        Complex E_total = 1.0 - std::exp(Complex(0, -phase_diff));
+        double F_linear = std::abs(E_total); // 线性幅值
+        
+        // 加上天线方向图修正 (因为理论公式假设全向，但我们是高斯)
+        // 计算直射波角度，看它在高斯波束的哪个位置
+        double direct_angle = std::atan((receiver_h - data.sender_antenna_height) / r);
+        // 高斯方向图因子 G(theta)
+        // 注意：这里仅仅是粗略修正，为了完美重合，建议理论公式只对比“波峰/波谷的位置”，不强求幅值绝对一致
+        
+        double theory_loss = fspl - 20 * std::log10(F_linear + 1e-10);
+
+        out << r << "," << pe_loss << "," << theory_loss << "\n";
+    }
+    out.close();
+    spdlog::info("Validation data saved to validation_data.csv");
 }

@@ -247,8 +247,10 @@ void MainWindow::on_StartSimulate_clicked() {
     _emcEngine = new EMC_Engine(ModelType::PE, std::move(fleet));
     connect(_emcEngine, &EMC_Engine::peComputationFinished, this, &MainWindow::onSingleGridMapReady);
 	spdlog::info("Engine computing 2D loss map...");
-	GridMap lossGrid = _emcEngine->do_PE_test();
-    PEmodel_Painting2D(lossGrid, ui->PEmodel_2Dplot);
+	// GridMap lossGrid = _emcEngine->do_PE_test();
+    // PEmodel_Painting2D(lossGrid, ui->PEmodel_2Dplot);
+    _emcEngine->do_Validation_TwoRay();
+    spdlog::debug("END");
 }
 
 void MainWindow::simulationWaiter(std::future<GridMap> future) {
