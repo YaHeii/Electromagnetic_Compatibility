@@ -316,3 +316,49 @@ void EMC_Engine::do_Validation_TwoRay() {
     out.close();
     spdlog::info("Validation data saved to validation_data.csv");
 }
+
+void EMC_Engine::do_Validation_Roughness() {
+    spdlog::info("Starting Level 2 Validation: PLST vs Miller-Brown...");
+
+    // 1. 设置测试参数 (典型的 X 波段海面场景)
+    PE_data data;
+    data.centralF_Ghz = 10;       // 10 GHz
+    data.sender_antenna_height = 15.0;
+    data.max_range = 20000.0;    // 20 km
+    data.dx = 10.0; data.dz = 0.1; data.nz = 2048;
+    data.wind_speed = 10.0;      // 【关键】较大的风速，确保粗糙度效应明显
+    data.duct_height = 0.0;      // 暂时关闭波导，专注于表面散射验证
+
+    // 2. 初始化环境
+    AtmosphereModel atm(data.duct_height);
+    JONSWAPSurfaceGenerator surface(data.wind_speed);
+    std::vector<double> n_profile(data.nz, 1.0); // 标准大气 n=1
+
+    PEModel solver_mb(data.centralF_Ghz, data.dx, data.dz, data.nz); // Solver A: Miller-Brown
+    PEModel solver_plst(data.centralF_Ghz, data.dx, data.dz, data.nz); // Solver B: PLST
+
+    // 初始化同样的高斯波束
+    solver_mb.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
+    solver_plst.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
+
+    // 3. 运行对比仿真
+    std::ofstream out("validation_roughness.csv");
+    out << "Range_m,Loss_MillerBrown,Loss_PLST\n";
+
+    double rx_h = 10.0;
+    int rx_idx = rx_h / data.dz;
+
+    for (double r = data.dx; r < data.max_range; r += data.dx) {
+        // --- A. 运行 Miller-Brown (基准) ---
+        // 注意：你需要确保 step_Miller_Brown 被正确声明为 public
+        solver_mb.step_Miller_Brown(r, data.wind_speed, n_profile);
+        double loss_mb = solver_mb.getPathLoss(rx_idx, r);
+
+        // --- B. 运行 PLST (待验证对象) ---
+        solver_plst.step_PLST(r, n_profile, surface, 0.0);
+        double loss_plst = solver_plst.getPathLoss(rx_idx, r);
+
+        out << r << "," << loss_mb << "," << loss_plst << "\n";
+    }
+    out.close();
+}
