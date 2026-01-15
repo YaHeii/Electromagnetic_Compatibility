@@ -249,7 +249,7 @@ void MainWindow::on_StartSimulate_clicked() {
 	spdlog::info("Engine computing 2D loss map...");
 	// GridMap lossGrid = _emcEngine->do_PE_test();
     // PEmodel_Painting2D(lossGrid, ui->PEmodel_2Dplot);
-    _emcEngine->do_Validation_Roughness();
+    _emcEngine->do_Validation_DuctLeakage();
 }
 
 void MainWindow::simulationWaiter(std::future<GridMap> future) {

@@ -362,3 +362,77 @@ void EMC_Engine::do_Validation_Roughness() {
     }
     out.close();
 }
+
+void EMC_Engine::do_Validation_DuctLeakage() {
+    spdlog::info("Starting Level 3 Validation: Duct Leakage Effect...");
+
+    // 1. 设置通用参数 (X波段，强波导)
+    PE_data data;
+    data.centralF_Ghz = 10;       // 10 GHz
+    data.sender_antenna_height = 10.0; // 发射机位于波导内部 (H0=20m, Ht=10m)
+    data.max_range = 50000.0;    // 【关键】距离要足够远 (50km)，累积泄漏才明显
+    data.dx = 10.0;
+    data.dz = 0.1;
+    data.nz = 2048;              // 计算高度约 200m，足以覆盖波导层(20m)和泄漏层(>20m)
+    data.duct_height = 20.0;     // 【关键】20米强蒸发波导
+
+    // 2. 准备两种场景
+    // 场景 A: 平静海面 (Wind = 0) -> 能量应该被死死锁住
+    double wind_flat = 0.0;
+    // 场景 B: 粗糙海面 (Wind = 15) -> 能量应该被散射出去
+    double wind_rough = 15.0;
+
+    // 3. 初始化环境
+    // 大气模型是一样的 (都是 20m 波导)
+    AtmosphereModel atm(data.duct_height);
+    std::vector<double> n_profile(data.nz);
+    for (int i = 0; i < data.nz; ++i) n_profile[i] = atm.getRefractiveIndex(i * data.dz);
+
+    // 表面生成器
+    JONSWAPSurfaceGenerator surf_flat(wind_flat);
+    JONSWAPSurfaceGenerator surf_rough(wind_rough);
+
+    // 求解器
+    PEModel solver_flat(data.centralF_Ghz, data.dx, data.dz, data.nz);
+    PEModel solver_rough(data.centralF_Ghz, data.dx, data.dz, data.nz);
+
+    solver_flat.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
+    solver_rough.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
+
+    // 4. 运行仿真到最大距离
+    // 这里我们不需要中间数据，只需要跑到终点看垂直分布
+    int steps = static_cast<int>(data.max_range / data.dx);
+
+    spdlog::info("Computing Flat Surface Case...");
+    for (int s = 0; s < steps; ++s) {
+        double r = (s + 1) * data.dx;
+        solver_flat.step_PLST(r, n_profile, surf_flat, 0.0);
+    }
+
+    spdlog::info("Computing Rough Surface Case...");
+    for (int s = 0; s < steps; ++s) {
+        double r = (s + 1) * data.dx;
+        solver_rough.step_PLST(r, n_profile, surf_rough, 0.0);
+    }
+
+    // 5. 提取终点处 (Range = 50km) 的垂直剖面数据
+    std::ofstream out("validation_leakage.csv");
+    out << "Height_m,Loss_Flat_dB,Loss_Rough_dB\n";
+
+    // 遍历所有高度层
+    for (int i = 0; i < data.nz; ++i) {
+        double z = i * data.dz;
+
+        // 获取损耗
+        double loss_flat = solver_flat.getPathLoss(i, data.max_range);
+        double loss_rough = solver_rough.getPathLoss(i, data.max_range);
+
+        // 过滤掉极其微弱的数值(比如高空吸收层)，只输出有效数据
+        // 或者直接输出，用Excel筛选
+        if (z < 150.0) { // 只关注 150m 以下，太高了是吸收层
+            out << z << "," << loss_flat << "," << loss_rough << "\n";
+        }
+    }
+    out.close();
+    spdlog::info("Validation data saved to validation_leakage.csv");
+}

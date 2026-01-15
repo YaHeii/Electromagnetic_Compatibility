@@ -91,6 +91,7 @@ public:
     GridMap do_PE_test();
     void do_Validation_TwoRay();
     void do_Validation_Roughness();
+    void do_Validation_DuctLeakage();
     //std::vector<InterferenceResult> EMC_computing(const Fleet& fleet);//返回受扰计算结果数组
 private:
     GridMap _LossGrid;
