@@ -73,7 +73,7 @@ struct EquipmentData {
     // --- 数据合法性校验 ---
     // 返回 pair: first=是否合法, second=错误信息
 
-    std::pair<bool,std::string> validate_EquipmentBaseInfo() const {
+    std::pair<bool,QString> validate_EquipmentBaseInfo() const {
         if (equipmentID.isEmpty()) return { false, "设备ID不能为空" };
         if(equipmentID.toStdString().find('_')){
             return {false, "设备名称不应含有‘_’"};
@@ -103,7 +103,7 @@ struct EquipmentData {
         return {true, ""};
     }
 
-    std::pair<bool, QString> valiate_Transmitter const {
+    std::pair<bool, QString> valiate_Transmitter() const {
         auto baseResult = validate_EquipmentBaseInfo();
         if (!baseResult.first) return baseResult;
         if (CentralF_Transmitter <= 0) return { false, "发射机中心频率必须大于 0" };
@@ -114,12 +114,12 @@ struct EquipmentData {
         return {true, ""};
     } 
 
-    std::pair<bool,QString> validate const{
+    std::pair<bool,QString> validate() const{
         if(equipmentType == "接收机") return validate_reciever();
-        if(EquipmentType == "发射机") return validate_Transmitter();
+        if(equipmentType == "发射机") return valiate_Transmitter();
         //TODO:收发一体
     }
-}
+};
 
 
 /// <summary>
@@ -166,7 +166,7 @@ struct ShipData {
         }
 
         if(ship_Orienteation<0 || ship_Orienteation>360){
-            return {false, "船向范围应在[0,360]"}
+            return {false, "船向范围应在[0,360]"};
         }
         return { true, "" };
     }

@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
+list(APPEND CMAKE_PREFIX_PATH "D:/QT/6.9.3/msvc2022_64")
 project(Electromagnetic_Compatibility CXX C)
 set(APP_TARGET_NAME Electromagnetic_Compatibility)
 set(CMAKE_CXX_STANDARD 17)
@@ -11,11 +12,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 set(Qt6_DIR "D:/QT/6.9.3/msvc2022_64/lib/cmake/Qt6")
-find_package(Qt6 6.9.3 REQUIRED COMPONENTS Core Widgets Multimedia PrintSupport)
+find_package(Qt6 6.9.3 REQUIRED COMPONENTS Core Widgets Multimedia PrintSupport Network)
 find_package(FFTW3 CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED) 
 find_package(OpenMP REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+
+# 确保 spdlog 的 include 目录在 target_include_directories 之前
+include_directories(${spdlog_INCLUDE_DIRS})
 
 if(MSVC)
     add_compile_options("/utf-8")
@@ -41,6 +45,8 @@ file(GLOB_RECURSE HDR_UTILS CONFIGURE_DEPENDS "include/utils/*.h" "include/utils
 # 扫描SRC
 file(GLOB SRC_MAIN CONFIGURE_DEPENDS "src/*.cpp") 
 file(GLOB HDR_MAIN CONFIGURE_DEPENDS "include/*.h")
+# 添加UI
+add_subdirectory(third_party/ElaWidgetTools)
 
 qt_add_executable(${APP_TARGET_NAME}
     ${SRC_MAIN}      ${HDR_MAIN}
@@ -59,7 +65,7 @@ target_include_directories(${APP_TARGET_NAME} PUBLIC
         ${CMAKE_SOURCE_DIR}/resource/ui
         ${DSPFilters_DIR}/shared/DSPFilters/include
 )
-
+set(ELA_QT_VERSION 6 CACHE STRING "Qt Version" FORCE)
 # 为目标链接 Qt 库
 target_link_libraries(${APP_TARGET_NAME} PRIVATE
         Qt6::Core
@@ -67,8 +73,10 @@ target_link_libraries(${APP_TARGET_NAME} PRIVATE
         Qt6::Multimedia
         FFTW3::fftw3
         Eigen3::Eigen
+        Qt6::Network
         Qt6::PrintSupport
         spdlog::spdlog
+        ElaWidgetTools
 )
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${APP_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)

@@ -18,7 +18,7 @@
 #include "models/PEModel.h"
 #include "utils/QtSpdlogSink.h"
 #include "utils/PaintImage.hpp"
-
+#include "ElaWindow.h"
 class ShipWidget;
 class DeviceWidget;
 
@@ -29,7 +29,7 @@ namespace Ui {
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-class MainWindow : public QMainWindow {
+class MainWindow : public ElaWindow {
     Q_OBJECT
 
 public:

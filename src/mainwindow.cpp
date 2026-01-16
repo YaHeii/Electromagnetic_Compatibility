@@ -8,7 +8,7 @@
 #include <QMetaType> // 包含 QMetaType
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent),
+    : ElaWindow(parent),
     ui(new Ui::MainWindow) {
     ui->setupUi(this);
     _treeView = new TreeViewManager(ui->treeView, this);
@@ -135,7 +135,7 @@ bool MainWindow::updateShipModelFromView()
     // 遍历 DataModel 中的所有船只进行检查
     auto& ships = DataModel::instance()->allShips;
     for (int i = 0; i < ships.size(); ++i) {
-        auto result = ships[i].validate(); // 调用 validate
+        auto result = ships[i].validate_Ship(); // 调用 validate
         if (!result.first) {
             // 校验失败，弹出警告
             QString errorMsg = QString("船只数据错误 (第 %1 个):\n%2").arg(i + 1).arg(result.second);
