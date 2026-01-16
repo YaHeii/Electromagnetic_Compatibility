@@ -49,3 +49,6 @@ inline void PEmodel_Painting2D(const GridMap& Loss_2D, QCustomPlot* PEmodel_2Dpl
     // 9. 重新绘制
     PEmodel_2Dplot->replot();
 }
+
+//TODO: 结合双重叠加法结果绘制不同海况下海面情况。
+void PaintMarineSurface_3D();

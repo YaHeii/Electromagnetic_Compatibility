@@ -96,7 +96,7 @@ public:
 private:
     GridMap _LossGrid;
     std::vector<PE_data> _peDataList;
-    using DataSnapshot = DataModel::DataSnapshot; // Use the snapshot from DataModel
+    using DataSnapshot = DataModel::DataSnapshot; 
 	std::unique_ptr<Fleet> _fleet;
 	DataSnapshot _dataSnapshot;
     ModelType _modelType;

@@ -93,6 +93,8 @@ struct EquipmentData {
     }
 
     std::pair<bool, QString> validate_reciever() const {
+        auto baseResult = validate_EquipmentBaseInfo();
+        if (!baseResult.first) return baseResult;
         if (CentralF_Reciever <= 0) return { false, "接收机中心频率必须大于 0" };
         if (Bandwidth_Reciever <= 0) return { false, "接收机带宽必须大于 0" };
         if (Sensitive_reciever > -90) return {false, "灵敏度不足,编队内通信最低灵敏度为-90dBm"};
@@ -102,6 +104,8 @@ struct EquipmentData {
     }
 
     std::pair<bool, QString> valiate_Transmitter const {
+        auto baseResult = validate_EquipmentBaseInfo();
+        if (!baseResult.first) return baseResult;
         if (CentralF_Transmitter <= 0) return { false, "发射机中心频率必须大于 0" };
         if (Bandwidth_Transmitter <= 0) return { false, "接收机带宽必须大于 0" };
         if (Power_Transmitter < 0) return {false, "发射机增益不应小于0"};
@@ -109,6 +113,13 @@ struct EquipmentData {
         if (Beamwidth_Transmitter < 0 || Beamwidth_Transmitter > 360) return {false, "天线波束宽度必须在 [0, 360] 范围内"};
         return {true, ""};
     } 
+
+    std::pair<bool,QString> validate const{
+        if(equipmentType == "接收机") return validate_reciever();
+        if(EquipmentType == "发射机") return validate_Transmitter();
+        //TODO:收发一体
+    }
+}
 
 
 /// <summary>

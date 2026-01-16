@@ -75,7 +75,6 @@ void qt_message_handler(QtMsgType type, const QMessageLogContext& context, const
         break;
     case QtFatalMsg:
         spdlog::critical("[Qt] {}", localMsg.constData());
-        // Qt Fatal 默认会 abort，但在 spdlog 记录后可能需要手动处理或让其继续
         break;
     }
 }
@@ -86,8 +85,8 @@ int main(int argc, char *argv[])
     
     QApplication a(argc, argv);
 
-// 1. 设置应用风格为 Fusion
-    // Fusion 是 Qt 自带的跨平台风格，对 QPalette 的支持最好
+
+    //TODO：使用QSS替代Fusion
     a.setStyle(QStyleFactory::create("Fusion"));
 
     // 2. 初始化调色板
