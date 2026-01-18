@@ -8,12 +8,19 @@
 MainWindow::MainWindow(QWidget *parent)
     : ElaWindow(parent),
     ui(new Ui::MainWindow) {
+    //创建面板
+    resize(1200, 800); // 设置初始大小
+    setWindowTitle("无人船舰队电磁预测系统");
+    FleetInput* FleetWidget = new FleetInput(this);
+    Simulation* SimulationWidget = new Simulation(this);
+
+    addPageNode("1", FleetWidget, ElaIconType::House);
+    addPageNode("2", SimulationWidget, ElaIconType::ChartSimple);
+    navigation("HOME");
 
     // 设置日志控件最大行数
- /*   ui->Debug_Edit->setMaximumBlockCount(5000);
-    ui->Error_Edit->setMaximumBlockCount(5000);*/
- 
-
+/*   ui->Debug_Edit->setMaximumBlockCount(5000);
+   ui->Error_Edit->setMaximumBlockCount(5000);*/
 
     // 初始化日志发射器并连接信号
     _logEmitter = new LogEmitter(this);
@@ -57,9 +64,7 @@ void MainWindow::onLogReceived(const QString& message, int level)
     }
     else if (logLevel == spdlog::level::debug) {
         // Debug 级别 -> 纯文本 (性能最高)
-        //ui->Debug_Edit->appendPlainText(message);
-    }
-    else if (logLevel == spdlog::level::info) {
+        //ui->Debug_Edit->appendPlainText(message);32
         // Info 级别 -> 绿色高亮
         //ui->Debug_Edit->appendHtml(QString("<font color='green'>%1</font>").arg(message));
     }

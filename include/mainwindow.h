@@ -2,14 +2,13 @@
 #include <QObject>
 #include <QRect>
 #include <iostream>
-#include <vector>
-#include <string>
-#include <unordered_map>
 #include <memory>
 #include <future>   
 #include <thread>   
 #include "utils/QtSpdlogSink.h"
 #include "ElaWindow.h"
+#include "Simulation.h"
+#include "FleetInput.h"
 
 namespace Ui {
     class MainWindow;
