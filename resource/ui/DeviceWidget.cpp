@@ -2,6 +2,8 @@
 #include <QDebug>
 #include "spdlog/spdlog.h"
 
+
+
 DeviceWidget::DeviceWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::DeviceWidget)
