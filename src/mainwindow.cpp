@@ -25,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 初始化日志发射器并连接信号
     _logEmitter = new LogEmitter(this);
     connect(_logEmitter, &LogEmitter::newLog, this, &MainWindow::onLogReceived);
+    //导航栏实验
+    addPageNode("Temp", new QWidget(this), ElaIconType::Bug);
 }
  
 std::shared_ptr<spdlog::sinks::sink> MainWindow::createGuiLogSink() {
