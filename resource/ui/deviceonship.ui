@@ -19,14 +19,19 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,2,2">
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="ElaText" name="label">
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>设备名称</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="EquipmentID"/>
+        <widget class="ElaComboBox" name="EquipmentID"/>
        </item>
        <item>
         <widget class="QPushButton" name="deleteDeviceonShip">
@@ -41,6 +46,18 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ElaComboBox</class>
+   <extends>QComboBox</extends>
+   <header location="global">ElaComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ElaText</class>
+   <extends>QLabel</extends>
+   <header location="global">ElaText.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -23,15 +23,12 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QWidget" name="widget" native="true">
        <property name="minimumSize">
         <size>
          <width>0</width>
          <height>200</height>
         </size>
-       </property>
-       <property name="title">
-        <string>船只1</string>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
@@ -41,42 +38,42 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout">
               <item>
-               <widget class="QLabel" name="label">
+               <widget class="ElaText" name="label">
                 <property name="text">
                  <string>X坐标</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="X_offset"/>
+               <widget class="ElaLineEdit" name="X_offset"/>
               </item>
              </layout>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_2">
               <item>
-               <widget class="QLabel" name="label_3">
+               <widget class="ElaText" name="label_3">
                 <property name="text">
                  <string>Y坐标</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="Y_offset"/>
+               <widget class="ElaLineEdit" name="Y_offset"/>
               </item>
              </layout>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
-               <widget class="QLabel" name="label_2">
+               <widget class="ElaText" name="label_2">
                 <property name="text">
                  <string>Z坐标</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="Z_offset"/>
+               <widget class="ElaLineEdit" name="Z_offset"/>
               </item>
              </layout>
             </item>
@@ -87,28 +84,28 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_5">
               <item>
-               <widget class="QLabel" name="label_39">
+               <widget class="ElaText" name="label_39">
                 <property name="text">
                  <string>船速</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="ship_Speed"/>
+               <widget class="ElaLineEdit" name="ship_Speed"/>
               </item>
              </layout>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_4">
               <item>
-               <widget class="QLabel" name="label_38">
+               <widget class="ElaText" name="label_38">
                 <property name="text">
                  <string>朝向</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="ship_Orienteation"/>
+               <widget class="ElaLineEdit" name="ship_Orienteation"/>
               </item>
              </layout>
             </item>
@@ -128,8 +125,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>468</width>
-               <height>152</height>
+               <width>469</width>
+               <height>169</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -155,7 +152,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="shipEquipmentPlus">
+           <widget class="ElaPushButton" name="shipEquipmentPlus">
             <property name="text">
              <string>添加设备</string>
             </property>
@@ -169,7 +166,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="deleteShip">
+    <widget class="ElaPushButton" name="deleteShip">
      <property name="text">
       <string>-</string>
      </property>
@@ -177,6 +174,23 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ElaPushButton</class>
+   <extends>QPushButton</extends>
+   <header location="global">ElaPushButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ElaLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header location="global">ElaLineEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ElaText</class>
+   <extends>QLabel</extends>
+   <header location="global">ElaText.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

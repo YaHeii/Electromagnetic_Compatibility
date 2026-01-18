@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <mutex>
+#include <iostream> 
 #include "spdlog/sinks/base_sink.h"
 #include "spdlog/details/null_mutex.h"
 
@@ -37,7 +38,7 @@ protected:
     // spdlog 写入日志时会调用这个函数
     void sink_it_(const spdlog::details::log_msg& msg) override {
         if (!emitter_) return;
-        std::cout << "Sink Trace: sink_it_ called, emitting signal..." << std::endl;
+        // std::cout << "Sink Trace: sink_it_ called, emitting signal..." << std::endl;
         // 1. 格式化日志消息 (将 spdlog 的 buffer 转为 string)
         spdlog::memory_buf_t formatted;
         this->formatter_->format(msg, formatted);
@@ -54,7 +55,5 @@ protected:
 
 //以此方便创建线程安全的 Sink
 using QtTextEditSink_mt = QtTextEditSink<std::mutex>;
-
-
 
 #endif // QTSPDLOGSINK_H

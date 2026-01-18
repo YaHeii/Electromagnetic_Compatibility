@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>652</width>
-    <height>486</height>
+    <width>607</width>
+    <height>442</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,4">
      <item>
-      <widget class="QTabWidget" name="treeViewManager">
+      <widget class="ElaTabWidget" name="treeViewManager">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -51,7 +51,17 @@
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_6">
          <item>
-          <widget class="QTreeView" name="treeView"/>
+          <widget class="ElaTreeView" name="treeView">
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Shape::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Shadow::Plain</enum>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -60,9 +70,9 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0">
        <item>
-        <widget class="QTabWidget" name="tabWidget_3">
+        <widget class="ElaTabWidget" name="tabWidget_3">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="device_Tab">
           <attribute name="title">
@@ -88,8 +98,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>459</width>
-                <height>356</height>
+                <width>414</width>
+                <height>312</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -121,14 +131,14 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="addDeviceButton">
+            <widget class="ElaPushButton" name="addDeviceButton">
              <property name="text">
               <string>添加设备</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="DeviceSave">
+            <widget class="ElaPushButton" name="DeviceSave">
              <property name="text">
               <string>保存</string>
              </property>
@@ -151,8 +161,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>471</width>
-                <height>356</height>
+                <width>426</width>
+                <height>312</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -204,6 +214,24 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ElaTabWidget</class>
+   <extends>QTabWidget</extends>
+   <header>ElaTabWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ElaPushButton</class>
+   <extends>QPushButton</extends>
+   <header location="global">ElaPushButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ElaTreeView</class>
+   <extends>QTreeView</extends>
+   <header>elatreeview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

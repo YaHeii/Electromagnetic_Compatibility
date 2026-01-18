@@ -6,9 +6,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// 引入 spdlog 头文件
 #include "spdlog/spdlog.h"
-#include "spdlog/async.h" // 异步日志必须
+#include "spdlog/async.h" 
 #include "spdlog/sinks/stdout_color_sinks.h" // 控制台输出
 #include "spdlog/sinks/basic_file_sink.h"    // 文件输出
 
