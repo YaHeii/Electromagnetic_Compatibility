@@ -52,6 +52,15 @@
         <layout class="QVBoxLayout" name="verticalLayout_6">
          <item>
           <widget class="ElaTreeView" name="treeView">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>400</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true"/>
            </property>
@@ -61,6 +70,27 @@
            <property name="frameShadow">
             <enum>QFrame::Shadow::Plain</enum>
            </property>
+           <property name="rootIsDecorated">
+            <bool>true</bool>
+           </property>
+           <property name="uniformRowHeights">
+            <bool>false</bool>
+           </property>
+           <property name="itemsExpandable">
+            <bool>true</bool>
+           </property>
+           <property name="animated">
+            <bool>false</bool>
+           </property>
+           <property name="wordWrap">
+            <bool>false</bool>
+           </property>
+           <property name="headerHidden">
+            <bool>true</bool>
+           </property>
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
           </widget>
          </item>
         </layout>
@@ -110,21 +140,7 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
-                <layout class="QVBoxLayout" name="deviceLayout">
-                 <item>
-                  <spacer name="verticalSpacer">
-                   <property name="orientation">
-                    <enum>Qt::Orientation::Vertical</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
+                <layout class="QVBoxLayout" name="deviceLayout"/>
                </item>
               </layout>
              </widget>

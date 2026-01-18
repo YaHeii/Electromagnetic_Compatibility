@@ -116,7 +116,8 @@ struct EquipmentData {
 
     std::pair<bool,QString> validate() const{
         if(equipmentType == "接收机") return validate_reciever();
-        if(equipmentType == "发射机") return valiate_Transmitter();
+        else if(equipmentType == "发射机") return valiate_Transmitter();
+        else return {false,"未知部件"};
         //TODO:收发一体
     }
 };

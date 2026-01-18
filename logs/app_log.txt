@@ -1,3 +1,6 @@
-[2026-01-18 15:10:34.242] [global_logger] [debug] 正在初始化....
-[2026-01-18 15:10:34.440] [global_logger] [info] MainWindow shown.
-[2026-01-18 15:12:50.727] [global_logger] [info] Application exiting with code 0
+[2026-01-18 23:06:28.152] [global_logger] [debug] 正在初始化....
+[2026-01-18 23:06:28.374] [global_logger] [info] MainWindow shown.
+[2026-01-18 23:06:31.537] [global_logger] [warning] [Qt] QLayout: Attempting to add QLayout "" to ElaScrollPage "Mainwidget", which already has a layout
+[2026-01-18 23:06:34.319] [global_logger] [info] 设备 NewDevice1 的数据已从模型中删除。
+[2026-01-18 23:06:34.319] [global_logger] [info] 设备 NewDevice1 的UI控件已删除。
+[2026-01-18 23:06:39.162] [global_logger] [info] Application exiting with code 0

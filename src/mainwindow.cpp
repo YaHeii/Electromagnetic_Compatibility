@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     : ElaWindow(parent),
     ui(new Ui::MainWindow) {
     //创建面板
-    resize(1200, 800); // 设置初始大小
+    resize(1200, 800); 
     setWindowTitle("无人船舰队电磁预测系统");
     
     FleetInput* FleetWidget = new FleetInput(this);
@@ -34,9 +34,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 或者完全固定：
     // logDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
 
-    LogWidget* logWidget = new LogWidget(this);
+    _logWidget = new LogWidget(this);
 
-    logDock->setWidget(logWidget);
+    logDock->setWidget(_logWidget);
 
     this->addDockWidget(Qt::RightDockWidgetArea, logDock);
     
