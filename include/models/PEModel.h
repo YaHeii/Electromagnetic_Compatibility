@@ -20,9 +20,9 @@ const Complex J(0.0, 1.0);//虚数单位
 // 蒸发波导或标准大气的建模
 class AtmosphereModel {
 private:
-    double _M0;      // 底部修正折射率，通常为 330 [cite: 914]
-    double _z0;      // 粗糙度长度，通常为 1.5e-4 [cite: 914]
-    double _c0;      // 常数，通常为 0.125 [cite: 915]
+    double _M0;      // 底部修正折射率，通常为 330
+    double _z0;      // 粗糙度长度，通常为 1.5e-4
+    double _c0;      // 常数，通常为 0.125
     double _duct_height; // 蒸发波导高度 H0 (m)
 
 public:
@@ -52,14 +52,14 @@ public:
     // 计算均方根波高 h (菲利普斯谱)
     // 公式: h = 0.0051 * U^2
     static double calculateRMSHeight(double wind_speed) {
-        return 0.0051 * std::pow(wind_speed, 2); // [cite: 693]
+        return 0.0051 * std::pow(wind_speed, 2);
     }
 
     // 计算瑞利粗糙度因子 gamma
     // gamma = 2 * k * h * sin(theta)
 	//  k 为波常数；θ 为掠射角（弧度）
     static double calculateRayleighParameter(double k, double h_rms, double grazing_angle_rad) {
-        return 2.0 * k * h_rms * std::sin(grazing_angle_rad); // [cite: 691]
+        return 2.0 * k * h_rms * std::sin(grazing_angle_rad); 
     }
 
     // 计算 Miller-Brown 粗糙度衰减因子 rho

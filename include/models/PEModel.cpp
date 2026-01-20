@@ -175,13 +175,13 @@ void PEModel::step_Miller_Brown(double current_range, double wind_speed, const s
     Map<VectorXcd> u_kspace(reinterpret_cast<Complex*>(_out_ptr), _fft_size);
     // --- 步骤 A: 空间域处理 (折射 + 吸收 + 边界构建) ---
 
-    // 1. 估算掠射角 (简单的几何近似，实际应参考 Paper 2 [cite: 175] 使用谱估计)
+    // 1. 估算掠射角 (简单的几何近似，实际应参考 Paper 2 使用谱估计)
     double grazing_approx = atan(25.0 / (current_range + 1000.0)); // 假设天线高25m
 
     // 2. 计算底部边界参数
     double rho = calculateRoughnessRho(wind_speed, grazing_approx); // 粗糙度 
     Complex eps_sea(80.0, -4.0 * M_PI * 4.0 / (_k0 * 299792458.0)); // 海水介电常数示例
-    Complex Gamma_f = calculateFresnel(grazing_approx, eps_sea);    // 菲涅尔 [cite: 96]
+    Complex Gamma_f = calculateFresnel(grazing_approx, eps_sea);    // 菲涅尔
 
     // Paper 2 Eq. (93): 有效反射系数 Gamma_eff = rho * Gamma_Fresnel
     Complex Gamma_eff = rho * Gamma_f;

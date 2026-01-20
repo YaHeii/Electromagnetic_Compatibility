@@ -62,7 +62,7 @@ public:
     }
     LineMap PEmodel_computing1D(PE_data _PEdata, double reciever_antenna_height);
     GridMap PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height);
-    // TODO: 将所有的Equipment转换为Matrix格式，
+    
     std::vector<PE_data> EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet);
 
 private:
