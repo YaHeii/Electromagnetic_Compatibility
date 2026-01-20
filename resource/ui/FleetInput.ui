@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>607</width>
-    <height>442</height>
+    <height>467</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,53 +46,30 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="styleSheet">
+         <string notr="true">QWidget#tab_6 {
+    background-color: transparent;
+}</string>
+        </property>
         <attribute name="title">
          <string>结构树</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_6">
-         <item>
-          <widget class="ElaTreeView" name="treeView">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>100</width>
-             <height>400</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::Shape::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Shadow::Plain</enum>
-           </property>
-           <property name="rootIsDecorated">
-            <bool>true</bool>
-           </property>
-           <property name="uniformRowHeights">
-            <bool>false</bool>
-           </property>
-           <property name="itemsExpandable">
-            <bool>true</bool>
-           </property>
-           <property name="animated">
-            <bool>false</bool>
-           </property>
-           <property name="wordWrap">
-            <bool>false</bool>
-           </property>
-           <property name="headerHidden">
-            <bool>true</bool>
-           </property>
-           <attribute name="headerVisible">
-            <bool>false</bool>
-           </attribute>
-          </widget>
-         </item>
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
         </layout>
        </widget>
       </widget>
@@ -102,7 +79,7 @@
        <item>
         <widget class="ElaTabWidget" name="tabWidget_3">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="device_Tab">
           <attribute name="title">
@@ -129,7 +106,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>414</width>
-                <height>312</height>
+                <height>337</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -178,7 +155,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>426</width>
-                <height>312</height>
+                <height>337</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -207,14 +184,14 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="addShipButton">
+            <widget class="ElaPushButton" name="addShipButton">
              <property name="text">
               <string>添加舰船</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="ShipSave">
+            <widget class="ElaPushButton" name="ShipSave">
              <property name="text">
               <string>保存</string>
              </property>
@@ -232,20 +209,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ElaTabWidget</class>
-   <extends>QTabWidget</extends>
-   <header>ElaTabWidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>ElaPushButton</class>
    <extends>QPushButton</extends>
    <header location="global">ElaPushButton.h</header>
   </customwidget>
   <customwidget>
-   <class>ElaTreeView</class>
-   <extends>QTreeView</extends>
-   <header>elatreeview.h</header>
+   <class>ElaTabWidget</class>
+   <extends>QTabWidget</extends>
+   <header>ElaTabWidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
