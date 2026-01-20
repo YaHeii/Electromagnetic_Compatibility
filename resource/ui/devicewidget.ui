@@ -437,14 +437,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ElaComboBox</class>
-   <extends>QComboBox</extends>
-   <header location="global">ElaComboBox.h</header>
-  </customwidget>
-  <customwidget>
    <class>ElaPushButton</class>
    <extends>QPushButton</extends>
    <header location="global">ElaPushButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ElaComboBox</class>
+   <extends>QComboBox</extends>
+   <header location="global">ElaComboBox.h</header>
   </customwidget>
   <customwidget>
    <class>ElaLineEdit</class>

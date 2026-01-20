@@ -70,6 +70,9 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
+         <item>
+          <widget class="QTreeView" name="treeView"/>
+         </item>
         </layout>
        </widget>
       </widget>
@@ -114,6 +117,11 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QWidget#deviceContentsWidget {
+    background-color: transparent;
+}</string>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
@@ -164,19 +172,6 @@
                  <property name="sizeConstraint">
                   <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
                  </property>
-                 <item>
-                  <spacer name="verticalSpacer_2">
-                   <property name="orientation">
-                    <enum>Qt::Orientation::Vertical</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
                 </layout>
                </item>
               </layout>
