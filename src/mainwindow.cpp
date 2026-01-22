@@ -16,13 +16,13 @@ MainWindow::MainWindow(QWidget *parent)
     //创建面板
     resize(1200, 800); 
     setWindowTitle("无人船舰队电磁预测系统");
-    
+
     FleetInput* FleetWidget = new FleetInput(this);
     Simulation* SimulationWidget = new Simulation(this);
 
     addPageNode("编队参数", FleetWidget, ElaIconType::House);
     addPageNode("仿真", SimulationWidget, ElaIconType::ChartSimple);
-    
+
     navigation("HOME");
 
     ElaDockWidget* logDock = new ElaDockWidget("运行日志", this);
@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
     logDock->setWidget(_logWidget);
 
     this->addDockWidget(Qt::RightDockWidgetArea, logDock);
-    
+
     // 如果能被菜单栏控制显示/隐藏
     // routePage->addMenuAction(logDock->toggleViewAction());
 }
