@@ -39,7 +39,12 @@ MainWindow::MainWindow(QWidget *parent)
     logDock->setWidget(_logWidget);
 
     this->addDockWidget(Qt::RightDockWidgetArea, logDock);
+<<<<<<< HEAD
 
+=======
+    // ui->treeView->setStyleSheet("background-color: transparent; border: none;");
+    // ui->treeView->viewport()->setAttribute(Qt::WA_TranslucentBackground);
+>>>>>>> 21bcc76d83c96f793793fd000516dbe4eec9b0c1
     // 如果能被菜单栏控制显示/隐藏
     // routePage->addMenuAction(logDock->toggleViewAction());
 }

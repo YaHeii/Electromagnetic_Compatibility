@@ -11,7 +11,19 @@ FleetInput::FleetInput(QWidget* parent)
     : QWidget(parent), ui(new Ui::FleetInput)
 {
     ui->setupUi(this);
+    //设置 TreeView 本体透明
+    ui->treeView->setStyleSheet("background-color: transparent; border: none;");
+    //设置设备界面透明
+    ui->scrollArea->setStyleSheet("background-color: transparent; border: none;");
+    ui->scrollArea->viewport()->setStyleSheet("background-color: transparent;");
+    ui->deviceContentsWidget->setAttribute(Qt::WA_TranslucentBackground);
+    //设置舰船界面透明
+    ui->scrollArea_2->setStyleSheet("background-color: transparent; border: none;");
+    ui->scrollArea_2->viewport()->setStyleSheet("background-color: transparent;");
+    ui->shipsContentsWidget->setAttribute(Qt::WA_TranslucentBackground);
+    
     _treeView = new TreeViewManager(ui->treeView, this);
+
 }
 
 FleetInput::~FleetInput() {

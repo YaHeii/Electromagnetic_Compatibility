@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>871</width>
-    <height>656</height>
+    <width>480</width>
+    <height>450</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,446 +18,420 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>0</width>
+    <width>300</width>
     <height>450</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>DeviceWidget</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_6">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="ElaScrollPage" name="Mainwidget" native="true">
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,1,1">
+    <widget class="ElaScrollPageArea" name="BaseWidget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>120</height>
+      </size>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
-       <widget class="ElaScrollPageArea" name="widget_2" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_6">
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_5">
-           <item>
-            <widget class="ElaText" name="label_9">
-             <property name="text">
-              <string>设备类型</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="ElaComboBox" name="equipmentType">
-             <item>
-              <property name="text">
-               <string>天线</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>发射机</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>接收机</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>收发一体机</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="ElaText" name="label_23">
-             <property name="text">
-              <string>发射/接收增益</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_9">
-             <item>
-              <widget class="ElaLineEdit" name="Gain">
-               <property name="placeholderText">
-                <string>dBm</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
-             <item>
-              <widget class="ElaText" name="label_21">
-               <property name="text">
-                <string>设备ID</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="ElaLineEdit" name="equipmentID"/>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <widget class="ElaWidget" name="widget" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout_5">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <item>
-               <widget class="ElaText" name="label_2">
-                <property name="text">
-                 <string>X坐标</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="ElaLineEdit" name="X_offset">
-                <property name="placeholderText">
-                 <string>X坐标</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="ElaText" name="label_3">
-                <property name="text">
-                 <string>Y坐标</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="ElaLineEdit" name="Y_offset">
-                <property name="placeholderText">
-                 <string>Y坐标</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="ElaText" name="label_4">
-                <property name="text">
-                 <string>Z坐标</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="ElaLineEdit" name="Z_offset">
-                <property name="placeholderText">
-                 <string>Z坐标</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="ElaScrollPageArea" name="RecieverWidget" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <widget class="ElaWidget" name="Recieverwidget" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,2">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
-              <item>
-               <widget class="ElaText" name="label">
-                <property name="text">
-                 <string>中心频率</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="ElaLineEdit" name="CentralF_Reciever">
-                <property name="placeholderText">
-                 <string>Hz</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="ElaText" name="label_30">
-                <property name="text">
-                 <string>接收带宽</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="ElaLineEdit" name="Bandwidth_Reciever">
-                <property name="placeholderText">
-                 <string>Hz</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QGridLayout" name="gridLayout_7">
-              <item row="1" column="1">
-               <layout class="QHBoxLayout" name="horizontalLayout_22">
-                <item>
-                 <widget class="ElaText" name="label_35">
-                  <property name="text">
-                   <string>噪声系数</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="noiseFigure">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="0" column="0">
-               <layout class="QHBoxLayout" name="horizontalLayout_19">
-                <item>
-                 <widget class="ElaText" name="label_32">
-                  <property name="text">
-                   <string>接收机灵敏度</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="Sensitive_reciever">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="0" column="1">
-               <layout class="QHBoxLayout" name="horizontalLayout_24">
-                <item>
-                 <widget class="ElaText" name="label_37">
-                  <property name="text">
-                   <string>干扰阈值</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="interferenceMargin">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="1" column="0">
-               <layout class="QHBoxLayout" name="horizontalLayout_20">
-                <item>
-                 <widget class="ElaText" name="label_34">
-                  <property name="text">
-                   <string>信噪比阈值</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="SINRMargin">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="ElaScrollPageArea" name="TransmitterWidget" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_7">
-         <item>
-          <widget class="QWidget" name="widget_4" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>设备类型</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaComboBox" name="equipmentType">
+          <item>
+           <property name="text">
+            <string>天线</string>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_2">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1,1">
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_17">
-                <item>
-                 <widget class="ElaText" name="centralBandwidth">
-                  <property name="text">
-                   <string>中心频率</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="CentralF_Transmitter">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_16">
-                <item>
-                 <widget class="ElaText" name="label_29">
-                  <property name="text">
-                   <string>发射带宽</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="Bandwidth_Transmitter">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_13">
-                <item>
-                 <widget class="ElaText" name="label_47">
-                  <property name="text">
-                   <string>发射功率</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="Power_Transmitter">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QGridLayout" name="gridLayout_8">
-              <item row="0" column="1">
-               <layout class="QHBoxLayout" name="horizontalLayout_25">
-                <item>
-                 <widget class="ElaText" name="label_39">
-                  <property name="text">
-                   <string>波束宽度</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="Beamwidth_Transmitter">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="2" column="1">
-               <layout class="QHBoxLayout" name="horizontalLayout_23" stretch="1,6">
-                <item>
-                 <widget class="ElaText" name="label_36">
-                  <property name="text">
-                   <string>天线类型</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaComboBox" name="antennaType_Transmitter">
-                  <item>
-                   <property name="text">
-                    <string>喇叭天线</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>赋型波束天线</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>抛物面天线</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="0" column="0">
-               <layout class="QHBoxLayout" name="horizontalLayout_21">
-                <item>
-                 <widget class="ElaText" name="label_38">
-                  <property name="text">
-                   <string>天线指向角</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaLineEdit" name="antennaPhi_Transmitter">
-                  <property name="placeholderText">
-                   <string>dBm</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="2" column="0">
-               <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,7">
-                <item>
-                 <widget class="ElaText" name="label_43">
-                  <property name="text">
-                   <string>极化方式</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="ElaComboBox" name="PolarizationMethod_Transmitter">
-                  <item>
-                   <property name="text">
-                    <string>垂直极化</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>水平极化</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+          </item>
+          <item>
+           <property name="text">
+            <string>发射机</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>接收机</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>收发一体机</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="ElaPushButton" name="equipmentReduction">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_23">
+          <property name="text">
+           <string>发射/接收增益</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaLineEdit" name="Gain">
+          <property name="placeholderText">
+           <string>dBm</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_21">
+          <property name="text">
+           <string>设备ID</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaLineEdit" name="equipmentID"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>X坐标</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaLineEdit" name="X_offset">
+          <property name="placeholderText">
+           <string>X坐标</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Y坐标</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaLineEdit" name="Y_offset">
+          <property name="placeholderText">
+           <string>Y坐标</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Z坐标</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaLineEdit" name="Z_offset">
+          <property name="placeholderText">
+           <string>Z坐标</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ElaScrollPageArea" name="RecieverWidget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>120</height>
+      </size>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_32">
         <property name="text">
-         <string>-</string>
+         <string>接收机灵敏度</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="ElaLineEdit" name="CentralF_Reciever">
+        <property name="placeholderText">
+         <string>Hz</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_30">
+        <property name="text">
+         <string>接收带宽</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="ElaLineEdit" name="Sensitive_reciever">
+        <property name="placeholderText">
+         <string>dBm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_37">
+        <property name="text">
+         <string>干扰阈值</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="ElaLineEdit" name="interferenceMargin">
+        <property name="placeholderText">
+         <string>dBm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>中心频率</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="ElaLineEdit" name="Bandwidth_Reciever">
+        <property name="placeholderText">
+         <string>Hz</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_34">
+        <property name="text">
+         <string>信噪比阈值</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="ElaLineEdit" name="SINRMargin">
+        <property name="placeholderText">
+         <string>dBm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_35">
+        <property name="text">
+         <string>噪声系数</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="ElaLineEdit" name="noiseFigure">
+        <property name="placeholderText">
+         <string>dBm</string>
         </property>
        </widget>
       </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <widget class="ElaScrollPageArea" name="TransmitterWidget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>120</height>
+      </size>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="centralBandwidth">
+          <property name="text">
+           <string>中心频率</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaLineEdit" name="CentralF_Transmitter">
+          <property name="placeholderText">
+           <string>dBm</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_29">
+          <property name="text">
+           <string>发射带宽</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaLineEdit" name="Bandwidth_Transmitter">
+          <property name="placeholderText">
+           <string>dBm</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_47">
+          <property name="text">
+           <string>发射功率</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ElaLineEdit" name="Power_Transmitter">
+          <property name="placeholderText">
+           <string>dBm</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="1">
+         <widget class="ElaLineEdit" name="antennaPhi_Transmitter">
+          <property name="placeholderText">
+           <string>dBm</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_38">
+          <property name="text">
+           <string>天线指向角</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="label_39">
+          <property name="text">
+           <string>波束宽度</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="ElaLineEdit" name="Beamwidth_Transmitter">
+          <property name="placeholderText">
+           <string>dBm</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_43">
+          <property name="text">
+           <string>极化方式</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="ElaComboBox" name="PolarizationMethod_Transmitter">
+          <item>
+           <property name="text">
+            <string>垂直极化</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>水平极化</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="label_36">
+          <property name="text">
+           <string>天线类型</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="ElaComboBox" name="antennaType_Transmitter">
+          <item>
+           <property name="text">
+            <string>喇叭天线</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>赋型波束天线</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>抛物面天线</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <property name="topMargin">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="ElaPushButton" name="equipmentReduction">
+       <property name="text">
+        <string>删除设备</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
@@ -468,10 +442,9 @@
    <header location="global">ElaPushButton.h</header>
   </customwidget>
   <customwidget>
-   <class>ElaWidget</class>
-   <extends>QWidget</extends>
-   <header location="global">ElaWidget.h</header>
-   <container>1</container>
+   <class>ElaComboBox</class>
+   <extends>QComboBox</extends>
+   <header location="global">ElaComboBox.h</header>
   </customwidget>
   <customwidget>
    <class>ElaLineEdit</class>
@@ -479,25 +452,9 @@
    <header location="global">ElaLineEdit.h</header>
   </customwidget>
   <customwidget>
-   <class>ElaText</class>
-   <extends>QLabel</extends>
-   <header location="global">ElaText.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ElaComboBox</class>
-   <extends>QComboBox</extends>
-   <header location="global">ElaComboBox.h</header>
-  </customwidget>
-  <customwidget>
    <class>ElaScrollPageArea</class>
    <extends>QWidget</extends>
    <header>ElaScrollPageArea.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ElaScrollPage</class>
-   <extends>QWidget</extends>
-   <header>ElaScrollPage.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

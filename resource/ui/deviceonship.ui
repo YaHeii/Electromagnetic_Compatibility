@@ -34,7 +34,7 @@
         <widget class="ElaComboBox" name="EquipmentID"/>
        </item>
        <item>
-        <widget class="QPushButton" name="deleteDeviceonShip">
+        <widget class="ElaPushButton" name="deleteDeviceonShip">
          <property name="text">
           <string>-</string>
          </property>
@@ -56,6 +56,11 @@
    <class>ElaText</class>
    <extends>QLabel</extends>
    <header location="global">ElaText.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ElaPushButton</class>
+   <extends>QPushButton</extends>
+   <header location="global">ElaPushButton.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
