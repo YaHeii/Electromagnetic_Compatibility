@@ -17,11 +17,9 @@
 using GridMap = std::vector<std::vector<double>>;
 using Matrix = std::vector<std::vector<double>>;
 using LineMap = std::vector<double>;
-// 注册自定义类型以便在 Qt 信号槽中使用
 Q_DECLARE_METATYPE(GridMap)
 Q_DECLARE_METATYPE(LineMap)
 
-// 将 MainWindow 作为参数，以便从中获取 GUI sink
 void init_logger(MainWindow& w) {
     try {
         // 1. 初始化线程池
@@ -56,7 +54,6 @@ void init_logger(MainWindow& w) {
     }
 }
 
-// 定义一个 Qt 消息处理函数
 void qt_message_handler(QtMsgType type, const QMessageLogContext& context, const QString& msg) {
     QByteArray localMsg = msg.toLocal8Bit();
 
@@ -82,25 +79,27 @@ void qt_message_handler(QtMsgType type, const QMessageLogContext& context, const
 
 int main(int argc, char *argv[])
 {
-    
+    //初始化大小
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
     QApplication a(argc, argv);
-
+    //初始化控件
     eApp->init();
+    //初始化自定义传递信号
     qRegisterMetaType<GridMap>("GridMap");
     qRegisterMetaType<Matrix>("Matrix");
     qRegisterMetaType<LineMap>("LineMap");
     MainWindow w;
 
-    // 在创建 MainWindow 之后，初始化日志系统
+    // 初始化日志系统
     init_logger(w);
     qInstallMessageHandler(qt_message_handler);
     
     spdlog::debug("正在初始化....");
-
     w.show();
+
     spdlog::info("MainWindow shown.");
     int exit_code = a.exec();
-
 
     spdlog::info("Application exiting with code {}", exit_code);
     spdlog::shutdown();
