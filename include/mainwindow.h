@@ -14,6 +14,7 @@ namespace Ui {
 }
 
 class LogWidget; 
+class ElaContentDialog;
 
 class MainWindow : public ElaWindow {
     Q_OBJECT
@@ -24,8 +25,15 @@ public:
 
     std::shared_ptr<spdlog::sinks::sink> createGuiLogSink();
 
+    void initWindow();
+    void initEdgeLayout();
+    //void initContent();
+
 private:
     Ui::MainWindow *ui;
     LogWidget* _logWidget;
+    ElaContentDialog* _closeDialog{ nullptr };
+    ElaSuggestBox* _windowSuggestBox{ nullptr };
+    QString _settingKey{ "" };
 };
 

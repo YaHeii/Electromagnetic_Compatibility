@@ -12,7 +12,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 set(Qt6_DIR "D:/QT/6.9.3/msvc2022_64/lib/cmake/Qt6")
-find_package(Qt6 6.9.3 REQUIRED COMPONENTS Core Widgets Multimedia PrintSupport Network)
+find_package(Qt6 6.9.3 REQUIRED COMPONENTS Core Widgets Multimedia PrintSupport Network Gui)
 find_package(FFTW3 CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED) 
 find_package(OpenMP REQUIRED)
@@ -45,6 +45,9 @@ file(GLOB_RECURSE HDR_UTILS CONFIGURE_DEPENDS "include/utils/*.h" "include/utils
 # 扫描SRC
 file(GLOB SRC_MAIN CONFIGURE_DEPENDS "src/*.cpp") 
 file(GLOB HDR_MAIN CONFIGURE_DEPENDS "include/*.h")
+# 扫描图片
+file(GLOB_RECURSE RESOURCE_IMAGES CONFIGURE_DEPENDS "resource/Image/*.*")
+
 # 添加UI
 add_subdirectory(third_party/ElaWidgetTools)
 
@@ -58,6 +61,15 @@ qt_add_executable(${APP_TARGET_NAME}
 INCLUDE_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}
 )
+# Add Qt resource files to the target
+# Use consistent indentation and argument naming for clarity
+qt_add_resources(${APP_TARGET_NAME} "app_images"
+    PREFIX "/Image"    # 对应 C++ 中的 :/include/Image
+    BASE "resource/Image"      # 剪掉物理路径中的 resource/image
+    FILES ${RESOURCE_IMAGES}   # 填入图片文件列表
+)
+
+
 # 包含 DSPFilters 库头文件路径
 set(DSPFilters_DIR ${CMAKE_SOURCE_DIR}/third_party/DSPFilters-master)
 target_include_directories(${APP_TARGET_NAME} PUBLIC
@@ -71,6 +83,7 @@ target_link_libraries(${APP_TARGET_NAME} PRIVATE
         Qt6::Core
         Qt6::Widgets
         Qt6::Multimedia
+        Qt6::Gui
         FFTW3::fftw3
         Eigen3::Eigen
         Qt6::Network
@@ -95,4 +108,3 @@ qt_generate_deploy_app_script(
         OUTPUT_SCRIPT deploy_script
         NO_UNSUPPORTED_PLATFORM_ERROR
 )
-install(SCRIPT ${deploy_script})

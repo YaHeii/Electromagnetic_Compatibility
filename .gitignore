@@ -19,5 +19,5 @@ cmake-build-*/
 compile_commands.json
 *.user
 .vs/
-third_party/*
+third_party/DSPFilters-master/*
 roo_docs/
