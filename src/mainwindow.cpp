@@ -23,6 +23,22 @@
 #include "ElaToolBar.h"
 #include "ElaToolButton.h"
 
+#include "ExamplePage/T_Home.h"
+#include "ExamplePage/T_About.h"
+#include "ExamplePage/T_BaseComponents.h"
+#include "ExamplePage/T_Card.h"
+#include "ExamplePage/T_Graphics.h"
+#include "ExamplePage/T_ListView.h"
+#include "ExamplePage/T_Setting.h"
+#include "ExamplePage/T_TableView.h"
+#include "ExamplePage/T_TreeView.h"
+
+#include "ExamplePage/T_ElaScreen.h"
+#include "ExamplePage/T_Icon.h"
+#include "ExamplePage/T_LogWidget.h"
+#include "ExamplePage/T_Navigation.h"
+#include "ExamplePage/T_Popup.h"
+#include "ExamplePage/T_UpdateWidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : ElaWindow(parent),

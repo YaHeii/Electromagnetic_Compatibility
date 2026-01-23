@@ -6,7 +6,7 @@
 
 #include "ElaTableView.h"
 #include "ElaText.h"
-#include "T_TableViewModel.h"
+#include "ModelView/T_TableViewModel.h"
 T_TableView::T_TableView(QWidget* parent)
     : T_BasePage(parent)
 {

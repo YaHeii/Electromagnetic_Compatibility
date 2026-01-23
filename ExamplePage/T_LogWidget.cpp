@@ -5,7 +5,7 @@
 #include <QVBoxLayout>
 
 #include "ElaLog.h"
-#include "T_LogModel.h"
+#include "ModelView/T_LogModel.h"
 T_LogWidget::T_LogWidget(QWidget* parent)
     : QWidget{parent}
 {

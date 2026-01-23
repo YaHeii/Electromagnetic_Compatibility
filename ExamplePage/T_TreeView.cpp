@@ -9,7 +9,7 @@
 #include "ElaSlider.h"
 #include "ElaText.h"
 #include "ElaTreeView.h"
-#include "T_TreeViewModel.h"
+#include "ModelView/T_TreeViewModel.h"
 T_TreeView::T_TreeView(QWidget* parent)
     : T_BasePage(parent)
 {

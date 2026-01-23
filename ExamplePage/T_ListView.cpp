@@ -6,7 +6,7 @@
 #include "ElaListView.h"
 #include "ElaScrollBar.h"
 #include "ElaText.h"
-#include "T_ListViewModel.h"
+#include "ModelView/T_ListViewModel.h"
 T_ListView::T_ListView(QWidget* parent)
     : T_BasePage(parent)
 {

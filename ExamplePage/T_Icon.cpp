@@ -9,8 +9,8 @@
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaMessageBar.h"
-#include "T_IconDelegate.h"
-#include "T_IconModel.h"
+#include "ModelView/T_IconDelegate.h"
+#include "ModelView/T_IconModel.h"
 T_Icon::T_Icon(QWidget* parent)
     : T_BasePage(parent)
 {

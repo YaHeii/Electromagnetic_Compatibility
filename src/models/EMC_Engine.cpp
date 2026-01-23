@@ -433,6 +433,6 @@ void EMC_Engine::do_Validation_DuctLeakage() {
             out << z << "," << loss_flat << "," << loss_rough << "\n";
         }
     }
-    out.dlog::info("Validation data saved to validation_leakage.csv");
-}close();
-    sp
+    out.close();
+    spdlog::info("Validation data saved to validation_leakage.csv");
+}

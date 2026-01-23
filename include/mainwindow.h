@@ -54,6 +54,10 @@ private:
     QString _settingKey{ "" };
 
 // REVIEW：参考页面
+#ifdef Q_OS_WIN
+    T_ElaScreen* _elaScreenPage{ nullptr };
+#endif
+    T_Home* _homePage{ nullptr };
     T_Icon* _iconPage{nullptr};
     T_BaseComponents* _baseComponentsPage{nullptr};
     T_Graphics* _graphicsPage{nullptr};

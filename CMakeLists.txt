@@ -45,6 +45,9 @@ file(GLOB_RECURSE HDR_UTILS CONFIGURE_DEPENDS "include/utils/*.h" "include/utils
 # 扫描SRC
 file(GLOB SRC_MAIN CONFIGURE_DEPENDS "src/*.cpp") 
 file(GLOB HDR_MAIN CONFIGURE_DEPENDS "include/*.h")
+# 扫描模板Page
+file(GLOB EXAMPLE_PAGE CONFIGURE_DEPENDS "ExamplePage/*.cpp" "ExamplePage/*.h") 
+file(GLOB MODEL_VIEW CONFIGURE_DEPENDS "ModelView/*.cpp" "ModelView/*.h") 
 # 扫描图片
 file(GLOB_RECURSE RESOURCE_IMAGES CONFIGURE_DEPENDS "resource/Image/*.*")
 
@@ -57,6 +60,8 @@ qt_add_executable(${APP_TARGET_NAME}
     ${SRC_MODELS}    ${HDR_MODELS}
     ${SRC_UI_RES}    ${HDR_UI_RES}  ${UI_FILES}
     ${SRC_UTILS}     ${HDR_UTILS}
+    ${EXAMPLE_PAGE}  ${MODEL_VIEW}
+    ${RESOURCE_IMAGES}
 )
 INCLUDE_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}
