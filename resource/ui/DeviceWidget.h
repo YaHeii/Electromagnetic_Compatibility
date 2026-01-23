@@ -2,14 +2,15 @@
 #define DEVICEWIDGET_H
 
 #include <QWidget>
+#include <QComboBox>
+#include <QLineEdit>
 #include "../include/models/DataModel.h"
-#ifdef IN_IDE
-#   include <QObject>
-#else
-#   include "ui_devicewidget.h"
-#endif
 
-
+// 前向声明自定义控件
+class ElaPushButton;
+class ElaComboBox;
+class ElaLineEdit;
+class ElaScrollPageArea;
 
 class DeviceWidget: public QWidget {
     Q_OBJECT
@@ -25,9 +26,47 @@ public:
     void updateModelData();
     QString getID() const { return m_currentId; }
 private:
-    Ui::DeviceWidget *ui;
+    // UI控件成员
+    ElaScrollPageArea *BaseWidget;
+    ElaScrollPageArea *RecieverWidget;
+    ElaScrollPageArea *TransmitterWidget;
+    
+    // 基础信息控件
+    ElaComboBox *equipmentType;
+    ElaLineEdit *Gain;
+    ElaLineEdit *equipmentID;
+    ElaLineEdit *X_offset;
+    ElaLineEdit *Y_offset;
+    ElaLineEdit *Z_offset;
+    
+    // 接收机控件
+    ElaLineEdit *CentralF_Reciever;
+    ElaLineEdit *Bandwidth_Reciever;
+    ElaLineEdit *Sensitive_reciever;
+    ElaLineEdit *interferenceMargin;
+    ElaLineEdit *SINRMargin;
+    ElaLineEdit *noiseFigure;
+    
+    // 发射机控件
+    ElaLineEdit *CentralF_Transmitter;
+    ElaLineEdit *Bandwidth_Transmitter;
+    ElaLineEdit *Power_Transmitter;
+    ElaLineEdit *antennaPhi_Transmitter;
+    ElaLineEdit *Beamwidth_Transmitter;
+    ElaComboBox *PolarizationMethod_Transmitter;
+    ElaComboBox *antennaType_Transmitter;
+    
+    // 操作控件
+    ElaPushButton *equipmentReduction;
+    
     QString m_currentId;
 
+    // UI设置方法
+    void setupUI();
+    void setupBaseWidget();
+    void setupReceiverWidget();
+    void setupTransmitterWidget();
+    
     // 重置/清空各模块的输入框
     void resetTransmitterUI();
     void resetReceiverUI();

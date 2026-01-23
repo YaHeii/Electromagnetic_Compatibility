@@ -1,13 +1,13 @@
-﻿#pragma once
+#pragma once
 #include "utils/PaintImage.hpp"
 #include "models/EMC_Engine.h"
 #include "spdlog/spdlog.h"
 #include <QWidget>
+#include <QTabWidget>
+#include <QVBoxLayout>
+#include "qcustomplot.h"
+#include <ElaPushButton.h>
 #include <future>
-
-QT_BEGIN_NAMESPACE
-namespace Ui { class Simulation; }
-QT_END_NAMESPACE
 
 class Simulation : public QWidget {
 	Q_OBJECT
@@ -21,9 +21,22 @@ signals:
 	void simulationDone(const GridMap& result);
 
 private:
+	void setupUI();
 	EMC_Engine* _emcEngine;
 	void simulationWaiter(std::future<GridMap> future);
-	Ui::Simulation* ui;
+	
+	// UI Components
+	QVBoxLayout* mainLayout;
+	QTabWidget* tabWidget;
+	
+	// 2D Power Distribution Tab
+	QWidget* simulateTab;
+	QVBoxLayout* simulateTabLayout;
+	QCustomPlot* PEmodel2Dplot;
+	ElaPushButton* StartSimulate;
+	
+	// Tab 2 (placeholder)
+	QWidget* tab2;
 
 public slots:
 	void on_StartSimulate_clicked();

@@ -1,5 +1,5 @@
 #include "ui_mainwindow.h"
-#include "ui_devicewidget.h"
+//#include "ui_devicewidget.h"
 #include "../include/mainwindow.h"
 #include <QMessageBox>
 #include "spdlog/spdlog.h"
@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     initEdgeLayout();
 
     ////中心窗口
-    //initContent();
+    initContent();
 
     // 拦截默认关闭事件
     _closeDialog = new ElaContentDialog(this);
@@ -328,7 +328,7 @@ void MainWindow::initContent()
         this->navigation(_cardPage->property("ElaPageKey").toString());
     });
 
-    _windowSuggestBox->addSuggestion(getNavigationSuggestDataList());
+    //_windowSuggestBox->addSuggestion(getNavigationSuggestDataList());
     qDebug() << "已注册的事件列表" << ElaEventBus::getInstance()->getRegisteredEventsName();
 }
 

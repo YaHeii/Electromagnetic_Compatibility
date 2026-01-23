@@ -1,5 +1,4 @@
-﻿#include "Simulation.h"
-#include "ui_Simulation.h"
+#include "Simulation.h"
 #include "models/DataModel.h"
 #include "utils/TransferToEngin.h"
 #include <QMessageBox>
@@ -7,8 +6,8 @@
 #include <future>
 
 Simulation::Simulation(QWidget* parent)
-	:QWidget(parent), ui(new Ui::Simulation), _emcEngine(nullptr) {
-    ui->setupUi(this);
+	: QWidget(parent), _emcEngine(nullptr) {
+    setupUI();
 	// 连接仿真完成信号到槽
 	connect(this, &Simulation::simulationDone, this, &Simulation::onSimulationFinished);
 }
@@ -18,7 +17,37 @@ Simulation::~Simulation() {
         delete _emcEngine;
         _emcEngine = nullptr;
     }
-    delete ui;
+}
+
+void Simulation::setupUI()
+{
+    // Main layout
+    mainLayout = new QVBoxLayout(this);
+    
+    // Tab widget
+    tabWidget = new QTabWidget(this);
+    tabWidget->setCurrentIndex(0);
+    
+    // 2D Power Distribution Tab
+    simulateTab = new QWidget();
+    simulateTabLayout = new QVBoxLayout(simulateTab);
+    
+    PEmodel2Dplot = new QCustomPlot(simulateTab);
+    simulateTabLayout->addWidget(PEmodel2Dplot);
+    
+    StartSimulate = new ElaPushButton("仿真", simulateTab);
+    simulateTabLayout->addWidget(StartSimulate);
+    
+    tabWidget->addTab(simulateTab, "二维功率损耗分布");
+    
+    // Tab 2 (placeholder)
+    tab2 = new QWidget();
+    tabWidget->addTab(tab2, "Tab 2");
+    
+    mainLayout->addWidget(tabWidget);
+    
+    // Connect signals
+    connect(StartSimulate, &ElaPushButton::clicked, this, &Simulation::on_StartSimulate_clicked);
 }
 
 void Simulation::on_StartSimulate_clicked() {
@@ -28,18 +57,18 @@ void Simulation::on_StartSimulate_clicked() {
     auto dataSnapshot = DataModel::instance()->createSnapshot();
 
     // UI 状态更新
-    ui->StartSimulate->setEnabled(false);
+    StartSimulate->setEnabled(false);
     spdlog::info("正在进行电磁仿真计算...");
 
     // 清空旧的绘图
-    ui->PEmodel_2Dplot->clearPlottables();
-    ui->PEmodel_2Dplot->replot();
+    PEmodel2Dplot->clearPlottables();
+    PEmodel2Dplot->replot();
 
     // 阻塞实现
     auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
     if (!fleet) {
         spdlog::error("Fleet conversion failed (nullptr).");
-        ui->StartSimulate->setEnabled(true);
+        StartSimulate->setEnabled(true);
         return;
     }
     
@@ -56,7 +85,7 @@ void Simulation::on_StartSimulate_clicked() {
 
     _emcEngine->do_Validation_DuctLeakage();
     
-    ui->StartSimulate->setEnabled(true);
+    StartSimulate->setEnabled(true);
     spdlog::info("Simulation finished.");
 }
 
@@ -73,8 +102,8 @@ void Simulation::simulationWaiter(std::future<GridMap> future) {
 
 void Simulation::onSimulationFinished(const GridMap& result) {
 
-    ui->StartSimulate->setEnabled(true);
-    // ui->statusbar->showMessage("仿真完成", 5000);
+    StartSimulate->setEnabled(true);
+    // statusbar->showMessage("仿真完成", 5000);
 
     if (result.empty() || (result.size() > 0 && result[0].empty())) {
         spdlog::warn("Simulation returned empty or invalid result.");
@@ -87,10 +116,10 @@ void Simulation::onSimulationFinished(const GridMap& result) {
         spdlog::info("Painting results to QCustomPlot...");
 
         // 直接调用提供的内联函数
-        PEmodel_Painting2D(result, ui->PEmodel_2Dplot);
+        PEmodel_Painting2D(result, PEmodel2Dplot);
 
         // 强制刷新显示
-        ui->PEmodel_2Dplot->replot();
+        PEmodel2Dplot->replot();
 
     }
     catch (const std::exception& e) {
@@ -104,8 +133,8 @@ void Simulation::onSingleGridMapReady(const std::string& shipName, const std::st
     
 
     try {
-         PEmodel_Painting2D(lossGrid, ui->PEmodel_2Dplot);
-         ui->PEmodel_2Dplot->replot();
+         PEmodel_Painting2D(lossGrid, PEmodel2Dplot);
+         PEmodel2Dplot->replot();
     } catch (const std::exception& e) {
         spdlog::error("Error painting single grid map: {}", e.what());
     }

@@ -1,33 +1,152 @@
-﻿#include "FleetInput.h"
-#include "ui_FleetInput.h"
+#include "FleetInput.h"
 #include "TreeViewManager.h"
 #include "DeviceWidget.h"
 #include "shipwidget.h"
 #include <QMessageBox>
 #include <QLayoutItem> // Added for QLayoutItem
 #include <algorithm> // for std::remove_if
+#include <QRect>
+#include <Qt>
 
 FleetInput::FleetInput(QWidget* parent)
-    : QWidget(parent), ui(new Ui::FleetInput)
+    : QWidget(parent)
 {
-    ui->setupUi(this);
+    setupUI();
     //设置 TreeView 本体透明
-    ui->treeView->setStyleSheet("background-color: transparent; border: none;");
+    treeView->setStyleSheet("background-color: transparent; border: none;");
     //设置设备界面透明
-    ui->scrollArea->setStyleSheet("background-color: transparent; border: none;");
-    ui->scrollArea->viewport()->setStyleSheet("background-color: transparent;");
-    ui->deviceContentsWidget->setAttribute(Qt::WA_TranslucentBackground);
+    deviceScrollArea->setStyleSheet("background-color: transparent; border: none;");
+    deviceScrollArea->viewport()->setStyleSheet("background-color: transparent;");
+    deviceContentsWidget->setAttribute(Qt::WA_TranslucentBackground);
     //设置舰船界面透明
-    ui->scrollArea_2->setStyleSheet("background-color: transparent; border: none;");
-    ui->scrollArea_2->viewport()->setStyleSheet("background-color: transparent;");
-    ui->shipsContentsWidget->setAttribute(Qt::WA_TranslucentBackground);
+    shipScrollArea->setStyleSheet("background-color: transparent; border: none;");
+    shipScrollArea->viewport()->setStyleSheet("background-color: transparent;");
+    shipsContentsWidget->setAttribute(Qt::WA_TranslucentBackground);
     
-    _treeView = new TreeViewManager(ui->treeView, this);
-
+    _treeView = new TreeViewManager(treeView, this);
+    connectTreeViewSignals();
 }
 
 FleetInput::~FleetInput() {
-	delete ui;
+}
+
+void FleetInput::connectTreeViewSignals()
+{
+    // 可以在这里连接树视图的信号，比如选中项变化等
+    connect(_treeView, &TreeViewManager::syncViewWithModel, this, [this]() {
+        // 当树视图同步时，可以执行一些操作
+    });
+}
+
+void FleetInput::setupUI()
+{
+	// Main layout
+	mainLayout = new QVBoxLayout(this);
+	
+	// Content layout (horizontal split)
+	contentLayout = new QHBoxLayout();
+	contentLayout->setStretch(0, 1);
+	contentLayout->setStretch(1, 4);
+	
+	// Left side - Tree view manager
+	treeViewManager = new ElaTabWidget(this);
+	treeViewManager->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	treeViewManager->setTabPosition(QTabWidget::TabPosition::North);
+	treeViewManager->setCurrentIndex(0);
+	treeViewManager->setElideMode(Qt::TextElideMode::ElideLeft);
+	treeViewManager->setDocumentMode(true);
+	treeViewManager->setMovable(false);
+	
+	// Structure tree tab
+	structureTab = new QWidget();
+	structureTab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+	structureTab->setObjectName("structureTab");
+	structureTab->setStyleSheet("QWidget#structureTab { background-color: transparent; }");
+	
+	structureLayout = new QVBoxLayout(structureTab);
+	structureLayout->setSpacing(0);
+	structureLayout->setContentsMargins(0, 0, 0, 0);
+	
+	treeView = new QTreeView(structureTab);
+	structureLayout->addWidget(treeView);
+	
+	treeViewManager->addTab(structureTab, "结构树");
+	
+	// Right side - Input tabs
+	rightLayout = new QVBoxLayout();
+	
+	inputTabWidget = new ElaTabWidget(this);
+	inputTabWidget->setCurrentIndex(0);
+	
+	// Device tab
+	deviceTab = new QWidget();
+	deviceTabLayout = new QVBoxLayout(deviceTab);
+	deviceTabLayout->setStretch(0, 0);
+	deviceTabLayout->setStretch(1, 0);
+	deviceTabLayout->setStretch(2, 0);
+	
+	deviceScrollArea = new QScrollArea(deviceTab);
+	deviceScrollArea->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+	deviceScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+	deviceScrollArea->setWidgetResizable(true);
+	
+	deviceContentsWidget = new QWidget();
+	deviceContentsWidget->setGeometry(0, 0, 414, 337);
+	deviceContentsWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	deviceContentsWidget->setObjectName("deviceContentsWidget");
+	deviceContentsWidget->setStyleSheet("QWidget#deviceContentsWidget { background-color: transparent; }");
+	
+	deviceLayout = new QVBoxLayout(deviceContentsWidget);
+	
+	deviceScrollArea->setWidget(deviceContentsWidget);
+	deviceTabLayout->addWidget(deviceScrollArea);
+	
+	addDeviceButton = new ElaPushButton("添加设备", deviceTab);
+	deviceTabLayout->addWidget(addDeviceButton);
+	
+	DeviceSave = new ElaPushButton("保存", deviceTab);
+	deviceTabLayout->addWidget(DeviceSave);
+	
+	inputTabWidget->addTab(deviceTab, "创建设备");
+	
+	// Ship tab
+	shipTab = new QWidget();
+	shipTabLayout = new QVBoxLayout(shipTab);
+	
+	shipScrollArea = new QScrollArea(shipTab);
+	shipScrollArea->setWidgetResizable(true);
+	
+	shipsContentsWidget = new QWidget();
+	shipsContentsWidget->setGeometry(0, 0, 426, 337);
+	
+	shipsLayout = new QVBoxLayout(shipsContentsWidget);
+	shipsLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+	
+	shipScrollArea->setWidget(shipsContentsWidget);
+	shipTabLayout->addWidget(shipScrollArea);
+	
+	addShipButton = new ElaPushButton("添加舰船", shipTab);
+	shipTabLayout->addWidget(addShipButton);
+	
+	ShipSave = new ElaPushButton("保存", shipTab);
+	shipTabLayout->addWidget(ShipSave);
+	
+	inputTabWidget->addTab(shipTab, "创建舰队");
+	
+	rightLayout->addWidget(inputTabWidget);
+	
+	// Add to content layout
+	contentLayout->addWidget(treeViewManager);
+	contentLayout->addLayout(rightLayout);
+	
+	// Add to main layout
+	mainLayout->addLayout(contentLayout);
+	
+	// Connect signals
+	connect(addShipButton, &ElaPushButton::clicked, this, &FleetInput::on_addShipButton_clicked);
+	connect(addDeviceButton, &ElaPushButton::clicked, this, &FleetInput::on_addDeviceButton_clicked);
+	connect(DeviceSave, &ElaPushButton::clicked, this, &FleetInput::on_DeviceSave_clicked);
+	connect(ShipSave, &ElaPushButton::clicked, this, &FleetInput::on_ShipSave_clicked);
 }
 
 void FleetInput::on_addDeviceButton_clicked()
@@ -40,9 +159,9 @@ void FleetInput::on_addDeviceButton_clicked()
     // 首先在DataModel中占位
     DataModel::instance()->allEquipments.push_back(newDevice);
     // 然后创建新的DeviceWidget并添加到UI
-    DeviceWidget* widget = new DeviceWidget(this);
+    DeviceWidget* widget = new DeviceWidget();
     widget->setData(newDevice); // 关联UI与数据
-    ui->deviceLayout->addWidget(widget);
+    deviceLayout->addWidget(widget);
     connect(widget, &DeviceWidget::removalRequested, this, &FleetInput::onDeviceWidgetRemovalRequested);
     
     //同步treeView
@@ -57,9 +176,9 @@ void FleetInput::on_addShipButton_clicked()
     newShip.shipID = DataModel::instance()->allShips.size() + 1;
     newShip.shipName = QString("NewShip_%1").arg(newShip.shipID);
     DataModel::instance()->allShips.push_back(newShip);
-    ShipWidget* widget = new ShipWidget(this);
+    ShipWidget* widget = new ShipWidget();
     widget->setData(newShip); // 关联UI与数据
-    ui->shipsLayout->addWidget(widget);
+    shipsLayout->addWidget(widget);
     _treeView->syncViewWithModel();
 }
 
@@ -82,8 +201,8 @@ void FleetInput::on_ShipSave_clicked()
 bool FleetInput::updateShipModelFromView()
 {
     // 1. 从 View 同步到 Model
-    for (int i = 0; i < ui->shipsLayout->count(); ++i) {
-        QLayoutItem* item = ui->shipsLayout->itemAt(i);
+    for (int i = 0; i < shipsLayout->count(); ++i) {
+        QLayoutItem* item = shipsLayout->itemAt(i);
         if (item && item->widget()) {
              ShipWidget* widget = qobject_cast<ShipWidget*>(item->widget());
              if (widget) {
@@ -114,8 +233,8 @@ bool FleetInput::updateShipModelFromView()
 bool FleetInput::updateDeviceModelFromView()
 {
     // 1. 从 View 同步到 Model
-    for (int i = 0; i < ui->deviceLayout->count(); ++i) {
-        QLayoutItem* item = ui->deviceLayout->itemAt(i);
+    for (int i = 0; i < deviceLayout->count(); ++i) {
+        QLayoutItem* item = deviceLayout->itemAt(i);
         if (item && item->widget()) {
             DeviceWidget* widget = qobject_cast<DeviceWidget*>(item->widget());
             if (widget) {
@@ -156,13 +275,13 @@ void FleetInput::onDeviceWidgetRemovalRequested(const QString& id)
         spdlog::info("设备 {} 的数据已从模型中删除。", id.toStdString());
 
         // 2. 遍历布局，找到并删除对应的UI控件
-        for (int i = 0; i < ui->deviceLayout->count(); ++i) {
-            QLayoutItem* item = ui->deviceLayout->itemAt(i);
+        for (int i = 0; i < deviceLayout->count(); ++i) {
+            QLayoutItem* item = deviceLayout->itemAt(i);
             if (item && item->widget()) {
                 DeviceWidget* widget = qobject_cast<DeviceWidget*>(item->widget());
                 // 假设DeviceWidget有方法可以获取其ID
                 if (widget && widget->getID() == id) {
-                    ui->deviceLayout->removeWidget(widget);
+                    deviceLayout->removeWidget(widget);
                     widget->deleteLater();
                     spdlog::info("设备 {} 的UI控件已删除。", id.toStdString());
                     break; // 找到并删除后即可退出循环
