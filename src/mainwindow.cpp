@@ -121,6 +121,7 @@ void MainWindow::initWindow() {
     setCustomMenu(appBarMenu);
 }
 
+// REVIEW: 参考侧边栏
 void MainWindow::initEdgeLayout()
 {
     //菜单栏
@@ -226,4 +227,116 @@ void MainWindow::initEdgeLayout()
     statusText->setTextPixelSize(14);
     statusBar->addWidget(statusText);
     this->setStatusBar(statusBar);
+}
+
+// REVIEW:参考页面
+void MainWindow::initContent()
+{
+    _homePage = new T_Home(this);
+#ifdef Q_OS_WIN
+    _elaScreenPage = new T_ElaScreen(this);
+#endif
+    _iconPage = new T_Icon(this);
+    _baseComponentsPage = new T_BaseComponents(this);
+    _graphicsPage = new T_Graphics(this);
+    _navigationPage = new T_Navigation(this);
+    _popupPage = new T_Popup(this);
+    _cardPage = new T_Card(this);
+    _listViewPage = new T_ListView(this);
+    _tableViewPage = new T_TableView(this);
+    _treeViewPage = new T_TreeView(this);
+    _settingPage = new T_Setting(this);
+
+    QString testKey_1;
+    QString testKey_2;
+    addPageNode("HOME", _homePage, ElaIconType::House);
+#ifdef Q_OS_WIN
+    addExpanderNode("ElaDxgi", _elaDxgiKey, ElaIconType::TvMusic);
+    addPageNode("ElaScreen", _elaScreenPage, _elaDxgiKey, 3, ElaIconType::ObjectGroup);
+#endif
+    // navigation(elaScreenWidget->property("ElaPageKey").toString());
+    addPageNode("ElaBaseComponents", _baseComponentsPage, ElaIconType::CabinetFiling);
+
+    addExpanderNode("ElaView", _viewKey, ElaIconType::CameraViewfinder);
+    addPageNode("ElaListView", _listViewPage, _viewKey, 9, ElaIconType::List);
+    addPageNode("ElaTableView", _tableViewPage, _viewKey, ElaIconType::Table);
+    addPageNode("ElaTreeView", _treeViewPage, _viewKey, ElaIconType::ListTree);
+    expandNavigationNode(_viewKey);
+
+    addPageNode("ElaGraphics", _graphicsPage, 9, ElaIconType::Paintbrush);
+    addPageNode("ElaCard", _cardPage, ElaIconType::Cards);
+    addPageNode("ElaNavigation", _navigationPage, ElaIconType::LocationArrow);
+    addPageNode("ElaPopup", _popupPage, ElaIconType::Envelope);
+    addPageNode("ElaIcon", _iconPage, 99, ElaIconType::FontCase);
+    addExpanderNode("TEST_EXPAND_NODE1", testKey_1, ElaIconType::Acorn);
+    addExpanderNode("TEST_EXPAND_NODE2", testKey_2, testKey_1, ElaIconType::Acorn);
+    addPageNode("TEST_NODE3", new QWidget(this), testKey_2, ElaIconType::Acorn);
+    for (int i = 0; i < 10; i++)
+    {
+        addExpanderNode(QString("TEST_EXPAND_NODE%1").arg(i + 4), testKey_1, testKey_2, ElaIconType::Acorn);
+    }
+    addExpanderNode("TEST_EXPAND_NODE14", testKey_1, ElaIconType::Acorn);
+    addExpanderNode("TEST_EXPAND_NODE5", testKey_1, ElaIconType::Acorn);
+    addExpanderNode("TEST_EXPAND_NODE16", testKey_1, ElaIconType::Acorn);
+
+    addFooterNode("About", nullptr, _aboutKey, 0, ElaIconType::User);
+    _aboutPage = new T_About();
+
+    _aboutPage->hide();
+    connect(this, &ElaWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) {
+        if (_aboutKey == nodeKey)
+        {
+            _aboutPage->moveToCenter();
+            _aboutPage->show();
+        }
+    });
+    addFooterNode("Setting", _settingPage, _settingKey, 0, ElaIconType::GearComplex);
+    connect(this, &MainWindow::userInfoCardClicked, this, [=]() {
+        this->navigation(_homePage->property("ElaPageKey").toString());
+    });
+#ifdef Q_OS_WIN
+    connect(_homePage, &T_Home::elaScreenNavigation, this, [=]() {
+        this->navigation(_elaScreenPage->property("ElaPageKey").toString());
+    });
+#endif
+    connect(_homePage, &T_Home::elaBaseComponentNavigation, this, [=]() {
+        this->navigation(_baseComponentsPage->property("ElaPageKey").toString());
+    });
+    connect(_homePage, &T_Home::elaSceneNavigation, this, [=]() {
+        this->navigation(_graphicsPage->property("ElaPageKey").toString());
+    });
+    connect(_homePage, &T_Home::elaIconNavigation, this, [=]() {
+        this->navigation(_iconPage->property("ElaPageKey").toString());
+    });
+    connect(_homePage, &T_Home::elaCardNavigation, this, [=]() {
+        this->navigation(_cardPage->property("ElaPageKey").toString());
+    });
+
+    _windowSuggestBox->addSuggestion(getNavigationSuggestDataList());
+    qDebug() << "已注册的事件列表" << ElaEventBus::getInstance()->getRegisteredEventsName();
+}
+
+void MainWindow::mouseReleaseEvent(QMouseEvent* event)
+{
+    if (getCurrentNavigationIndex() != 2)
+    {
+        switch (event->button())
+        {
+        case Qt::BackButton:
+        {
+            this->setCurrentStackIndex(0);
+            break;
+        }
+        case Qt::ForwardButton:
+        {
+            this->setCurrentStackIndex(1);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+        }
+    }
+    ElaWindow::mouseReleaseEvent(event);
 }
