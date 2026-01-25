@@ -1,4 +1,4 @@
-#include "DeviceWidget.h"
+#include "DeviceWidgetNew.h"
 #include <QDebug>
 #include "spdlog/spdlog.h"
 #include <QVBoxLayout>
@@ -11,8 +11,9 @@
 #include "ElaLineEdit.h"
 #include "ElaScrollPageArea.h"
 #include "ElaTheme.h"
+#include "ElaMessageBar.h"
 
-DeviceWidget::DeviceWidget(QWidget *parent) :
+DeviceWidgetNew::DeviceWidgetNew(QWidget *parent) :
     QWidget(parent)
 {
     setupUI();
@@ -21,58 +22,131 @@ DeviceWidget::DeviceWidget(QWidget *parent) :
     
     // 当设备类型改变时，自动填充默认参数
     connect(equipmentType, QOverload<int>::of(&QComboBox::currentIndexChanged),
-        this, &DeviceWidget::onEquipmentTypeChanged);
+        this, &DeviceWidgetNew::onEquipmentTypeChanged);
+        
+    // 主题切换支持
+    connect(eTheme, &ElaTheme::themeModeChanged, this, [=]() {
+        update();
+    });
 }
-void DeviceWidget::setupUI()
+
+void DeviceWidgetNew::setupUI()
 {
-    // 设置窗口属性
-    setMinimumSize(300, 450);
+    // 设置窗口属性 - 采用ElaWidget的设计模式
+    setMinimumSize(320, 480);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    setWindowTitle("DeviceWidget");
+    setWindowTitle("设备配置");
     
     // 创建主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(15, 15, 15, 15);
+    mainLayout->setSpacing(12);
+    
+    // 创建标题区域 - 仿照T_BasePage的createCustomWidget模式
+    setupTitleWidget();
     
     // 创建各个区域
     setupBaseWidget();
     setupReceiverWidget();
     setupTransmitterWidget();
     
-    // 创建删除按钮
-    equipmentReduction = new ElaPushButton("删除设备", this);
+    // 创建操作按钮区域
+    setupActionButtons();
     
     // 添加到主布局
+    mainLayout->addWidget(titleWidget);
     mainLayout->addWidget(BaseWidget);
     mainLayout->addWidget(RecieverWidget);
     mainLayout->addWidget(TransmitterWidget);
+    mainLayout->addWidget(actionWidget);
+    mainLayout->addStretch();
+}
+
+void DeviceWidgetNew::setupTitleWidget()
+{
+    titleWidget = new QWidget(this);
+    titleWidget->setFixedHeight(60);
     
-    QVBoxLayout *buttonLayout = new QVBoxLayout();
-    buttonLayout->setContentsMargins(10, 10, 10, 10);
-    buttonLayout->addWidget(equipmentReduction);
-    mainLayout->addLayout(buttonLayout);
+    QVBoxLayout *titleLayout = new QVBoxLayout(titleWidget);
+    titleLayout->setContentsMargins(0, 0, 0, 0);
+    titleLayout->setSpacing(5);
+    
+    // 标题文本
+    ElaText *titleText = new ElaText("设备配置", this);
+    titleText->setTextPixelSize(18);
+    // titleText->setTextBold(true);
+    
+    // 描述文本
+    ElaText *descText = new ElaText("配置设备参数和属性", this);
+    descText->setTextPixelSize(12);
+    // descText->setTextColor(QColor(128, 128, 128));
+    
+    titleLayout->addWidget(titleText);
+    titleLayout->addWidget(descText);
+    titleLayout->addStretch();
+}
+
+void DeviceWidgetNew::setupActionButtons()
+{
+    actionWidget = new QWidget(this);
+    actionWidget->setFixedHeight(50);
+    
+    QHBoxLayout *actionLayout = new QHBoxLayout(actionWidget);
+    actionLayout->setContentsMargins(0, 10, 0, 0);
+    
+    // 保存按钮
+    ElaPushButton *saveButton = new ElaPushButton("保存配置", this);
+    saveButton->setFixedSize(100, 35);
+    // saveButton->setElaIcon(ElaIconType::Sailboat);
+    connect(saveButton, &ElaPushButton::clicked, this, [=]() {
+        updateModelData();
+        ElaMessageBar::success(ElaMessageBarType::BottomRight, "成功", "配置已保存", 2000);
+    });
+    
+    // 删除按钮
+    equipmentReduction = new ElaPushButton("删除设备", this);
+    equipmentReduction->setFixedSize(100, 35);
+    // equipmentReduction->setElaIcon(ElaIconType::Sailboat);
+    // equipmentReduction->setIsTransparent(false);
+    
+    actionLayout->addStretch();
+    actionLayout->addWidget(saveButton);
+    actionLayout->addSpacing(10);
+    actionLayout->addWidget(equipmentReduction);
     
     // 连接删除按钮信号
     connect(equipmentReduction, &ElaPushButton::clicked,
-            this, &DeviceWidget::on_equipmentReduction_clicked);
+            this, &DeviceWidgetNew::on_equipmentReduction_clicked);
 }
 
-void DeviceWidget::setupBaseWidget()
+void DeviceWidgetNew::setupBaseWidget()
 {
     BaseWidget = new ElaScrollPageArea(this);
-    BaseWidget->setMinimumSize(0, 120);
+    BaseWidget->setFixedHeight(140);
     BaseWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
     
     QVBoxLayout *baseLayout = new QVBoxLayout(BaseWidget);
-    baseLayout->setContentsMargins(2, 2, 2, 2);
+    baseLayout->setContentsMargins(10, 10, 10, 10);
+    baseLayout->setSpacing(8);
+    
+    // 区域标题
+    ElaText *baseTitle = new ElaText("基础信息", this);
+    baseTitle->setTextPixelSize(14);
+    // baseTitle->setTextBold(true);
+    baseLayout->addWidget(baseTitle);
     
     // 设备类型选择
     QHBoxLayout *typeLayout = new QHBoxLayout();
-    ElaText *typeLabel = new ElaText("设备类型", 13, this);
+    ElaText *typeLabel = new ElaText("设备类型", this);
+    typeLabel->setTextPixelSize(12);
+    typeLabel->setFixedWidth(80);
+    
     equipmentType = new ElaComboBox(this);
     equipmentType->addItem("天线");
     equipmentType->addItem("发射机");
     equipmentType->addItem("接收机");
     equipmentType->addItem("收发一体机");
+    equipmentType->setFixedHeight(30);
     
     typeLayout->addWidget(typeLabel);
     typeLayout->addWidget(equipmentType);
@@ -80,117 +154,154 @@ void DeviceWidget::setupBaseWidget()
     
     // 增益和设备ID
     QHBoxLayout *gainIdLayout = new QHBoxLayout();
-    ElaText *gainLabel = new ElaText("发射/接收增益", 13, this);
+    ElaText *gainLabel = new ElaText("发射/接收增益", this);
+    gainLabel->setTextPixelSize(12);
+    gainLabel->setFixedWidth(80);
     Gain = new ElaLineEdit(this);
     Gain->setPlaceholderText("dBm");
+    Gain->setFixedHeight(30);
     
-    ElaText *idLabel = new ElaText("设备ID", 13, this);
+    ElaText *idLabel = new ElaText("设备ID", this);
+    idLabel->setTextPixelSize(12);
+    idLabel->setFixedWidth(60);
     equipmentID = new ElaLineEdit(this);
+    equipmentID->setFixedHeight(30);
     
     gainIdLayout->addWidget(gainLabel);
     gainIdLayout->addWidget(Gain);
+    gainIdLayout->addSpacing(10);
     gainIdLayout->addWidget(idLabel);
     gainIdLayout->addWidget(equipmentID);
     baseLayout->addLayout(gainIdLayout);
     
     // 坐标输入
     QHBoxLayout *coordLayout = new QHBoxLayout();
-    ElaText *xLabel = new ElaText("X坐标", 13, this);
+    ElaText *coordLabel = new ElaText("坐标位置", this);
+    coordLabel->setTextPixelSize(12);
+    coordLabel->setFixedWidth(80);
+    
     X_offset = new ElaLineEdit(this);
-    X_offset->setPlaceholderText("X坐标");
+    X_offset->setPlaceholderText("X");
+    X_offset->setFixedHeight(30);
+    X_offset->setFixedWidth(60);
     
-    ElaText *yLabel = new ElaText("Y坐标", 13, this);
     Y_offset = new ElaLineEdit(this);
-    Y_offset->setPlaceholderText("Y坐标");
+    Y_offset->setPlaceholderText("Y");
+    Y_offset->setFixedHeight(30);
+    Y_offset->setFixedWidth(60);
     
-    ElaText *zLabel = new ElaText("Z坐标", 13, this);
     Z_offset = new ElaLineEdit(this);
-    Z_offset->setPlaceholderText("Z坐标");
+    Z_offset->setPlaceholderText("Z");
+    Z_offset->setFixedHeight(30);
+    Z_offset->setFixedWidth(60);
     
-    coordLayout->addWidget(xLabel);
+    coordLayout->addWidget(coordLabel);
     coordLayout->addWidget(X_offset);
-    coordLayout->addWidget(yLabel);
     coordLayout->addWidget(Y_offset);
-    coordLayout->addWidget(zLabel);
     coordLayout->addWidget(Z_offset);
+    coordLayout->addStretch();
     baseLayout->addLayout(coordLayout);
 }
 
-void DeviceWidget::setupReceiverWidget()
+void DeviceWidgetNew::setupReceiverWidget()
 {
     RecieverWidget = new ElaScrollPageArea(this);
-    RecieverWidget->setMinimumSize(0, 120);
+    RecieverWidget->setFixedHeight(120);
     RecieverWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     
-    QGridLayout *receiverLayout = new QGridLayout(RecieverWidget);
-    receiverLayout->setContentsMargins(2, 2, 2, 2);
+    QVBoxLayout *receiverLayout = new QVBoxLayout(RecieverWidget);
+    receiverLayout->setContentsMargins(10, 10, 10, 10);
+    receiverLayout->setSpacing(8);
+    
+    // 区域标题
+    ElaText *receiverTitle = new ElaText("接收机参数", this);
+    receiverTitle->setTextPixelSize(14);
+    // receiverTitle->setTextBold(true);
+    receiverLayout->addWidget(receiverTitle);
+    
+    // 参数网格
+    QGridLayout *paramGrid = new QGridLayout();
+    paramGrid->setSpacing(8);
     
     // 第一行：中心频率、接收带宽
-    ElaText *centralFLabel = new ElaText("中心频率",13, this);
+    ElaText *centralFLabel = new ElaText("中心频率", this);
+    centralFLabel->setTextPixelSize(12);
     CentralF_Reciever = new ElaLineEdit(this);
     CentralF_Reciever->setPlaceholderText("Hz");
+    CentralF_Reciever->setFixedHeight(30);
     
-    ElaText *bandwidthLabel = new ElaText("接收带宽", 13, this);
+    ElaText *bandwidthLabel = new ElaText("接收带宽", this);
+    bandwidthLabel->setTextPixelSize(12);
     Bandwidth_Reciever = new ElaLineEdit(this);
     Bandwidth_Reciever->setPlaceholderText("Hz");
+    Bandwidth_Reciever->setFixedHeight(30);
     
-    receiverLayout->addWidget(centralFLabel, 0, 0);
-    receiverLayout->addWidget(CentralF_Reciever, 0, 1);
-    receiverLayout->addWidget(bandwidthLabel, 0, 2);
-    receiverLayout->addWidget(Bandwidth_Reciever, 0, 3);
+    paramGrid->addWidget(centralFLabel, 0, 0);
+    paramGrid->addWidget(CentralF_Reciever, 0, 1);
+    paramGrid->addWidget(bandwidthLabel, 0, 2);
+    paramGrid->addWidget(Bandwidth_Reciever, 0, 3);
     
     // 第二行：接收机灵敏度、干扰阈值
-    ElaText *sensitiveLabel = new ElaText("接收机灵敏度", 13, this);
+    ElaText *sensitiveLabel = new ElaText("接收机灵敏度", this);
+    sensitiveLabel->setTextPixelSize(12);
     Sensitive_reciever = new ElaLineEdit(this);
     Sensitive_reciever->setPlaceholderText("dBm");
+    Sensitive_reciever->setFixedHeight(30);
     
-    ElaText *interferenceLabel = new ElaText("干扰阈值", 13, this);
+    ElaText *interferenceLabel = new ElaText("干扰阈值", this);
+    interferenceLabel->setTextPixelSize(12);
     interferenceMargin = new ElaLineEdit(this);
     interferenceMargin->setPlaceholderText("dBm");
+    interferenceMargin->setFixedHeight(30);
     
-    receiverLayout->addWidget(sensitiveLabel, 1, 0);
-    receiverLayout->addWidget(Sensitive_reciever, 1, 1);
-    receiverLayout->addWidget(interferenceLabel, 1, 2);
-    receiverLayout->addWidget(interferenceMargin, 1, 3);
+    paramGrid->addWidget(sensitiveLabel, 1, 0);
+    paramGrid->addWidget(Sensitive_reciever, 1, 1);
+    paramGrid->addWidget(interferenceLabel, 1, 2);
+    paramGrid->addWidget(interferenceMargin, 1, 3);
     
-    // 第三行：信噪比阈值、噪声系数
-    ElaText *sinrLabel = new ElaText("信噪比阈值", 13, this);
-    SINRMargin = new ElaLineEdit(this);
-    SINRMargin->setPlaceholderText("dBm");
-    
-    ElaText *noiseLabel = new ElaText("噪声系数", 13, this);
-    noiseFigure = new ElaLineEdit(this);
-    noiseFigure->setPlaceholderText("dBm");
-    
-    receiverLayout->addWidget(sinrLabel, 2, 0);
-    receiverLayout->addWidget(SINRMargin, 2, 1);
-    receiverLayout->addWidget(noiseLabel, 2, 2);
-    receiverLayout->addWidget(noiseFigure, 2, 3);
+    receiverLayout->addLayout(paramGrid);
 }
 
-void DeviceWidget::setupTransmitterWidget()
+void DeviceWidgetNew::setupTransmitterWidget()
 {
     TransmitterWidget = new ElaScrollPageArea(this);
-    TransmitterWidget->setMinimumSize(0, 120);
+    TransmitterWidget->setFixedHeight(140);
     TransmitterWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     
     QVBoxLayout *transmitterLayout = new QVBoxLayout(TransmitterWidget);
-    transmitterLayout->setSpacing(0);
-    transmitterLayout->setContentsMargins(2, 2, 2, 5);
+    transmitterLayout->setContentsMargins(10, 10, 10, 10);
+    transmitterLayout->setSpacing(8);
+    
+    // 区域标题
+    ElaText *transmitterTitle = new ElaText("发射机参数", this);
+    transmitterTitle->setTextPixelSize(14);
+    // transmitterTitle->setTextBold(true);
+    transmitterLayout->addWidget(transmitterTitle);
     
     // 第一行：中心频率、发射带宽、发射功率
     QHBoxLayout *freqPowerLayout = new QHBoxLayout();
-    ElaText *centralFLabel = new ElaText("中心频率", 13, this);
+    freqPowerLayout->setSpacing(8);
+    
+    ElaText *centralFLabel = new ElaText("中心频率", this);
+    centralFLabel->setTextPixelSize(12);
+    centralFLabel->setFixedWidth(80);
     CentralF_Transmitter = new ElaLineEdit(this);
-    CentralF_Transmitter->setPlaceholderText("dBm");
+    CentralF_Transmitter->setPlaceholderText("Hz");
+    CentralF_Transmitter->setFixedHeight(30);
     
-    ElaText *bandwidthLabel = new ElaText("发射带宽", 13, this);
+    ElaText *bandwidthLabel = new ElaText("发射带宽", this);
+    bandwidthLabel->setTextPixelSize(12);
+    bandwidthLabel->setFixedWidth(80);
     Bandwidth_Transmitter = new ElaLineEdit(this);
-    Bandwidth_Transmitter->setPlaceholderText("dBm");
+    Bandwidth_Transmitter->setPlaceholderText("Hz");
+    Bandwidth_Transmitter->setFixedHeight(30);
     
-    ElaText *powerLabel = new ElaText("发射功率", 13, this);
+    ElaText *powerLabel = new ElaText("发射功率", this);
+    powerLabel->setTextPixelSize(12);
+    powerLabel->setFixedWidth(80);
     Power_Transmitter = new ElaLineEdit(this);
     Power_Transmitter->setPlaceholderText("dBm");
+    Power_Transmitter->setFixedHeight(30);
     
     freqPowerLayout->addWidget(centralFLabel);
     freqPowerLayout->addWidget(CentralF_Transmitter);
@@ -198,51 +309,51 @@ void DeviceWidget::setupTransmitterWidget()
     freqPowerLayout->addWidget(Bandwidth_Transmitter);
     freqPowerLayout->addWidget(powerLabel);
     freqPowerLayout->addWidget(Power_Transmitter);
+    
     transmitterLayout->addLayout(freqPowerLayout);
     
-    // 第二行：天线参数网格
-    QGridLayout *antennaLayout = new QGridLayout();
+    // 第二行：天线参数
+    QHBoxLayout *antennaLayout = new QHBoxLayout();
+    antennaLayout->setSpacing(8);
     
-    // 天线指向角、波束宽度
-    ElaText *phiLabel = new ElaText("天线指向角", 13, this);
+    ElaText *phiLabel = new ElaText("天线指向角", this);
+    phiLabel->setTextPixelSize(12);
+    phiLabel->setFixedWidth(80);
     antennaPhi_Transmitter = new ElaLineEdit(this);
-    antennaPhi_Transmitter->setPlaceholderText("dBm");
+    antennaPhi_Transmitter->setPlaceholderText("度");
+    antennaPhi_Transmitter->setFixedHeight(30);
     
-    ElaText *beamwidthLabel = new ElaText("波束宽度", 13, this);
+    ElaText *beamwidthLabel = new ElaText("波束宽度", this);
+    beamwidthLabel->setTextPixelSize(12);
+    beamwidthLabel->setFixedWidth(80);
     Beamwidth_Transmitter = new ElaLineEdit(this);
-    Beamwidth_Transmitter->setPlaceholderText("dBm");
+    Beamwidth_Transmitter->setPlaceholderText("度");
+    Beamwidth_Transmitter->setFixedHeight(30);
     
-    antennaLayout->addWidget(phiLabel, 0, 0);
-    antennaLayout->addWidget(antennaPhi_Transmitter, 0, 1);
-    antennaLayout->addWidget(beamwidthLabel, 0, 2);
-    antennaLayout->addWidget(Beamwidth_Transmitter, 0, 3);
-    
-    // 极化方式、天线类型
-    ElaText *polarizationLabel = new ElaText("极化方式", 13, this);
+    ElaText *polarizationLabel = new ElaText("极化方式", this);
+    polarizationLabel->setTextPixelSize(12);
+    polarizationLabel->setFixedWidth(80);
     PolarizationMethod_Transmitter = new ElaComboBox(this);
     PolarizationMethod_Transmitter->addItem("垂直极化");
     PolarizationMethod_Transmitter->addItem("水平极化");
+    PolarizationMethod_Transmitter->setFixedHeight(30);
     
-    ElaText *antennaTypeLabel = new ElaText("天线类型", 13, this);
-    antennaType_Transmitter = new ElaComboBox(this);
-    antennaType_Transmitter->addItem("喇叭天线");
-    antennaType_Transmitter->addItem("赋型波束天线");
-    antennaType_Transmitter->addItem("抛物面天线");
-    
-    antennaLayout->addWidget(polarizationLabel, 1, 0);
-    antennaLayout->addWidget(PolarizationMethod_Transmitter, 1, 1);
-    antennaLayout->addWidget(antennaTypeLabel, 1, 2);
-    antennaLayout->addWidget(antennaType_Transmitter, 1, 3);
+    antennaLayout->addWidget(phiLabel);
+    antennaLayout->addWidget(antennaPhi_Transmitter);
+    antennaLayout->addWidget(beamwidthLabel);
+    antennaLayout->addWidget(Beamwidth_Transmitter);
+    antennaLayout->addWidget(polarizationLabel);
+    antennaLayout->addWidget(PolarizationMethod_Transmitter);
     
     transmitterLayout->addLayout(antennaLayout);
 }
 
-DeviceWidget::~DeviceWidget()
+DeviceWidgetNew::~DeviceWidgetNew()
 {
     // Qt会自动删除子控件，无需手动删除
 }
 
-void DeviceWidget::setData(const EquipmentData &data)
+void DeviceWidgetNew::setData(const EquipmentData &data)
 {
     m_currentId = data.equipmentID;
 
@@ -273,7 +384,7 @@ void DeviceWidget::setData(const EquipmentData &data)
     antennaType_Transmitter->setCurrentText(data.antennaType_Transmitter);
 }
 
-void DeviceWidget::updateModelData() {
+void DeviceWidgetNew::updateModelData() {
     bool ok;
     // 遍历全局数据列表找到当前设备
     for (EquipmentData &data : DataModel::instance()->allEquipments) {
@@ -329,7 +440,7 @@ void DeviceWidget::updateModelData() {
     }
 }
 
-void DeviceWidget::onEquipmentTypeChanged()
+void DeviceWidgetNew::onEquipmentTypeChanged()
 {
     QString type = equipmentType->currentText();
     // 设置基础参数
@@ -389,17 +500,14 @@ void DeviceWidget::onEquipmentTypeChanged()
 
         spdlog::debug("正在设定{}参数", type.toStdString());
     }
-    
 }
 
-
-
-void DeviceWidget::on_equipmentReduction_clicked()
+void DeviceWidgetNew::on_equipmentReduction_clicked()
 {
     emit removalRequested(m_currentId);
 }
 
-void DeviceWidget::resetTransmitterUI() {
+void DeviceWidgetNew::resetTransmitterUI() {
     CentralF_Transmitter->setText("0");
     Bandwidth_Transmitter->setText("0");
     Power_Transmitter->setText("0");
@@ -410,7 +518,7 @@ void DeviceWidget::resetTransmitterUI() {
     antennaType_Transmitter->setCurrentIndex(0);
 }
 
-void DeviceWidget::resetReceiverUI() {
+void DeviceWidgetNew::resetReceiverUI() {
     CentralF_Reciever->setText("0");
     Bandwidth_Reciever->setText("0");
     Sensitive_reciever->setText("0");

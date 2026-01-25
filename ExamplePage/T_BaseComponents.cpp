@@ -33,11 +33,13 @@ T_BaseComponents::T_BaseComponents(QWidget* parent)
     QHBoxLayout* toggleSwitchLayout = new QHBoxLayout(toggleSwitchArea);
     ElaText* toggleSwitchText = new ElaText("ElaToggleSwitch", this);
     toggleSwitchText->setTextPixelSize(15);
+
     toggleSwitchLayout->addWidget(toggleSwitchText);
     toggleSwitchLayout->addWidget(_toggleSwitch);
     toggleSwitchLayout->addStretch();
     ElaToggleSwitch* toggleSwitchDisableSwitch = new ElaToggleSwitch(this);
     ElaText* toggleSwitchDisableText = new ElaText("禁用", this);
+
     toggleSwitchDisableText->setTextPixelSize(15);
     connect(toggleSwitchDisableSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked) {
         _toggleSwitch->setDisabled(checked);

@@ -1,10 +1,7 @@
-#ifndef DEVICEWIDGET_H
-#define DEVICEWIDGET_H
+#ifndef DEVICEWIDGETNEW_H
+#define DEVICEWIDGETNEW_H
 
 #include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QGridLayout>
 #include <QComboBox>
 #include <QLineEdit>
 #include "../include/models/DataModel.h"
@@ -16,13 +13,13 @@ class ElaLineEdit;
 class ElaScrollPageArea;
 class ElaText;
 
-class DeviceWidget: public QWidget {
+class DeviceWidgetNew: public QWidget {
     Q_OBJECT
 signals:
     void removalRequested(const QString &id);
 public:
-    explicit DeviceWidget(QWidget *parent =  nullptr);
-    ~DeviceWidget();
+    explicit DeviceWidgetNew(QWidget *parent =  nullptr);
+    ~DeviceWidgetNew();
     // 将数据从模型加载到UI界面
     void setData(const EquipmentData &data);
     
@@ -31,6 +28,8 @@ public:
     QString getID() const { return m_currentId; }
 private:
     // UI控件成员
+    QWidget *titleWidget;
+    QWidget *actionWidget;
     ElaScrollPageArea *BaseWidget;
     ElaScrollPageArea *RecieverWidget;
     ElaScrollPageArea *TransmitterWidget;
@@ -67,6 +66,8 @@ private:
 
     // UI设置方法
     void setupUI();
+    void setupTitleWidget();
+    void setupActionButtons();
     void setupBaseWidget();
     void setupReceiverWidget();
     void setupTransmitterWidget();
@@ -79,4 +80,4 @@ private slots:
     void onEquipmentTypeChanged();
 };
 
-#endif //DEVICEWIDGET_H
+#endif //DEVICEWIDGETNEW_H

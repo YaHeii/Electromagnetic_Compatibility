@@ -17,7 +17,7 @@ enum class AntennaType {
 
 enum class VerticalFieldDistribution {
     GAUSSIAN,
-    SINC,
+    SINC,   //TODO
     COSINE  //TODO
 };
 

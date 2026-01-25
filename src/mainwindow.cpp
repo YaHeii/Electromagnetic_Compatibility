@@ -1,5 +1,4 @@
 #include "ui_mainwindow.h"
-//#include "ui_devicewidget.h"
 #include "../include/mainwindow.h"
 #include <QMessageBox>
 #include "spdlog/spdlog.h"
@@ -81,7 +80,7 @@ void MainWindow::initWindow() {
     setWindowTitle("无人船舰队电磁预测系统");
     setUserInfoCardPixmap(QPixmap(":/Image/Cirno.jpg"));
     setUserInfoCardTitle("无人船舰队电磁预测系统");
-    setUserInfoCardSubTitle("Liniyous@gmail.com");
+    //setUserInfoCardSubTitle("Liniyous@gmail.com");
 
     ElaText* centralStack = new ElaText("这是一个主窗口堆栈页面", this);
     centralStack->setFocusPolicy(Qt::StrongFocus);
@@ -94,12 +93,7 @@ void MainWindow::initWindow() {
     setWindowMoviePath(ElaThemeType::Light, ":/Image/WindowBase/Miku.gif");
     setWindowMoviePath(ElaThemeType::Dark, ":/Image/WindowBase/WorldTree.gif");
 
-    FleetInput* FleetWidget = new FleetInput(this);
-    Simulation* SimulationWidget = new Simulation(this);
 
-    addPageNode("编队参数", FleetWidget, ElaIconType::House);
-    addPageNode("仿真", SimulationWidget, ElaIconType::ChartSimple);
-    navigation("HOME");
 
     ElaDockWidget* logDock = new ElaDockWidget("运行日志", this);
 
@@ -262,9 +256,16 @@ void MainWindow::initContent()
     _tableViewPage = new T_TableView(this);
     _treeViewPage = new T_TreeView(this);
     _settingPage = new T_Setting(this);
+    FleetInput* FleetWidget = new FleetInput(this);
+    Simulation* SimulationWidget = new Simulation(this);
 
+ 
     QString testKey_1;
     QString testKey_2;
+    navigation("HOME");
+    addPageNode("编队参数", FleetWidget, ElaIconType::House);
+    addPageNode("仿真", SimulationWidget, ElaIconType::ChartSimple);
+
     addPageNode("HOME", _homePage, ElaIconType::House);
 #ifdef Q_OS_WIN
     addExpanderNode("ElaDxgi", _elaDxgiKey, ElaIconType::TvMusic);
