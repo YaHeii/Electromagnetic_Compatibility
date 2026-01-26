@@ -1,3 +1,0 @@
-# .clangd
-CompileFlags:
-  Add: [--query-driver=D:/MINGW64/bin/g++.exe]

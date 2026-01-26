@@ -41,7 +41,7 @@ std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(
     Point3D location{ shipData.X_offset, shipData.Y_offset, shipData.Z_offset };
 
     auto shipObj = std::make_unique<ship>(
-        shipData.shipName.toStdString(),
+        shipData.shipID,
         location,
         shipData.ship_Orienteation,
         shipData.ship_Speed
@@ -61,7 +61,7 @@ std::unique_ptr<ship> TransferToEngine::convertShipDataToShip(
         }
         else {
             // 警告船上挂载了不存在的设备
-             spdlog::debug("Ship {} has unknown equipment ID: {}", shipData.shipName.toStdString(), id);
+             spdlog::debug("Ship {} has unknown equipment ID: {}", shipData.shipID, id);
         }
     }
     return shipObj;

@@ -96,6 +96,22 @@ target_link_libraries(${APP_TARGET_NAME} PRIVATE
         spdlog::spdlog
         ElaWidgetTools
 )
+if(MSVC)
+    # 获取 Qt6::Core 库文件的位置（通常在 bin 目录）
+    get_target_property(QT6_CORE_DLL Qt6::Core LOCATION)
+    get_filename_component(QT_BIN_DIR ${QT6_CORE_DLL} DIRECTORY)
+    
+    # 将该路径转换为 Windows 格式（反斜杠），防止 CMake 路径混淆
+    file(TO_NATIVE_PATH "${QT_BIN_DIR}" QT_BIN_DIR_NATIVE)
+
+    # 设置 VS_DEBUGGER_ENVIRONMENT 属性
+    # 这会告诉 VS 在启动调试器时，临时将 Qt 的 bin 目录加入 PATH
+    set_target_properties(${APP_TARGET_NAME} PROPERTIES 
+        VS_DEBUGGER_ENVIRONMENT "PATH=${QT_BIN_DIR_NATIVE};%PATH%"
+    )
+    
+    message(STATUS "调试环境已配置: 将自动加载 Qt DLLs 自: ${QT_BIN_DIR}")
+endif()
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${APP_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif()

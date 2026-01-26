@@ -136,8 +136,8 @@ struct EquipmentOnShip {
 /// 舰船数据模型
 /// </summary>
 struct ShipData {
-    int shipID = 0;
-    QString shipName = "未命名船只";
+    std::string shipID = "未命名";
+    //QString shipName = "未命名船只";
      //DEPRECATED: 没有Type接口
     QString shipType = "驱逐舰";
 
@@ -155,7 +155,6 @@ struct ShipData {
 
     // 校验逻辑
     std::pair<bool, QString> validate_Ship() const {
-        if (shipName.isEmpty()) return { false, "船名不能为空" };
         if (ship_Speed < 0) return { false, "航速不能为负数" };
 
         auto inRange = [](int val, int min, int max) { return val >= min && val <= max; };

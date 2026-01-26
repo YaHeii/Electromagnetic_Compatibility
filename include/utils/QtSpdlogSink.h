@@ -5,7 +5,7 @@
 #include <QString>
 #include <mutex>
 #include <iostream> 
-#include "spdlog/sinks/base_sink.h"  // 恢复spdlog相关头文件引用
+#include "spdlog/sinks/base_sink.h" 
 #include "spdlog/details/null_mutex.h"
 
 class LogEmitter : public QObject {
