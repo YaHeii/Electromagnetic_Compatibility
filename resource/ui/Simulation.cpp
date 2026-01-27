@@ -4,7 +4,7 @@
 #include <QMessageBox>
 #include <thread>
 #include <future>
-
+#include "utils/JsonLoader.hpp"
 Simulation::Simulation(QWidget* parent)
 	: QWidget(parent), _emcEngine(nullptr) {
     setupUI();
@@ -52,7 +52,9 @@ void Simulation::setupUI()
 
 void Simulation::on_StartSimulate_clicked() {
     spdlog::info("Simulation requested...");
+    if (JsonLoader::LoadFile("D:/code/Electromagnetic_compatibility/tests/Test.json")) {
 
+    }
     // 准备数据快照 (深拷贝以保证线程安全)
     auto dataSnapshot = DataModel::instance()->createSnapshot();
 
@@ -83,7 +85,7 @@ void Simulation::on_StartSimulate_clicked() {
     spdlog::info("Engine computing 2D loss map...");
     
 
-    _emcEngine->do_Validation_DuctLeakage();
+    _emcEngine->do_PE_computing();
     
     StartSimulate->setEnabled(true);
     spdlog::info("Simulation finished.");
@@ -128,8 +130,8 @@ void Simulation::onSimulationFinished(const GridMap& result) {
     }
 }
 
-void Simulation::onSingleGridMapReady(const std::string& shipName, const std::string& equipmentName, const GridMap& lossGrid) {
-    spdlog::debug("Received single GridMap for ship: {}, equipment: {}", shipName, equipmentName);
+void Simulation::onSingleGridMapReady(const std::string& shipID, const std::string& equipmentName, const GridMap& lossGrid) {
+    spdlog::debug("Received single GridMap for ship: {}, equipment: {}", shipID, equipmentName);
     
 
     try {

@@ -79,6 +79,8 @@ void qt_message_handler(QtMsgType type, const QMessageLogContext& context, const
 
 int main(int argc, char *argv[])
 {
+    SetConsoleOutputCP(65001);
+    SetConsoleCP(65001);
     //初始化大小
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);

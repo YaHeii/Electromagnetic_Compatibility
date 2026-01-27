@@ -43,6 +43,6 @@ public slots:
 	// 槽函数现在接收GridMap作为参数
 	void onSimulationFinished(const GridMap& result);
 	//单张图返回
-	void onSingleGridMapReady(const std::string& shipName, const std::string& equipmentName, const GridMap& lossGrid);
+	void onSingleGridMapReady(const std::string& shipID, const std::string& equipmentName, const GridMap& lossGrid);
 
 };

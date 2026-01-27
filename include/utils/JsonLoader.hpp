@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -6,7 +6,7 @@
 #include <QRegularExpression>
 #include <QDebug>
 #include <QStringList>
-#include "../models/DataModel.h"
+#include "models/DataModel.h"
 #include "spdlog/spdlog.h" 
 
 class JsonLoader {
@@ -14,27 +14,27 @@ public:
     static bool LoadFile(const QString& filePath) {
         QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            spdlog::error("ÎŞ·¨´ò¿ªÎÄ¼ş: {}", filePath.toStdString());
+            spdlog::error("cannot open file: {}, {}", filePath.toStdString(), file.errorString().toStdString());
             return false;
         }
 
         QString jsonString = file.readAll();
         file.close();
 
-        // 1. ÇåÏ´×¢ÊÍ
+        // 1. æ¸…æ´—æ³¨é‡Š
         QRegularExpression re("//[^\n]*");
         jsonString.replace(re, "");
 
-        // 2. ½âÎöÎÄµµ
+        // 2. è§£ææ–‡æ¡£
         QJsonParseError error;
         QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError) {
-            spdlog::error("JSON ½âÎö´íÎó: {}", error.errorString().toStdString());
+            spdlog::error("JSON è§£æé”™è¯¯: {}", error.errorString().toStdString());
             return false;
         }
 
         if (!doc.isObject()) {
-            spdlog::error("JSON ¸ñÊ½´íÎó: ¸ù½Úµã±ØĞëÊÇ¶ÔÏó");
+            spdlog::error("JSON æ ¼å¼é”™è¯¯: æ ¹èŠ‚ç‚¹å¿…é¡»æ˜¯å¯¹è±¡");
             return false;
         }
 
@@ -44,17 +44,17 @@ public:
 
         QJsonObject rootObj = doc.object();
 
-        // ±éÀúËùÓĞ´¬Ö» 
+        // éå†æ‰€æœ‰èˆ¹åª 
         for (auto it = rootObj.begin(); it != rootObj.end(); ++it) {
             if (!it.value().isObject()) continue;
 
-            QString shipKey = it.key(); // ÀıÈç "USV1"
+            QString shipKey = it.key(); // ä¾‹å¦‚ "USV1"
             QJsonObject shipObj = it.value().toObject();
 
             ShipData ship;
             ship.shipID = shipObj.contains("ID") ? shipObj["ID"].toString().toStdString() : shipKey.toStdString();
 
-            // --- ½âÎöÎ»ÖÃ ---
+            // --- è§£æä½ç½® ---
             if (shipObj.contains("Location")) {
                 QJsonObject locObj = shipObj["Location"].toObject();
                 QJsonArray coords = locObj["coordinates"].toArray();
@@ -68,14 +68,14 @@ public:
             ship.ship_Speed = parseDouble(shipObj["Speed"]);
             ship.ship_Orienteation = parseDouble(shipObj["Orientation"]);
 
-            // --- ½âÎöÉè±¸ (±éÀú´¬Ö»¶ÔÏóÄÚµÄËùÓĞ Key) ---
+            // --- è§£æè®¾å¤‡ (éå†èˆ¹åªå¯¹è±¡å†…çš„æ‰€æœ‰ Key) ---
             for (auto devIt = shipObj.begin(); devIt != shipObj.end(); ++devIt) {
 
                 if (!devIt.value().isObject()) continue;
 
                 QJsonObject devObj = devIt.value().toObject();
 
-                // ¸ù¾İ type ×Ö¶Î¾ö¶¨½âÎö·½Ê½
+                // æ ¹æ® type å­—æ®µå†³å®šè§£ææ–¹å¼
                 QString type = devObj["type"].toString().toUpper();
 
                 if (type == "TRANSMITTER") {
@@ -96,13 +96,13 @@ public:
                 }
             }
 
-            // Ğ£Ñé²¢±£´æ
+            // æ ¡éªŒå¹¶ä¿å­˜
             auto validateRes = ship.validate_Ship();
             if (validateRes.first) {
                 model->allShips.push_back(ship);
             }
             else {
-                spdlog::warn("ºöÂÔÎŞĞ§´¬Ö»( {} ): {}", ship.shipID, validateRes.second.toStdString());
+                spdlog::warn("å¿½ç•¥æ— æ•ˆèˆ¹åª( {} ): {}", ship.shipID, validateRes.second.toStdString());
             }
         }
 
@@ -110,7 +110,7 @@ public:
     }
 
 private:
-    // ¸¨Öúº¯Êı£º¼æÈİÊı×ÖÀàĞÍºÍ×Ö·û´®ÀàĞÍµÄÊı×Ö½âÎö
+    // è¾…åŠ©å‡½æ•°ï¼šå…¼å®¹æ•°å­—ç±»å‹å’Œå­—ç¬¦ä¸²ç±»å‹çš„æ•°å­—è§£æ
     static double parseDouble(const QJsonValue& val) {
         if (val.isString()) return val.toString().toDouble();
         if (val.isDouble()) return val.toDouble();
@@ -120,7 +120,7 @@ private:
     static EquipmentData parseTransmitter(const QJsonObject& json) {
         EquipmentData eq;
         eq.equipmentID = json["ID"].toString();
-        eq.equipmentType = "·¢Éä»ú";
+        eq.equipmentType = "å‘å°„æœº";
         eq.Gain = parseDouble(json["Gain"]);
 
         if (json.contains("Location_Offset")) {
@@ -132,7 +132,7 @@ private:
             }
         }
 
-        // --- ·¢Éä»úÌØÓĞ×Ö¶Î ---
+        // --- å‘å°„æœºç‰¹æœ‰å­—æ®µ ---
         eq.CentralF_Transmitter = parseDouble(json["Central_F"]);
         eq.Bandwidth_Transmitter = parseDouble(json["Bandwith"]);
         eq.Power_Transmitter = parseDouble(json["Power"]);
@@ -148,13 +148,13 @@ private:
         return eq;
     }
 
-    // ¸¨Öú: ½âÎö½ÓÊÕ»ú
+    // è¾…åŠ©: è§£ææ¥æ”¶æœº
     static EquipmentData parseReceiver(const QJsonObject& json) {
         EquipmentData eq;
         eq.equipmentID = json["ID"].toString();
-        eq.equipmentType = "½ÓÊÕ»ú";
+        eq.equipmentType = "æ¥æ”¶æœº";
 
-        // --- Í¨ÓÃ×Ö¶Î ---
+        // --- é€šç”¨å­—æ®µ ---
         eq.Gain = parseDouble(json["Gain"]);
 
         if (json.contains("Location_Offset")) {
@@ -166,7 +166,7 @@ private:
             }
         }
 
-        // --- ½ÓÊÕ»úÌØÓĞ×Ö¶Î ---
+        // --- æ¥æ”¶æœºç‰¹æœ‰å­—æ®µ ---
         eq.CentralF_Reciever = parseDouble(json["Central_F"]);
         eq.Bandwidth_Reciever = parseDouble(json["Bandwith"]);
         eq.Sensitive_reciever = parseDouble(json["Sensitivity"]);

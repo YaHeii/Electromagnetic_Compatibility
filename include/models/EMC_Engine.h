@@ -25,7 +25,7 @@ struct InterferenceResult {
     bool is_interference_degraded; // 干扰裕度是否超限
 };
 struct PE_data {
-    std::string shipName = "DefaultShip"; // 船名
+    std::string shipID = "DefaultShip"; // 船名
     std::string equipmenName = "DefaultEquipment"; // 设备名
     AntennaType antennaType = AntennaType::OMNI; // 天线类型
 	double sender_antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
@@ -47,21 +47,21 @@ enum class ModelType {
 using GridMap = std::vector<std::vector<double>>;
 using Matrix = std::vector<std::vector<double>>;
 using LineMap = std::vector<double>;
-
+using GridMatrix = Eigen::MatrixXd;
 class Propagation_Engine {
 public:
     Propagation_Engine(ModelType model_type, std::unique_ptr<Fleet> fleet)
         : _model_type(model_type), _fleet(std::move(fleet)) {
         if (_model_type == ModelType::PE) {
             //初始化PEModel
-            GridMap Loss2D = PEmodel_computing2D(_PEdata, 25);
+            GridMatrix Loss2D = PEmodel_computing2D(_PEdata, 25);
         }
         else if (_model_type == ModelType::RayModel) {
             //初始化RayModel
         }
     }
     LineMap PEmodel_computing1D(PE_data _PEdata, double reciever_antenna_height);
-    GridMap PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height);
+    GridMatrix PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height);
     
     std::vector<PE_data> EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet);
 
@@ -102,5 +102,5 @@ private:
     ModelType _modelType;
     Propagation_Engine* _propagationEngine; // Consider using std::unique_ptr here as well
 signals:
-    void peComputationFinished(const std::string& shipName, const std::string& equipmentName, const GridMap& lossGrid);
+    void peComputationFinished(const std::string& shipID, const std::string& equipmentName, const GridMap& lossGrid);
 };

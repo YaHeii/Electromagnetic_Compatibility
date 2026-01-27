@@ -6,12 +6,12 @@
 #include <vector> 
 #include <cmath>  
 
-const int X_MIN = -50;
-const int X_MAX = 50;
-const int Y_MIN = -50;
-const int Y_MAX = 50;
+const int X_MIN = -50000;
+const int X_MAX = 50000;
+const int Y_MIN = -50000;
+const int Y_MAX = 50000;
 const int Z_MIN = 0;
-const int Z_MAX = 50;
+const int Z_MAX = 50000;
 
 
 /// <summary>
