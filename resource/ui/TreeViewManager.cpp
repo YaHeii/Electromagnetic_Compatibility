@@ -84,7 +84,7 @@ void TreeViewManager::populateShips(FleetTreeItem* shipsRoot)
     const std::vector<ShipData>& ships = DataModel::instance()->allShips;
 
     for (const ShipData& ship : ships) {
-        FleetTreeItem* shipItem = new FleetTreeItem(ship.shipID, FleetTreeItem::Ship, ship.shipID, shipsRoot);
+        FleetTreeItem* shipItem = new FleetTreeItem(QString::fromStdString(ship.shipID), FleetTreeItem::Ship, QString::fromStdString(ship.shipID), shipsRoot);
         shipsRoot->appendChildItem(shipItem);
 
         // 添加配置的设备
@@ -238,7 +238,7 @@ void FleetTreeViewModel::addShip(const ShipData& ship)
         endInsertRows();
     }
     
-    FleetTreeItem* shipItem = new FleetTreeItem(ship.shipID, FleetTreeItem::Ship, ship.shipID, fleetItem);
+    FleetTreeItem* shipItem = new FleetTreeItem(QString::fromStdString(ship.shipID), FleetTreeItem::Ship, QString::fromStdString(ship.shipID), fleetItem);
     
     beginInsertRows(createIndex(fleetItem->getRow(), 0, fleetItem), fleetItem->getChildrenItems().count(), fleetItem->getChildrenItems().count());
     fleetItem->appendChildItem(shipItem);

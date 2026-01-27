@@ -174,7 +174,6 @@ void FleetInput::on_addShipButton_clicked()
 
     ShipData newShip;
     newShip.shipID = DataModel::instance()->allShips.size() + 1;
-    newShip.shipName = QString("NewShip_%1").arg(newShip.shipID);
     DataModel::instance()->allShips.push_back(newShip);
     ShipWidget* widget = new ShipWidget();
     widget->setData(newShip); // 关联UI与数据

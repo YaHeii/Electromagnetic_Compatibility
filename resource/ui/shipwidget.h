@@ -24,9 +24,8 @@ public:
 
 private:
     void setupUI();
-    QString m_currentId;
     void syncDeviceListWithModel();
-    int m_currentShipId;
+    std::string _currentShipId;
     
     // UI Components
     QVBoxLayout* mainLayout;
@@ -48,6 +47,9 @@ private:
     
     // Right side - Ship properties
     QVBoxLayout* shipPropertiesLayout;
+    QHBoxLayout* IDLayout;
+    ElaText* IDLabel;
+    ElaLineEdit* ship_ID;
     QHBoxLayout* speedLayout;
     ElaText* speedLabel;
     ElaLineEdit* ship_Speed;
