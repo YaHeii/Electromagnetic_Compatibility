@@ -25,7 +25,9 @@ LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_
         , _PEdata.antennaPhi_deg);
 
     // 开始步进仿真
-    std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
+    //std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
+    std::ofstream out("PEmodel_computing1D.csv");
+    EMC_Engine::writeCSVRow(out, "Range", "Loss");
     //r为仿真距离（剖面）
     for (double r = _PEdata.dx; r < _PEdata.max_range; r += _PEdata.dx) {
         // 将预计算好的大气剖面传递给求解器
@@ -37,18 +39,19 @@ LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_
             // 获取接收天线高度 15m 处的损耗
             int rx_idx = static_cast<int>(reciever_antenna_height / _PEdata.dz);
             double loss = solver.getPathLoss(rx_idx, r);
-            std::cout << r / 1000.0 << " \t\t " << loss << std::endl;
+            EMC_Engine::writeCSVRow(out, r, loss);
             _LossLine.push_back(loss);
         }
     }
     return _LossLine;
 }
-using GridMatrix = Eigen::MatrixXd;
 
 GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height) {
     spdlog::info("Starting 2D PE model computation for equipment: {}", _PEdata.equipmenName);
     spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
 		_PEdata.centralF_Ghz, _PEdata.max_range, _PEdata.duct_height, _PEdata.wind_speed);
+    std::ofstream out("PEmodel_computing2D.csv");
+    EMC_Engine::writeCSVRow(out, "Grid_X_m", "Grid_Y_m", "Path_Loss_dB");
     // 1. 定义地图网格参数
     double map_size_km = 20.0;
     double grid_res_m = 50.0; // 50米一个像素
@@ -112,10 +115,18 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
             range_idx++;
         }
     }
+    //std::ofstream out_polar("PE_Raw_Polar.csv");
+    //EMC_Engine::writeCSVRow(out_polar, "Angle_Deg", "Range_m", "Loss_dB");
 
-    std::cout << "Scan complete. Mapping to Cartesian grid..." << std::endl;
-    std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
-
+    //for (int i = 0; i < num_angles; ++i) {
+    //    double az_deg = i * angle_step_deg;
+    //    for (int j = 0; j < num_ranges; ++j) {
+    //        double r_m = (j + 1) * _PEdata.dx;
+    //        double loss = polar_matrix(i, j);
+    //        EMC_Engine::writeCSVRow(out_polar, az_deg, r_m, loss);
+    //    }
+    //}
+    //out_polar.close();
     // 4. 坐标映射 (填满车轮空隙)
     GridMatrix cartesian_grid = GridMatrix::Constant(grid_dim, grid_dim, static_cast<int>(noise_floor));
     double center_idx = grid_dim / 2.0;
@@ -154,7 +165,23 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
             }
         }
     }
+    double center_idx = grid_dim / 2.0;
+    for (int y = 0; y < grid_dim; ++y) {
+        for (int x = 0; x < grid_dim; ++x) {
+            double px = (x - center_idx) * grid_res_m;
+            double py = (y - center_idx) * grid_res_m;
 
+            // 获取损耗值
+            int loss_val = cartesian_grid(y, x);
+            // 过滤无效数据：
+            // if (loss_val > noise_floor + 1.0) 
+            {
+                EMC_Engine::writeCSVRow(out, px, py, loss_val);
+            }
+        }
+    }
+    out.close(); 
+    spdlog::info("CSV save complete.");
     return cartesian_grid; 
 }
 
@@ -207,6 +234,7 @@ GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
     // 预分配外层 vector
     std::vector<std::vector<double>> vec(mat.rows());
 
+
     // 并行拷贝 (如果矩阵非常大，比如 2000x2000，否则单线程即可)
 #pragma omp parallel for
     for (long i = 0; i < mat.rows(); ++i) {
@@ -236,7 +264,7 @@ void EMC_Engine::do_PE_computing() {
     }
     _LossGrid = eigen_to_vector(LossMatrix);
     // 触发信号，通知UI更新
-    //emit peComputationFinished(pe_data.shipID, pe_data.equipmenName, _LossGrid);
+    emit peComputationFinished(_LossGrid);
 }
 
 GridMap EMC_Engine::do_PE_test() {
@@ -255,7 +283,7 @@ GridMap EMC_Engine::do_PE_test() {
 
     //_LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 5.0); // 接收天线高度 25m
     return _LossGrid;
-    emit peComputationFinished(pe_data.shipID, pe_data.equipmenName, _LossGrid);
+    emit peComputationFinished(_LossGrid);
 }
 
 // 退化参数为平面，以双径模型验证结果

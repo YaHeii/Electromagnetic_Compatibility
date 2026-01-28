@@ -24,17 +24,17 @@ private:
 	void setupUI();
 	EMC_Engine* _emcEngine;
 	void simulationWaiter(std::future<GridMap> future);
-	
+
 	// UI Components
 	QVBoxLayout* mainLayout;
 	QTabWidget* tabWidget;
-	
+
 	// 2D Power Distribution Tab
 	QWidget* simulateTab;
 	QVBoxLayout* simulateTabLayout;
 	QCustomPlot* PEmodel2Dplot;
 	ElaPushButton* StartSimulate;
-	
+
 	// Tab 2 (placeholder)
 	QWidget* tab2;
 
@@ -43,6 +43,6 @@ public slots:
 	// 槽函数现在接收GridMap作为参数
 	void onSimulationFinished(const GridMap& result);
 	//单张图返回
-	void onSingleGridMapReady(const std::string& shipID, const std::string& equipmentName, const GridMap& lossGrid);
+	void onSingleGridMapReady(const GridMap& lossGrid);
 
 };

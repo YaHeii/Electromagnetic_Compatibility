@@ -8,6 +8,7 @@
 #include "DataModel.h"
 #include <stdexcept>
 #include <spdlog/spdlog.h>
+#include <fstream>
 #include "../utils/PaintImage.hpp"
 
 struct InterferenceResult {
@@ -93,6 +94,24 @@ public:
     void do_Validation_Roughness();
     void do_Validation_DuctLeakage();
     //std::vector<InterferenceResult> EMC_computing(const Fleet& fleet);//返回受扰计算结果数组
+    template <typename... Args>
+    static void writeCSVRow(std::ofstream& out, Args... args) {
+        // 使用 lambda 和 C++17 折叠表达式来处理逗号分隔
+        bool first = true;
+        auto print_arg = [&](const auto& val) {
+            if (!first) {
+                out << ",";
+            }
+            out << val;
+            first = false;
+            };
+
+        // 折叠表达式：对 args 参数包中的每一个元素调用 print_arg
+        (print_arg(args), ...);
+
+        // 每一行结束后换行
+        out << "\n";
+    }
 private:
     GridMap _LossGrid;
     std::vector<PE_data> _peDataList;
@@ -100,7 +119,8 @@ private:
 	std::unique_ptr<Fleet> _fleet;
 	DataSnapshot _dataSnapshot;
     ModelType _modelType;
-    Propagation_Engine* _propagationEngine; // Consider using std::unique_ptr here as well
+    Propagation_Engine* _propagationEngine;
+
 signals:
-    void peComputationFinished(const std::string& shipID, const std::string& equipmentName, const GridMap& lossGrid);
+    void peComputationFinished(const GridMap& lossGrid);
 };

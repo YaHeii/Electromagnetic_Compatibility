@@ -130,8 +130,8 @@ void Simulation::onSimulationFinished(const GridMap& result) {
     }
 }
 
-void Simulation::onSingleGridMapReady(const std::string& shipID, const std::string& equipmentName, const GridMap& lossGrid) {
-    spdlog::debug("Received single GridMap for ship: {}, equipment: {}", shipID, equipmentName);
+void Simulation::onSingleGridMapReady(const GridMap& lossGrid) {
+    //spdlog::debug("Received single GridMap for ship: {}, equipment: {}", shipID, equipmentName);
     
 
     try {
