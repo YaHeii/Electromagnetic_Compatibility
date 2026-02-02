@@ -1,10 +1,10 @@
 #include "Simulation.h"
-#include "models/DataModel.h"
-#include "utils/TransferToEngin.h"
+#include "Interface/DataModel.h"
+#include "Utils/TransferToEngin.h"
 #include <QMessageBox>
 #include <thread>
 #include <future>
-#include "utils/JsonLoader.hpp"
+#include "Utils/JsonLoader.hpp"
 Simulation::Simulation(QWidget* parent)
 	: QWidget(parent), _emcEngine(nullptr) {
     setupUI();

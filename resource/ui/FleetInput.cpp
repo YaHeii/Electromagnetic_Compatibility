@@ -3,8 +3,8 @@
 #include "DeviceWidget.h"
 #include "shipwidget.h"
 #include <QMessageBox>
-#include <QLayoutItem> // Added for QLayoutItem
-#include <algorithm> // for std::remove_if
+#include <QLayoutItem>
+#include <algorithm> 
 #include <QRect>
 #include <Qt>
 

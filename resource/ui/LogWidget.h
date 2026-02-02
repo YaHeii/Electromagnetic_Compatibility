@@ -1,5 +1,4 @@
-#ifndef LOGWIDGETNEW_H
-#define LOGWIDGETNEW_H
+#pragma once
 
 #include <QWidget>
 #include <QAbstractListModel>
@@ -8,7 +7,7 @@
 #include <memory>
 #include <QString>
 #include "spdlog/spdlog.h"
-#include "../../include/utils/QtSpdlogSink.h"
+#include "Utils/QtSpdlogSink.h"
 
 // 前向声明自定义控件
 class ElaText;
@@ -101,4 +100,3 @@ private:
     QList<LogEntry> logEntries;
 };
 
-#endif // LOGWIDGETNEW_H

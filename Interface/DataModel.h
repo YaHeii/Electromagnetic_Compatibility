@@ -1,5 +1,4 @@
-#ifndef DATAMODEL_H
-#define DATAMODEL_H
+#pragma once
 #include <QString>
 #include <QList>
 #include <QObject>
@@ -216,4 +215,3 @@ private:
     DataModel& operator=(const DataModel&) = delete;
 };
 
-#endif //DATAMODEL_H

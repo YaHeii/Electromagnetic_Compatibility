@@ -1,6 +1,4 @@
-#ifndef DEVICEONSHIP_H
-#define DEVICEONSHIP_H
-
+#pragma once
 #include <QWidget>
 
 
@@ -23,4 +21,3 @@ private:
 private slots:
     void on_deleteDeviceonShip_clicked();
 };
-#endif //DEVICEONSHIP_H

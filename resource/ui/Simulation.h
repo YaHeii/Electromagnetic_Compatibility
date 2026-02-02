@@ -1,6 +1,6 @@
 #pragma once
-#include "utils/PaintImage.hpp"
-#include "models/EMC_Engine.h"
+#include "Utils/PaintImage.hpp"
+#include "Simulation/EMC_Engine.h"
 #include "spdlog/spdlog.h"
 #include <QWidget>
 #include <QTabWidget>

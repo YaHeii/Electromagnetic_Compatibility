@@ -1,4 +1,4 @@
-﻿#include "../include/mainwindow.h"
+﻿#include "Resource/ui/mainwindow.h"
 #include <QApplication>
 #include <QDebug>
 #include <Windows.h>

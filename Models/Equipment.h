@@ -3,8 +3,8 @@
 #include <memory>
 #include "Antenna.h"
 #include "ship.h"
-#include "../utils/point_2D.h"
-#include "../utils/conversions.h"
+#include "Utils/point_2D.h"
+#include "Utils/conversions.h"
 enum class EquipmentType {
     TRANSMITTER,//发射机
     RECEIVER,//接收机

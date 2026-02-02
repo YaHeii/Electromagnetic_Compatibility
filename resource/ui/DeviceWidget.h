@@ -1,6 +1,4 @@
-#ifndef DEVICEWIDGET_H
-#define DEVICEWIDGET_H
-
+#pragma once
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -79,4 +77,3 @@ private slots:
     void onEquipmentTypeChanged();
 };
 
-#endif //DEVICEWIDGET_H

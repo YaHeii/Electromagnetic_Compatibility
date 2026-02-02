@@ -6,7 +6,7 @@
 #include <memory>
 #include <unordered_map>
 #include "Equipment.h"
-#include "../utils/point_2D.h"
+#include "Utils/point_2D.h"
 
 class Equipment;
 /// <summary>

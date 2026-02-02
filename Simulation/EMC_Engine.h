@@ -3,13 +3,13 @@
 #include <string>
 #include "PEModel.h"
 #include <omp.h>
-#include "core/Equipment.h"
-#include "core/fleet.h"
-#include "DataModel.h"
+#include "Models/Equipment.h"
+#include "Models/fleet.h"
+#include "Interface/DataModel.h"
 #include <stdexcept>
 #include <spdlog/spdlog.h>
 #include <fstream>
-#include "../utils/PaintImage.hpp"
+#include "Utils/PaintImage.hpp"
 
 struct InterferenceResult {
     std::string aggressor_ship_id;//干扰源船ID

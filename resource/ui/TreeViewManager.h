@@ -1,8 +1,8 @@
 #pragma once
 #include <QObject>
 #include <QAbstractItemModel>
-#include "../include/models/DataModel.h"
-#include "../ModelView/T_TreeItem.h"
+#include "Models/DataModel.h"
+#include "ModelView/T_TreeItem.h"
 
 // 前置声明
 class QTreeView;

@@ -1,4 +1,5 @@
-﻿#include "PEModel.h"
+﻿#pragma once
+#include "PEModel.h"
 #include <random>
 #include <chrono>
 #ifndef M_PI

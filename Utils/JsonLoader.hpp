@@ -6,7 +6,7 @@
 #include <QRegularExpression>
 #include <QDebug>
 #include <QStringList>
-#include "models/DataModel.h"
+#include "Interface/DataModel.h"
 #include "spdlog/spdlog.h" 
 
 class JsonLoader {

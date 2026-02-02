@@ -1,4 +1,4 @@
-#include "../../include/models/EMC_Engine.h"
+#include "EMC_Engine.h"
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -53,9 +53,9 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
     std::ofstream out("PEmodel_computing2D.csv");
     EMC_Engine::writeCSVRow(out, "Grid_X_m", "Grid_Y_m", "Path_Loss_dB");
     // 1. 定义地图网格参数
-    double map_size_km = 20.0;
+    double map_size_m = _PEdata.max_range;
     double grid_res_m = 50.0; // 50米一个像素
-    const int grid_dim = static_cast<int>((map_size_km * 1000) / grid_res_m); // 400x400
+    const int grid_dim = static_cast<int>(map_size_m / grid_res_m); // 400x400
 
     // 角度与距离参数
     const int angle_step_deg = 5;
@@ -233,7 +233,6 @@ std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_pt
 GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
     // 预分配外层 vector
     std::vector<std::vector<double>> vec(mat.rows());
-
 
     // 并行拷贝 (如果矩阵非常大，比如 2000x2000，否则单线程即可)
 #pragma omp parallel for

@@ -1,11 +1,11 @@
 #pragma once
 
 
-#include "../core/fleet.h"
-#include "../core/ship.h"
-#include "../core/Equipment.h"
-#include "../core/Antenna.h"
-#include "../models/DataModel.h"
+#include "Models/fleet.h"
+#include "Models/ship.h"
+#include "Models/Equipment.h"
+#include "Models/Antenna.h"
+#include "Interface/DataModel.h"
 #include <memory>
 
 /**

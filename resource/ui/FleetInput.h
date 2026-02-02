@@ -8,7 +8,7 @@
 #include <QSizePolicy>
 #include <vector>
 #include "spdlog/spdlog.h"
-#include "models/DataModel.h"
+#include "Interface/DataModel.h"
 #include "ElaPushButton.h"
 #include "ElaTabWidget.h"
 #include "ElaText.h"

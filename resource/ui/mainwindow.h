@@ -8,7 +8,7 @@
 #include <future>   
 #include <thread>   
 #include "ElaWindow.h"
-#include "utils/QtSpdlogSink.h" 
+#include "Utils/QtSpdlogSink.h" 
 namespace Ui {
     class MainWindow;
 }

@@ -7,7 +7,7 @@
 #include <QScrollArea>
 #include "DeviceWidget.h"
 #include "deviceonship.h"
-#include "../include/models/DataModel.h"
+#include "Interface/DataModel.h"
 #include "ElaPushButton.h"
 #include "ElaLineEdit.h"
 #include "ElaText.h"
