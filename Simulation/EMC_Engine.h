@@ -10,6 +10,7 @@
 #include <spdlog/spdlog.h>
 #include <fstream>
 #include "Utils/PaintImage.hpp"
+#include "EnvironmentConfig.h"
 
 struct InterferenceResult {
     std::string aggressor_ship_id;//干扰源船ID
@@ -33,12 +34,12 @@ struct PE_data {
 	double beamWidth_deg = 2.0;     // 波束宽度 (度)
 	double antennaPhi_deg = 2.0;     // 天线仰角 (度)
     double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
-    double dx = 50.0;          // 步进 50m
-    double dz = 0.2;           // 垂直分辨率 0.2m (越高越好，建议 <= lambda/2)
-    int nz = 2048;             // 物理高度网格 (总高度 ~400m)
-    double max_range = 20000.0;// 20 km
-	double duct_height = 20.0; // 蒸发波导高度 H0 (m)
-    double wind_speed = 7.0;   // 风速 (m/s)，用于计算 Miller-Brown 粗糙度
+ //   double dx = 50.0;          // 步进 50m
+ //   double dz = 0.2;           // 垂直分辨率 0.2m (越高越好，建议 <= lambda/2)
+ //   int nz = 2048;             // 物理高度网格 (总高度 ~400m)
+ //   double max_range = 20000.0;// 20 km
+	//double duct_height = 20.0; // 蒸发波导高度 H0 (m)
+ //   double wind_speed = 7.0;   // 风速 (m/s)，用于计算 Miller-Brown 粗糙度
 };  
 
 enum class ModelType {
@@ -49,30 +50,7 @@ using GridMap = std::vector<std::vector<double>>;
 using Matrix = std::vector<std::vector<double>>;
 using LineMap = std::vector<double>;
 using GridMatrix = Eigen::MatrixXd;
-class Propagation_Engine {
-public:
-    Propagation_Engine(ModelType model_type, std::unique_ptr<Fleet> fleet)
-        : _model_type(model_type), _fleet(std::move(fleet)) {
-        if (_model_type == ModelType::PE) {
-            //初始化PEModel
-            GridMatrix Loss2D = PEmodel_computing2D(_PEdata, 25);
-        }
-        else if (_model_type == ModelType::RayModel) {
-            //初始化RayModel
-        }
-    }
-    LineMap PEmodel_computing1D(PE_data _PEdata, double reciever_antenna_height);
-    GridMatrix PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height);
-    
-    std::vector<PE_data> EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet);
-
-private:
-    std::unique_ptr<Fleet> _fleet;
-    ModelType _model_type;
-	PE_data _PEdata;
-    GridMap _LossGrid;
-    LineMap _LossLine;
-};
+class Propagation_Engine;
 
 class EMC_Engine : public QObject {
     Q_OBJECT
@@ -81,7 +59,7 @@ public:
         : _modelType(modelType),
           _fleet(std::move(fleet)),
           _dataSnapshot(DataModel::instance()->createSnapshot()),
-          _propagationEngine(nullptr) // Always initialize pointers
+          _propagationEngine(nullptr) 
     {
         if (!_fleet) {
             spdlog::error("EMC_Engine initialization failed: fleet is null");
@@ -93,7 +71,7 @@ public:
     void do_Validation_TwoRay();
     void do_Validation_Roughness();
     void do_Validation_DuctLeakage();
-    //std::vector<InterferenceResult> EMC_computing(const Fleet& fleet);//返回受扰计算结果数组
+
     template <typename... Args>
     static void writeCSVRow(std::ofstream& out, Args... args) {
         // 使用 lambda 和 C++17 折叠表达式来处理逗号分隔
@@ -112,6 +90,7 @@ public:
         // 每一行结束后换行
         out << "\n";
     }
+
 private:
     GridMap _LossGrid;
     std::vector<PE_data> _peDataList;
@@ -120,7 +99,26 @@ private:
 	DataSnapshot _dataSnapshot;
     ModelType _modelType;
     Propagation_Engine* _propagationEngine;
-
+	EnvironmentConfig _env;
 signals:
     void peComputationFinished(const GridMap& lossGrid);
+};
+
+
+class Propagation_Engine {
+public:
+    Propagation_Engine(ModelType model_type, std::unique_ptr<Fleet> fleet)
+        : _model_type(model_type), _fleet(std::move(fleet)) {}
+
+    LineMap PEmodel_computing1D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
+    GridMatrix PEmodel_computing2D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
+    std::vector<PE_data> EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet);
+
+private:
+    std::unique_ptr<Fleet> _fleet;
+    ModelType _model_type;
+    PE_data _PEdata;
+    GridMap _LossGrid;
+    LineMap _LossLine;
+	EnvironmentConfig _env;
 };

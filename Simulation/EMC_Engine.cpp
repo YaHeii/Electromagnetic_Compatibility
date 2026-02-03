@@ -4,40 +4,40 @@
 #endif
 #include <spdlog/spdlog.h>
 
-LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_antenna_height) {
+LineMap Propagation_Engine::PEmodel_computing1D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
     // 初始化大气模型：蒸发波导高度 20m
     // 对应 Paper 2 Fig. 6(d) 和 Eq. (35)
-    AtmosphereModel atm(_PEdata.duct_height);
-    JONSWAPSurfaceGenerator surface(_PEdata.wind_speed);
+    AtmosphereModel atm(env.duct_height);
+    JONSWAPSurfaceGenerator surface(env.wind_speed);
     // 预计算折射率剖面 (Profile)
     // 这一步非常重要，避免在 step 循环中重复计算 log 函数，提升效率
-    std::vector<double> n_profile(_PEdata.nz);
-    for (int i = 0; i < _PEdata.nz; ++i) {
-        double z = i * _PEdata.dz;
+    std::vector<double> n_profile(env.nz);
+    for (int i = 0; i < env.nz; ++i) {
+        double z = i * env.dz;
         n_profile[i] = atm.getRefractiveIndex(z);
     }
 
     // 初始化求解器
-    PEModel solver(_PEdata.centralF_Ghz, _PEdata.dx, _PEdata.dz, _PEdata.nz);
+    PEModel solver(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
 
     // 初始化高斯波束：天线高度 25m
-    solver.initializeGaussian(_PEdata.sender_antenna_height,_PEdata.beamWidth_deg
-        , _PEdata.antennaPhi_deg);
+    solver.initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg
+        , PEdata.antennaPhi_deg);
 
     // 开始步进仿真
     //std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
     std::ofstream out("PEmodel_computing1D.csv");
     EMC_Engine::writeCSVRow(out, "Range", "Loss");
     //r为仿真距离（剖面）
-    for (double r = _PEdata.dx; r < _PEdata.max_range; r += _PEdata.dx) {
+    for (double r = env.dx; r < env.max_range; r += env.dx) {
         // 将预计算好的大气剖面传递给求解器
-        //solver.step_Miller_Brown(r, _PEdata.wind_speed, n_profile);
+        //solver.step_Miller_Brown(r, PEdata.wind_speed, n_profile);
         solver.step_PLST(r, n_profile, surface, 0);
 
         // 输出数据
         if (std::abs(fmod(r, 1000.0)) < 0.1) {
             // 获取接收天线高度 15m 处的损耗
-            int rx_idx = static_cast<int>(reciever_antenna_height / _PEdata.dz);
+            int rx_idx = static_cast<int>(reciever_antenna_height / env.dz);
             double loss = solver.getPathLoss(rx_idx, r);
             EMC_Engine::writeCSVRow(out, r, loss);
             _LossLine.push_back(loss);
@@ -46,33 +46,33 @@ LineMap Propagation_Engine::PEmodel_computing1D(PE_data _PEdata,double reciever_
     return _LossLine;
 }
 
-GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double reciever_antenna_height) {
-    spdlog::info("Starting 2D PE model computation for equipment: {}", _PEdata.equipmenName);
+GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
+    spdlog::info("Starting 2D PE model computation for equipment: {}", PEdata.equipmenName);
     spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
-		_PEdata.centralF_Ghz, _PEdata.max_range, _PEdata.duct_height, _PEdata.wind_speed);
+        PEdata.centralF_Ghz, env.max_range, env.duct_height, env.wind_speed);
     std::ofstream out("PEmodel_computing2D.csv");
     EMC_Engine::writeCSVRow(out, "Grid_X_m", "Grid_Y_m", "Path_Loss_dB");
     // 1. 定义地图网格参数
-    double map_size_m = _PEdata.max_range;
+    double map_size_m = env.max_range;
     double grid_res_m = 50.0; // 50米一个像素
     const int grid_dim = static_cast<int>(map_size_m / grid_res_m); // 400x400
 
     // 角度与距离参数
     const int angle_step_deg = 5;
     const int num_angles = 360 / angle_step_deg;
-    const int num_ranges = static_cast<int>(_PEdata.max_range / _PEdata.dx);
+    const int num_ranges = static_cast<int>(env.max_range / env.dx);
 
     // 默认底噪值 (dB)
     const double noise_floor = -200.0;
 
     // 2. 准备环境
-    AtmosphereModel atm(_PEdata.duct_height);
-    JONSWAPSurfaceGenerator surface(_PEdata.wind_speed);
+    AtmosphereModel atm(env.duct_height);
+    JONSWAPSurfaceGenerator surface(env.wind_speed);
     // 预计算 n_profile
-    std::vector<double> n_profile(_PEdata.nz);
+    std::vector<double> n_profile(env.nz);
 #pragma omp parallel for
-    for (int i = 0; i < _PEdata.nz; ++i) {
-        n_profile[i] = atm.getRefractiveIndex(i * _PEdata.dz);
+    for (int i = 0; i < env.nz; ++i) {
+        n_profile[i] = atm.getRefractiveIndex(i * env.dz);
     }
     Eigen::MatrixXd polar_matrix(num_angles, num_ranges);
     polar_matrix.setConstant(noise_floor); // 初始化
@@ -83,9 +83,9 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
     std::vector<std::unique_ptr<PEModel>> solvers;
     solvers.reserve(max_threads);
     for (int t = 0; t < max_threads; ++t) {
-        auto s = std::make_unique<PEModel>(_PEdata.centralF_Ghz, _PEdata.dx, _PEdata.dz, _PEdata.nz);
+        auto s = std::make_unique<PEModel>(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
         // 预初始化高斯波束
-        s->initializeGaussian(_PEdata.sender_antenna_height, _PEdata.beamWidth_deg, _PEdata.antennaPhi_deg);
+        s->initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
         solvers.push_back(std::move(s));
     }
     
@@ -95,15 +95,15 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
         PEModel* solver = solvers[tid].get();
 
         // 每个角度必须重置初始场
-        solver->initializeGaussian(_PEdata.sender_antenna_height, _PEdata.beamWidth_deg, _PEdata.antennaPhi_deg);
+        solver->initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
 
         double az_deg = i * angle_step_deg;
         double az_rad = az_deg * M_PI / 180.0;
-        int rx_z_idx = static_cast<int>(reciever_antenna_height / _PEdata.dz);
+        int rx_z_idx = static_cast<int>(reciever_antenna_height / env.dz);
 
         // 沿径向步进 (Marching)
         int range_idx = 0;
-        for (double r = _PEdata.dx; r < _PEdata.max_range && range_idx < num_ranges; r += _PEdata.dx) {
+        for (double r = env.dx; r < env.max_range && range_idx < num_ranges; r += env.dx) {
 
             // 执行一步 PE 运算
             solver->step_PLST(r, az_rad, n_profile, surface, 0.0);
@@ -121,7 +121,7 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
     //for (int i = 0; i < num_angles; ++i) {
     //    double az_deg = i * angle_step_deg;
     //    for (int j = 0; j < num_ranges; ++j) {
-    //        double r_m = (j + 1) * _PEdata.dx;
+    //        double r_m = (j + 1) * PEdata.dx;
     //        double loss = polar_matrix(i, j);
     //        EMC_Engine::writeCSVRow(out_polar, az_deg, r_m, loss);
     //    }
@@ -131,7 +131,7 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
     GridMatrix cartesian_grid = GridMatrix::Constant(grid_dim, grid_dim, static_cast<int>(noise_floor));
     double center_idx = grid_dim / 2.0;
     const double deg_to_idx = 1.0 / angle_step_deg;
-    const double inv_dx = 1.0 / _PEdata.dx;
+    const double inv_dx = 1.0 / env.dx;
     const double two_pi = 2.0 * M_PI;
 #pragma omp parallel for collapse(2)
     for (int y = 0; y < grid_dim; ++y) {
@@ -144,7 +144,7 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
             double r = std::hypot(px, py); // 更快更安全的 sqrt(x^2+y^2)
 
             // 超出最大射程直接跳过 (保留默认值)
-            if (r >= _PEdata.max_range) continue;
+            if (r >= env.max_range) continue;
 
             double theta = std::atan2(py, px); // (-PI, PI]
             if (theta < 0) theta += two_pi;    // [0, 2PI)
@@ -241,6 +241,8 @@ GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
     }
     return vec;
 }
+
+
 void EMC_Engine::do_PE_computing() {
     if (!_fleet) {
         spdlog::error("Fleet is null, cannot perform PE computing.");
@@ -257,7 +259,7 @@ void EMC_Engine::do_PE_computing() {
     for (const auto& pe_data : _peDataList) {
         // 直接矩阵相加！
         //TODO:这里使用功率叠加损耗后相加功率
-        LossMatrix += _propagationEngine->PEmodel_computing2D(pe_data, receiver_height);
+        LossMatrix += _propagationEngine->PEmodel_computing2D(pe_data, _env, receiver_height);
     }
     _LossGrid = eigen_to_vector(LossMatrix);
     // 触发信号，通知UI更新
@@ -271,12 +273,12 @@ GridMap EMC_Engine::do_PE_test() {
         pe_data.sender_antenna_height = 25.0;
         pe_data.beamWidth_deg = 2.0;      // 波束宽度
         pe_data.antennaPhi_deg = 0.0;     // 【关键】仰角改为0，确保照射海面
-        pe_data.dx = 10.0;                // 【关键】减小步长以捕捉 7m/s 的海浪
-        pe_data.dz = 0.1;                 // 适配 1GHz 波长
-        pe_data.nz = 4096;                // 保证计算域高度 ~400m
-        pe_data.max_range = 20000.0;      // 20km
-        pe_data.duct_height = 20.0;       // 蒸发波导
-        pe_data.wind_speed = 7.0;
+        _env.dx = 10.0;                // 【关键】减小步长以捕捉 7m/s 的海浪
+        _env.dz = 0.1;                 // 适配 1GHz 波长
+        _env.nz = 4096;                // 保证计算域高度 ~400m
+        _env.max_range = 20000.0;      // 20km
+        _env.duct_height = 20.0;       // 蒸发波导
+        _env.wind_speed = 7.0;
 
     //_LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 5.0); // 接收天线高度 25m
     return _LossGrid;
@@ -293,20 +295,20 @@ void EMC_Engine::do_Validation_TwoRay() {
     data.sender_antenna_height = 25.0; // ht = 25m
     data.beamWidth_deg = 20.0;  // 设宽波束，确保能照亮海面反射点
     data.antennaPhi_deg = 0.0;  // 水平发射
-    data.dx = 10.0;             
-    data.dz = 0.1;
-    data.nz = 4096;
-    data.max_range = 10000.0;   // 10km 足够看清干涉
-    data.duct_height = 0.0;     // 无波导 (标准大气)
-    data.wind_speed = 0.001;    // 近乎静止的平坦海面
+    _env.dx = 10.0;
+    _env.dz = 0.1;
+    _env.nz = 4096;
+    _env.max_range = 10000.0;   // 10km 足够看清干涉
+    _env.duct_height = 0.0;     // 无波导 (标准大气)
+    _env.wind_speed = 0.001;    // 近乎静止的平坦海面
 
     // 2. 初始化环境
     AtmosphereModel atm(0.0); 
-    JONSWAPSurfaceGenerator surface(data.wind_speed); 
-    std::vector<double> n_profile(data.nz, 1.0); 
+    JONSWAPSurfaceGenerator surface(_env.wind_speed);
+    std::vector<double> n_profile(_env.nz, 1.0);
 
     // 3. 运行 PE
-    PEModel solver(data.centralF_Ghz, data.dx, data.dz, data.nz);
+    PEModel solver(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
     solver.initializeGaussian(data.sender_antenna_height, data.beamWidth_deg, data.antennaPhi_deg);
 
     // 4. 准备导出数据
@@ -315,12 +317,12 @@ void EMC_Engine::do_Validation_TwoRay() {
 
     double receiver_h = 15.0; // hr = 15m
 
-    for (double r = data.dx; r < data.max_range; r += data.dx) {
+    for (double r = _env.dx; r < _env.max_range; r += _env.dx) {
         // 使用 PLST 步进 (由于 wind=0，PLST 应当退化为标准平坦 PE)
         solver.step_PLST(r, 0.0, n_profile, surface, 0.0);
 
         // --- A. 获取 PE 结果 ---
-        int rx_idx = static_cast<int>(receiver_h / data.dz);
+        int rx_idx = static_cast<int>(receiver_h / _env.dz);
         double pe_loss = solver.getPathLoss(rx_idx, r);
 
         // --- B. 计算理论双径结果 (Two-Ray Analytical) ---
@@ -359,18 +361,18 @@ void EMC_Engine::do_Validation_Roughness() {
     PE_data data;
     data.centralF_Ghz = 10;       // 10 GHz
     data.sender_antenna_height = 15.0;
-    data.max_range = 20000.0;    // 20 km
-    data.dx = 10.0; data.dz = 0.1; data.nz = 2048;
-    data.wind_speed = 10.0;      // 【关键】较大的风速，确保粗糙度效应明显
-    data.duct_height = 0.0;      // 暂时关闭波导，专注于表面散射验证
+    _env.max_range = 20000.0;    // 20 km
+    _env.dx = 10.0; _env.dz = 0.1; _env.nz = 2048;
+    _env.wind_speed = 10.0;      // 【关键】较大的风速，确保粗糙度效应明显
+    _env.duct_height = 0.0;      // 暂时关闭波导，专注于表面散射验证
 
     // 2. 初始化环境
-    AtmosphereModel atm(data.duct_height);
-    JONSWAPSurfaceGenerator surface(data.wind_speed);
-    std::vector<double> n_profile(data.nz, 1.0); // 标准大气 n=1
+    AtmosphereModel atm(_env.duct_height);
+    JONSWAPSurfaceGenerator surface(_env.wind_speed);
+    std::vector<double> n_profile(_env.nz, 1.0); // 标准大气 n=1
 
-    PEModel solver_mb(data.centralF_Ghz, data.dx, data.dz, data.nz); // Solver A: Miller-Brown
-    PEModel solver_plst(data.centralF_Ghz, data.dx, data.dz, data.nz); // Solver B: PLST
+    PEModel solver_mb(data.centralF_Ghz, _env.dx, _env.dz, _env.nz); // Solver A: Miller-Brown
+    PEModel solver_plst(data.centralF_Ghz, _env.dx, _env.dz, _env.nz); // Solver B: PLST
 
     // 初始化同样的高斯波束
     solver_mb.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
@@ -381,12 +383,12 @@ void EMC_Engine::do_Validation_Roughness() {
     out << "Range_m,Loss_MillerBrown,Loss_PLST\n";
 
     double rx_h = 10.0;
-    int rx_idx = rx_h / data.dz;
+    int rx_idx = rx_h / _env.dz;
 
-    for (double r = data.dx; r < data.max_range; r += data.dx) {
+    for (double r = _env.dx; r < _env.max_range; r += _env.dx) {
         // --- A. 运行 Miller-Brown (基准) ---
         // 注意：你需要确保 step_Miller_Brown 被正确声明为 public
-        solver_mb.step_Miller_Brown(r, data.wind_speed, n_profile);
+        solver_mb.step_Miller_Brown(r, _env.wind_speed, n_profile);
         double loss_mb = solver_mb.getPathLoss(rx_idx, r);
 
         // --- B. 运行 PLST (待验证对象) ---
@@ -405,11 +407,11 @@ void EMC_Engine::do_Validation_DuctLeakage() {
     PE_data data;
     data.centralF_Ghz = 10;       // 10 GHz
     data.sender_antenna_height = 10.0; // 发射机位于波导内部 (H0=20m, Ht=10m)
-    data.max_range = 50000.0;    // 【关键】距离要足够远 (50km)，累积泄漏才明显
-    data.dx = 10.0;
-    data.dz = 0.1;
-    data.nz = 2048;              // 计算高度约 200m，足以覆盖波导层(20m)和泄漏层(>20m)
-    data.duct_height = 20.0;     // 【关键】20米强蒸发波导
+    _env.max_range = 50000.0;    // 【关键】距离要足够远 (50km)，累积泄漏才明显
+    _env.dx = 10.0;
+    _env.dz = 0.1;
+    _env.nz = 2048;              // 计算高度约 200m，足以覆盖波导层(20m)和泄漏层(>20m)
+    _env.duct_height = 20.0;     // 【关键】20米强蒸发波导
 
     // 2. 准备两种场景
     // 场景 A: 平静海面 (Wind = 0) -> 能量应该被死死锁住
@@ -419,34 +421,34 @@ void EMC_Engine::do_Validation_DuctLeakage() {
 
     // 3. 初始化环境
     // 大气模型是一样的 (都是 20m 波导)
-    AtmosphereModel atm(data.duct_height);
-    std::vector<double> n_profile(data.nz);
-    for (int i = 0; i < data.nz; ++i) n_profile[i] = atm.getRefractiveIndex(i * data.dz);
+    AtmosphereModel atm(_env.duct_height);
+    std::vector<double> n_profile(_env.nz);
+    for (int i = 0; i < _env.nz; ++i) n_profile[i] = atm.getRefractiveIndex(i * _env.dz);
 
     // 表面生成器
     JONSWAPSurfaceGenerator surf_flat(wind_flat);
     JONSWAPSurfaceGenerator surf_rough(wind_rough);
 
     // 求解器
-    PEModel solver_flat(data.centralF_Ghz, data.dx, data.dz, data.nz);
-    PEModel solver_rough(data.centralF_Ghz, data.dx, data.dz, data.nz);
+    PEModel solver_flat(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
+    PEModel solver_rough(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
 
     solver_flat.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
     solver_rough.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
 
     // 4. 运行仿真到最大距离
     // 这里我们不需要中间数据，只需要跑到终点看垂直分布
-    int steps = static_cast<int>(data.max_range / data.dx);
+    int steps = static_cast<int>(_env.max_range / _env.dx);
 
     spdlog::info("Computing Flat Surface Case...");
     for (int s = 0; s < steps; ++s) {
-        double r = (s + 1) * data.dx;
+        double r = (s + 1) * _env.dx;
         solver_flat.step_PLST(r, n_profile, surf_flat, 0.0);
     }
 
     spdlog::info("Computing Rough Surface Case...");
     for (int s = 0; s < steps; ++s) {
-        double r = (s + 1) * data.dx;
+        double r = (s + 1) * _env.dx;
         solver_rough.step_PLST(r, n_profile, surf_rough, 0.0);
     }
 
@@ -455,12 +457,12 @@ void EMC_Engine::do_Validation_DuctLeakage() {
     out << "Height_m,Loss_Flat_dB,Loss_Rough_dB\n";
 
     // 遍历所有高度层
-    for (int i = 0; i < data.nz; ++i) {
-        double z = i * data.dz;
+    for (int i = 0; i < _env.nz; ++i) {
+        double z = i * _env.dz;
 
         // 获取损耗
-        double loss_flat = solver_flat.getPathLoss(i, data.max_range);
-        double loss_rough = solver_rough.getPathLoss(i, data.max_range);
+        double loss_flat = solver_flat.getPathLoss(i, _env.max_range);
+        double loss_rough = solver_rough.getPathLoss(i, _env.max_range);
 
         // 过滤掉极其微弱的数值(比如高空吸收层)，只输出有效数据
         // 或者直接输出，用Excel筛选
