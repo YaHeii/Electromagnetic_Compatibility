@@ -165,7 +165,6 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data _PEdata, double recie
             }
         }
     }
-    double center_idx = grid_dim / 2.0;
     for (int y = 0; y < grid_dim; ++y) {
         for (int x = 0; x < grid_dim; ++x) {
             double px = (x - center_idx) * grid_res_m;
@@ -226,7 +225,6 @@ std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_pt
             }
         }
     }
-
     return pe_data_list;
 }
 // Eigen Matrix -> vector<vector>

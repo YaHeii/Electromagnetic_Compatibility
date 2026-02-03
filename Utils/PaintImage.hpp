@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "qcustomplot.h"
+#include "Resource/ui/qcustomplot.h"
 #include <QWidget>
 using GridMap = std::vector<std::vector<double>>;
 inline void PEmodel_Painting2D(const GridMap& Loss_2D, QCustomPlot* PEmodel_2Dplot) {

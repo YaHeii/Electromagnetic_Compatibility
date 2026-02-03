@@ -1,7 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QAbstractItemModel>
-#include "Models/DataModel.h"
+#include "Interface/DataModel.h"
 #include "ModelView/T_TreeItem.h"
 
 // 前置声明

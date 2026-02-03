@@ -1,5 +1,5 @@
 #include "ui_mainwindow.h"
-#include "../include/mainwindow.h"
+#include "mainwindow.h"
 #include <QMessageBox>
 #include "spdlog/spdlog.h"
 #include <QMetaType> 

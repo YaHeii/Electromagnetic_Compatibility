@@ -27,12 +27,12 @@ endif()
 
 qt_standard_project_setup()
 
-set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/resource/ui)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/Resource/ui)
 
 # scan models
 file(GLOB_RECURSE MODELS CONFIGURE_DEPENDS "Models/*.cpp" "Models/*.h")
 # scan Simulation
-file(GLOB_RECURSE SIMULATION CONFIGURE_DEPENDS "Simulation/*.cpp" "Simulation/*.h")
+file(GLOB_RECURSE SIMULATION CONFIGURE_DEPENDS "Simulation/*.cpp" "Simulation/*.h" )
 # scan Interface
 file(GLOB_RECURSE INTERFACEE CONFIGURE_DEPENDS "Interface/*.cpp" "Interface/*.h")
 # scan UI
@@ -42,16 +42,32 @@ file(GLOB_RECURSE HDR_UI_RES CONFIGURE_DEPENDS "Resource/ui/*.h")
 # scan Utils 模块
 file(GLOB_RECURSE UTILS CONFIGURE_DEPENDS "Utils/*.cpp" "Utils/*.h")
 #  scan Page
-file(GLOB EXAMPLE_PAGE CONFIGURE_DEPENDS "ExamplePage/*.cpp" "ExamplePage/*.h") 
-file(GLOB MODEL_VIEW CONFIGURE_DEPENDS "ModelView/*.cpp" "ModelView/*.h") 
+file(GLOB_RECURSE EXAMPLE_PAGE CONFIGURE_DEPENDS "ExamplePage/*.cpp" "ExamplePage/*.h") 
+file(GLOB_RECURSE MODEL_VIEW CONFIGURE_DEPENDS "ModelView/*.cpp" "ModelView/*.h") 
 #  scan pic
-file(GLOB_RECURSE RESOURCE_IMAGES CONFIGURE_DEPENDS "resource/Image/*.*")
+file(GLOB_RECURSE RESOURCE_IMAGES CONFIGURE_DEPENDS "Resource/Image/*.*")
 
 # add UI
+option(BUILD_EXAMPLES "Build examples" OFF)
+option(BUILD_TESTING "Build tests" OFF)
+ set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(third_party/ElaWidgetTools)
-message(STATUS "DEBUG: MODELS = ${MODELS}")
-message(STATUS "DEBUG: SIMULATION = ${SIMULATION}")
-qt_add_executable(${APP_TARGET_NAME}
+
+#message(STATUS "---------------- DEBUG START ----------------")
+#message(STATUS "MODELS list: ${MODELS}")
+#message(STATUS "SIMULATION list: ${SIMULATION}")
+#message(STATUS "UI_FILES list: ${SRC_UI_RES}")
+#message(STATUS "UI_FILES list: ${HDR_UI_RES}")
+#message(STATUS "UI_FILES list: ${UI_FILES}")
+#message(STATUS "UI_FILES list: ${INTERFACEE}")
+#message(STATUS "UI_FILES list: ${UTILS}")
+#message(STATUS "UI_FILES list: ${UTILS}")
+#message(STATUS "UI_FILES list: ${MODEL_VIEW}")
+#message(STATUS "UI_FILES list: ${RESOURCE_IMAGES}")
+#message(STATUS "---------------- DEBUG END ------------------")
+
+add_executable(${APP_TARGET_NAME}
+    main.cpp
     ${MODELS}    ${SIMULATION}
     ${SRC_UI_RES}    ${HDR_UI_RES}  ${UI_FILES}
     ${INTERFACEE}     ${UTILS}
@@ -63,15 +79,15 @@ qt_add_executable(${APP_TARGET_NAME}
 # Use consistent indentation and argument naming for clarity
 qt_add_resources(${APP_TARGET_NAME} "app_images"
     PREFIX "/Image"    
-    BASE "resource/Image"     
+    BASE "Resource/Image"     
     FILES ${RESOURCE_IMAGES}  
 )
 
 
 # set(DSPFilters_DIR ${CMAKE_SOURCE_DIR}/third_party/DSPFilters-master)
-# target_include_directories(${APP_TARGET_NAME} PUBLIC
-#         ${DSPFilters_DIR}/shared/DSPFilters/include
-# )
+target_include_directories(${APP_TARGET_NAME} PRIVATE 
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
 set(ELA_QT_VERSION 6 CACHE STRING "Qt Version" FORCE)
 target_link_libraries(${APP_TARGET_NAME} PRIVATE
         Qt6::Core
