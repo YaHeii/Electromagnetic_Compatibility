@@ -4,244 +4,6 @@
 #endif
 #include <spdlog/spdlog.h>
 
-LineMap Propagation_Engine::PEmodel_computing1D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
-    // 初始化大气模型：蒸发波导高度 20m
-    // 对应 Paper 2 Fig. 6(d) 和 Eq. (35)
-    AtmosphereModel atm(env.duct_height);
-    JONSWAPSurfaceGenerator surface(env.wind_speed);
-    // 预计算折射率剖面 (Profile)
-    // 这一步非常重要，避免在 step 循环中重复计算 log 函数，提升效率
-    std::vector<double> n_profile(env.nz);
-    for (int i = 0; i < env.nz; ++i) {
-        double z = i * env.dz;
-        n_profile[i] = atm.getRefractiveIndex(z);
-    }
-
-    // 初始化求解器
-    PEModel solver(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
-
-    // 初始化高斯波束：天线高度 25m
-    solver.initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg
-        , PEdata.antennaPhi_deg);
-
-    // 开始步进仿真
-    //std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
-    std::ofstream out("PEmodel_computing1D.csv");
-    EMC_Engine::writeCSVRow(out, "Range", "Loss");
-    //r为仿真距离（剖面）
-    for (double r = env.dx; r < env.max_range; r += env.dx) {
-        // 将预计算好的大气剖面传递给求解器
-        //solver.step_Miller_Brown(r, PEdata.wind_speed, n_profile);
-        solver.step_PLST(r, n_profile, surface, 0);
-
-        // 输出数据
-        if (std::abs(fmod(r, 1000.0)) < 0.1) {
-            // 获取接收天线高度 15m 处的损耗
-            int rx_idx = static_cast<int>(reciever_antenna_height / env.dz);
-            double loss = solver.getPathLoss(rx_idx, r);
-            EMC_Engine::writeCSVRow(out, r, loss);
-            _LossLine.push_back(loss);
-        }
-    }
-    return _LossLine;
-}
-
-GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
-    spdlog::info("Starting 2D PE model computation for equipment: {}", PEdata.equipmenName);
-    spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
-        PEdata.centralF_Ghz, env.max_range, env.duct_height, env.wind_speed);
-    std::ofstream out("PEmodel_computing2D.csv");
-    EMC_Engine::writeCSVRow(out, "Grid_X_m", "Grid_Y_m", "Path_Loss_dB");
-    // 1. 定义地图网格参数
-    double map_size_m = env.max_range;
-    double grid_res_m = 50.0; // 50米一个像素
-    const int grid_dim = static_cast<int>(map_size_m / grid_res_m); // 400x400
-
-    // 角度与距离参数
-    const int angle_step_deg = 5;
-    const int num_angles = 360 / angle_step_deg;
-    const int num_ranges = static_cast<int>(env.max_range / env.dx);
-
-    // 默认底噪值 (dB)
-    const double noise_floor = -200.0;
-
-    // 2. 准备环境
-    AtmosphereModel atm(env.duct_height);
-    JONSWAPSurfaceGenerator surface(env.wind_speed);
-    // 预计算 n_profile
-    std::vector<double> n_profile(env.nz);
-#pragma omp parallel for
-    for (int i = 0; i < env.nz; ++i) {
-        n_profile[i] = atm.getRefractiveIndex(i * env.dz);
-    }
-    Eigen::MatrixXd polar_matrix(num_angles, num_ranges);
-    polar_matrix.setConstant(noise_floor); // 初始化
-
-    spdlog::info("Phase 1: Computing Polar Scan...");
-    // 创建每个线程专用的 solver 池，避免在并行循环中反复创建/销毁 FFTW 计划
-    int max_threads = omp_get_max_threads();
-    std::vector<std::unique_ptr<PEModel>> solvers;
-    solvers.reserve(max_threads);
-    for (int t = 0; t < max_threads; ++t) {
-        auto s = std::make_unique<PEModel>(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
-        // 预初始化高斯波束
-        s->initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
-        solvers.push_back(std::move(s));
-    }
-    
-#pragma omp parallel for schedule(dynamic)
-    for (int i = 0; i < num_angles; ++i) {
-        int tid = omp_get_thread_num();
-        PEModel* solver = solvers[tid].get();
-
-        // 每个角度必须重置初始场
-        solver->initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
-
-        double az_deg = i * angle_step_deg;
-        double az_rad = az_deg * M_PI / 180.0;
-        int rx_z_idx = static_cast<int>(reciever_antenna_height / env.dz);
-
-        // 沿径向步进 (Marching)
-        int range_idx = 0;
-        for (double r = env.dx; r < env.max_range && range_idx < num_ranges; r += env.dx) {
-
-            // 执行一步 PE 运算
-            solver->step_PLST(r, az_rad, n_profile, surface, 0.0);
-
-            // 获取损耗并存入 Eigen 矩阵
-            // 注意：Eigen 默认是 (row, col)
-            polar_matrix(i, range_idx) = solver->getPathLoss(rx_z_idx, r);
-
-            range_idx++;
-        }
-    }
-    //std::ofstream out_polar("PE_Raw_Polar.csv");
-    //EMC_Engine::writeCSVRow(out_polar, "Angle_Deg", "Range_m", "Loss_dB");
-
-    //for (int i = 0; i < num_angles; ++i) {
-    //    double az_deg = i * angle_step_deg;
-    //    for (int j = 0; j < num_ranges; ++j) {
-    //        double r_m = (j + 1) * PEdata.dx;
-    //        double loss = polar_matrix(i, j);
-    //        EMC_Engine::writeCSVRow(out_polar, az_deg, r_m, loss);
-    //    }
-    //}
-    //out_polar.close();
-    // 4. 坐标映射 (填满车轮空隙)
-    GridMatrix cartesian_grid = GridMatrix::Constant(grid_dim, grid_dim, static_cast<int>(noise_floor));
-    double center_idx = grid_dim / 2.0;
-    const double deg_to_idx = 1.0 / angle_step_deg;
-    const double inv_dx = 1.0 / env.dx;
-    const double two_pi = 2.0 * M_PI;
-#pragma omp parallel for collapse(2)
-    for (int y = 0; y < grid_dim; ++y) {
-        for (int x = 0; x < grid_dim; ++x) {
-            // 1. 像素 -> 物理坐标 (m)
-            double px = (x - center_idx) * grid_res_m;
-            double py = (y - center_idx) * grid_res_m; // 假设 y 向上为正，若绘图库相反需调整
-
-            // 2. 物理坐标 -> 极坐标 (r, theta)
-            double r = std::hypot(px, py); // 更快更安全的 sqrt(x^2+y^2)
-
-            // 超出最大射程直接跳过 (保留默认值)
-            if (r >= env.max_range) continue;
-
-            double theta = std::atan2(py, px); // (-PI, PI]
-            if (theta < 0) theta += two_pi;    // [0, 2PI)
-
-            // 3. 极坐标 -> 索引 (最近邻插值 Nearest Neighbor)
-            // 角度索引
-            double az_deg = theta * 180.0 / M_PI;
-            int az_idx = static_cast<int>(std::round(az_deg * deg_to_idx));
-            if (az_idx >= num_angles) az_idx = 0; // 处理 360度
-
-            // 距离索引
-            int r_idx = static_cast<int>(r * inv_dx);
-
-            // 边界检查并赋值
-            if (r_idx >= 0 && r_idx < num_ranges) {
-                // 读取 double，转为 int 存入结果矩阵
-                cartesian_grid(y, x) = static_cast<int>(polar_matrix(az_idx, r_idx));
-            }
-        }
-    }
-    for (int y = 0; y < grid_dim; ++y) {
-        for (int x = 0; x < grid_dim; ++x) {
-            double px = (x - center_idx) * grid_res_m;
-            double py = (y - center_idx) * grid_res_m;
-
-            // 获取损耗值
-            int loss_val = cartesian_grid(y, x);
-            // 过滤无效数据：
-            // if (loss_val > noise_floor + 1.0) 
-            {
-                EMC_Engine::writeCSVRow(out, px, py, loss_val);
-            }
-        }
-    }
-    out.close(); 
-    spdlog::info("CSV save complete.");
-    return cartesian_grid; 
-}
-
-
-std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet) {
-    std::vector<PE_data> pe_data_list;
-    spdlog::info("Converting Fleet to PE_data list...");
-    for (const auto& ship_ptr : fleet->getShips()) {
-        const ship& current_ship = *ship_ptr;
-
-        for (const auto& equip_ptr : current_ship.getEquipmentList()) {
-            Equipment* equipment = equip_ptr.get();
-            
-            // 尝试将 Equipment* 动态转换为 Transmitter* 或 Transceiver*
-            Transmitter* tx = dynamic_cast<Transmitter*>(equipment);
-            Transceiver* trx = dynamic_cast<Transceiver*>(equipment);
-
-            if (tx || trx) {
-                PE_data pe_data;
-
-                pe_data.shipID = current_ship.getID();
-                pe_data.equipmenName = equipment->getID();
-
-                // 获取天线和位置信息
-                Point3D ship_pos = current_ship.getLocation();
-                Point3D equip_pos = equipment->getRelativePosition();
-                pe_data.sender_antenna_height = ship_pos._z + equip_pos._z;
-
-                if (tx) {
-                    pe_data.antennaType = tx->getAntennaType_string();
-                    pe_data.beamWidth_deg = tx->getBeamWidth();
-                    pe_data.antennaPhi_deg = tx->getAntennaPhi();
-                    pe_data.centralF_Ghz = tx->getFrequencyMHz() / 1000.0;
-                } else { // trx
-                    pe_data.antennaType = trx->getAntennaType_string();
-                    pe_data.beamWidth_deg = trx->getBeamWidth();
-                    pe_data.antennaPhi_deg = trx->getAntennaPhi();
-                    pe_data.centralF_Ghz = trx->getTXFrequencyMHz() / 1000.0;
-                }
-                
-                pe_data_list.push_back(pe_data);
-            }
-        }
-    }
-    return pe_data_list;
-}
-// Eigen Matrix -> vector<vector>
-GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
-    // 预分配外层 vector
-    std::vector<std::vector<double>> vec(mat.rows());
-
-    // 并行拷贝 (如果矩阵非常大，比如 2000x2000，否则单线程即可)
-#pragma omp parallel for
-    for (long i = 0; i < mat.rows(); ++i) {
-        // resize 内层
-        vec[i].resize(mat.cols());
-        Eigen::Map<Eigen::VectorXd>(vec[i].data(), mat.cols()) = mat.row(i);
-    }
-    return vec;
-}
-
 
 void EMC_Engine::do_PE_computing() {
     if (!_fleet) {
@@ -268,17 +30,17 @@ void EMC_Engine::do_PE_computing() {
 
 GridMap EMC_Engine::do_PE_test() {
     spdlog::info("Starting PE test computation...");
-        PE_data pe_data;
-        pe_data.centralF_Ghz = 1;          // 1 GHz (确保单位正确)
-        pe_data.sender_antenna_height = 25.0;
-        pe_data.beamWidth_deg = 2.0;      // 波束宽度
-        pe_data.antennaPhi_deg = 0.0;     // 【关键】仰角改为0，确保照射海面
-        _env.dx = 10.0;                // 【关键】减小步长以捕捉 7m/s 的海浪
-        _env.dz = 0.1;                 // 适配 1GHz 波长
-        _env.nz = 4096;                // 保证计算域高度 ~400m
-        _env.max_range = 20000.0;      // 20km
-        _env.duct_height = 20.0;       // 蒸发波导
-        _env.wind_speed = 7.0;
+    PE_data pe_data;
+    pe_data.centralF_Ghz = 1;          // 1 GHz (确保单位正确)
+    pe_data.sender_antenna_height = 25.0;
+    pe_data.beamWidth_deg = 2.0;      // 波束宽度
+    pe_data.antennaPhi_deg = 0.0;     // 【关键】仰角改为0，确保照射海面
+    _env.dx = 10.0;                // 【关键】减小步长以捕捉 7m/s 的海浪
+    _env.dz = 0.1;                 // 适配 1GHz 波长
+    _env.nz = 4096;                // 保证计算域高度 ~400m
+    _env.max_range = 20000.0;      // 20km
+    _env.duct_height = 20.0;       // 蒸发波导
+    _env.wind_speed = 7.0;
 
     //_LossGrid = _propagationEngine->PEmodel_computing2D(pe_data, 5.0); // 接收天线高度 25m
     return _LossGrid;
@@ -303,7 +65,7 @@ void EMC_Engine::do_Validation_TwoRay() {
     _env.wind_speed = 0.001;    // 近乎静止的平坦海面
 
     // 2. 初始化环境
-    AtmosphereModel atm(0.0); 
+    AtmosphereModel atm(0.0);
     JONSWAPSurfaceGenerator surface(_env.wind_speed);
     std::vector<double> n_profile(_env.nz, 1.0);
 
@@ -329,23 +91,23 @@ void EMC_Engine::do_Validation_TwoRay() {
         // 自由空间损耗
         double lambda = 299792458.0 / (data.centralF_Ghz * 1.0e9);
         double fspl = 20 * std::log10(4 * M_PI * r / lambda);
-        
+
         // 传播因子 F (考虑地面的反射)
         // 路径差 delta_R approx 2*ht*hr / r
         double delta_R = 2.0 * data.sender_antenna_height * receiver_h / r;
         double phase_diff = (2.0 * M_PI / lambda) * delta_R;
-        
+
         // 理想导体反射系数 Gamma = -1 (即相移 PI)
         // E_total = E_direct + E_reflected = 1 + (-1)*exp(-j*k*delta_R)
         Complex E_total = 1.0 - std::exp(Complex(0, -phase_diff));
         double F_linear = std::abs(E_total); // 线性幅值
-        
+
         // 加上天线方向图修正 (因为理论公式假设全向，但我们是高斯)
         // 计算直射波角度，看它在高斯波束的哪个位置
         double direct_angle = std::atan((receiver_h - data.sender_antenna_height) / r);
         // 高斯方向图因子 G(theta)
         // 注意：这里仅仅是粗略修正，为了完美重合，建议理论公式只对比“波峰/波谷的位置”，不强求幅值绝对一致
-        
+
         double theory_loss = fspl - 20 * std::log10(F_linear + 1e-10);
 
         out << r << "," << pe_loss << "," << theory_loss << "\n";
@@ -473,3 +235,228 @@ void EMC_Engine::do_Validation_DuctLeakage() {
     out.close();
     spdlog::info("Validation data saved to validation_leakage.csv");
 }
+
+void EMC_Engine::InitPropagationEngine() {
+    _propagationEngine = new Propagation_Engine(_modelType, _fleet.get());
+}
+
+LineMap Propagation_Engine::PEmodel_computing1D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
+    // 初始化大气模型：蒸发波导高度 20m
+    // 对应 Paper 2 Fig. 6(d) 和 Eq. (35)
+    AtmosphereModel atm(env.duct_height);
+    JONSWAPSurfaceGenerator surface(env.wind_speed);
+    // 预计算折射率剖面 (Profile)
+    // 这一步非常重要，避免在 step 循环中重复计算 log 函数，提升效率
+    std::vector<double> n_profile(env.nz);
+    for (int i = 0; i < env.nz; ++i) {
+        double z = i * env.dz;
+        n_profile[i] = atm.getRefractiveIndex(z);
+    }
+
+    // 初始化求解器
+    PEModel solver(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
+
+    // 初始化高斯波束：天线高度 25m
+    solver.initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg
+        , PEdata.antennaPhi_deg);
+
+    // 开始步进仿真
+    //std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
+    std::ofstream out("PEmodel_computing1D.csv");
+    EMC_Engine::writeCSVRow(out, "Range", "Loss");
+    //r为仿真距离（剖面）
+    for (double r = env.dx; r < env.max_range; r += env.dx) {
+        // 将预计算好的大气剖面传递给求解器
+        //solver.step_Miller_Brown(r, PEdata.wind_speed, n_profile);
+        solver.step_PLST(r, n_profile, surface, 0);
+
+        // 输出数据
+        if (std::abs(fmod(r, 1000.0)) < 0.1) {
+            // 获取接收天线高度 15m 处的损耗
+            int rx_idx = static_cast<int>(reciever_antenna_height / env.dz);
+            double loss = solver.getPathLoss(rx_idx, r);
+            EMC_Engine::writeCSVRow(out, r, loss);
+            _LossLine.push_back(loss);
+        }
+    }
+    return _LossLine;
+}
+
+GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
+    spdlog::info("Starting 2D PE model computation for equipment: {}", PEdata.equipmenName);
+    spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
+        PEdata.centralF_Ghz, env.max_range, env.duct_height, env.wind_speed);
+    // 1. 定义地图网格参数
+    double map_size_m = env.max_range;
+    double grid_res_m = env.dx; 
+    const int grid_dim = static_cast<int>(map_size_m / grid_res_m);
+
+    // 角度与距离参数
+    const int num_angles = 360 / env.angle_step_deg;
+    const int num_ranges = static_cast<int>(env.max_range / env.dx);
+
+    // 默认底噪值 (dB)
+    const double noise_floor = -200.0;
+
+    // 2. 准备环境
+    AtmosphereModel atm(env.duct_height);
+    JONSWAPSurfaceGenerator surface(env.wind_speed);
+    // 预计算 n_profile 折射率
+    std::vector<double> n_profile(env.nz);
+#pragma omp parallel for
+    for (int i = 0; i < env.nz; ++i) {
+        n_profile[i] = atm.getRefractiveIndex(i * env.dz);
+    }
+    Eigen::MatrixXd polar_matrix(num_angles, num_ranges);
+    polar_matrix.setConstant(noise_floor); // 初始化
+
+    spdlog::info("Phase 1: Computing Polar Scan...");
+    // 创建每个线程专用的 solver 池，避免在并行循环中反复创建/销毁 FFTW 计划
+    int max_threads = omp_get_max_threads();
+    std::vector<std::unique_ptr<PEModel>> solvers;
+    solvers.reserve(max_threads);
+    for (int t = 0; t < max_threads; ++t) {
+        auto s = std::make_unique<PEModel>(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
+        // 预初始化高斯波束
+        s->initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
+        solvers.push_back(std::move(s));
+    }
+    
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < num_angles; ++i) {
+        int tid = omp_get_thread_num();
+        PEModel* solver = solvers[tid].get();
+
+        // 每个角度必须重置初始场
+        solver->initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
+
+        double az_deg = i * env.angle_step_deg;
+        double az_rad = az_deg * M_PI / 180.0;
+        int rx_z_idx = static_cast<int>(reciever_antenna_height / env.dz);
+
+        // 沿径向步进 (Marching)
+        int range_idx = 0;
+        for (double r = env.dx; r < env.max_range && range_idx < num_ranges; r += env.dx) {
+
+            // 执行一步 PE 运算
+            solver->step_PLST(r, az_rad, n_profile, surface, 0.0);
+
+            // 获取损耗并存入 Eigen 矩阵
+            // 注意：Eigen 默认是 (row, col)
+            polar_matrix(i, range_idx) = solver->getPathLoss(rx_z_idx, r);
+
+            range_idx++;
+        }
+    }
+    //std::ofstream out_polar("PE_Raw_Polar.csv");
+    //EMC_Engine::writeCSVRow(out_polar, "Angle_Deg", "Range_m", "Loss_dB");
+
+    //for (int i = 0; i < num_angles; ++i) {
+    //    double az_deg = i * angle_step_deg;
+    //    for (int j = 0; j < num_ranges; ++j) {
+    //        double r_m = (j + 1) * PEdata.dx;
+    //        double loss = polar_matrix(i, j);
+    //        EMC_Engine::writeCSVRow(out_polar, az_deg, r_m, loss);
+    //    }
+    //}
+    //out_polar.close();
+    // 4. 坐标映射 (填满车轮空隙)
+    GridMatrix cartesian_grid = GridMatrix::Constant(grid_dim, grid_dim, static_cast<int>(noise_floor));
+    double center_idx = grid_dim / 2.0;
+    const double deg_to_idx = 1.0 / env.angle_step_deg;
+    const double inv_dx = 1.0 / env.dx;
+    const double two_pi = 2.0 * M_PI;
+#pragma omp parallel for collapse(2)
+    for (int y = 0; y < grid_dim; ++y) {
+        for (int x = 0; x < grid_dim; ++x) {
+            // 1. 像素 -> 物理坐标 (m)
+            double px = (x - center_idx) * grid_res_m;
+            double py = (y - center_idx) * grid_res_m; // 假设 y 向上为正，若绘图库相反需调整
+
+            // 2. 物理坐标 -> 极坐标 (r, theta)
+            double r = std::hypot(px, py); // 更快更安全的 sqrt(x^2+y^2)
+
+            // 超出最大射程直接跳过 (保留默认值)
+            if (r >= env.max_range) continue;
+
+            double theta = std::atan2(py, px); // (-PI, PI]
+            if (theta < 0) theta += two_pi;    // [0, 2PI)
+
+            // 3. 极坐标 -> 索引 (最近邻插值 Nearest Neighbor)
+            // 角度索引
+            double az_deg = theta * 180.0 / M_PI;
+            int az_idx = static_cast<int>(std::round(az_deg * deg_to_idx));
+            if (az_idx >= num_angles) az_idx = 0; // 处理 360度
+
+            // 距离索引
+            int r_idx = static_cast<int>(r * inv_dx);
+
+            // 边界检查并赋值
+            if (r_idx >= 0 && r_idx < num_ranges) {
+                // 读取 double，转为 int 存入结果矩阵
+                cartesian_grid(y, x) = static_cast<int>(polar_matrix(az_idx, r_idx));
+            }
+        }
+    }
+
+    return cartesian_grid; 
+}
+
+
+std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet) {
+    std::vector<PE_data> pe_data_list;
+    spdlog::info("Converting Fleet to PE_data list...");
+    for (const auto& ship_ptr : fleet->getShips()) {
+        const ship& current_ship = *ship_ptr;
+
+        for (const auto& equip_ptr : current_ship.getEquipmentList()) {
+            Equipment* equipment = equip_ptr.get();
+            
+            // 尝试将 Equipment* 动态转换为 Transmitter* 或 Transceiver*
+            Transmitter* tx = dynamic_cast<Transmitter*>(equipment);
+            Transceiver* trx = dynamic_cast<Transceiver*>(equipment);
+
+            if (tx || trx) {
+                PE_data pe_data;
+
+                pe_data.shipID = current_ship.getID();
+                pe_data.equipmenName = equipment->getID();
+
+                // 获取天线和位置信息
+                Point3D ship_pos = current_ship.getLocation();
+                Point3D equip_pos = equipment->getRelativePosition();
+                pe_data.sender_antenna_height = ship_pos._z + equip_pos._z;
+
+                if (tx) {
+                    pe_data.antennaType = tx->getAntennaType_string();
+                    pe_data.beamWidth_deg = tx->getBeamWidth();
+                    pe_data.antennaPhi_deg = tx->getAntennaPhi();
+                    pe_data.centralF_Ghz = tx->getFrequencyMHz() / 1000.0;
+                } else { // trx
+                    pe_data.antennaType = trx->getAntennaType_string();
+                    pe_data.beamWidth_deg = trx->getBeamWidth();
+                    pe_data.antennaPhi_deg = trx->getAntennaPhi();
+                    pe_data.centralF_Ghz = trx->getTXFrequencyMHz() / 1000.0;
+                }
+                
+                pe_data_list.push_back(pe_data);
+            }
+        }
+    }
+    return pe_data_list;
+}
+// Eigen Matrix -> vector<vector>
+GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
+    // 预分配外层 vector
+    std::vector<std::vector<double>> vec(mat.rows());
+
+    // 并行拷贝 (如果矩阵非常大，比如 2000x2000，否则单线程即可)
+#pragma omp parallel for
+    for (long i = 0; i < mat.rows(); ++i) {
+        // resize 内层
+        vec[i].resize(mat.cols());
+        Eigen::Map<Eigen::VectorXd>(vec[i].data(), mat.cols()) = mat.row(i);
+    }
+    return vec;
+}
+

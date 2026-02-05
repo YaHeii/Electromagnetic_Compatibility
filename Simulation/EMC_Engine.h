@@ -34,12 +34,6 @@ struct PE_data {
 	double beamWidth_deg = 2.0;     // 波束宽度 (度)
 	double antennaPhi_deg = 2.0;     // 天线仰角 (度)
     double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
- //   double dx = 50.0;          // 步进 50m
- //   double dz = 0.2;           // 垂直分辨率 0.2m (越高越好，建议 <= lambda/2)
- //   int nz = 2048;             // 物理高度网格 (总高度 ~400m)
- //   double max_range = 20000.0;// 20 km
-	//double duct_height = 20.0; // 蒸发波导高度 H0 (m)
- //   double wind_speed = 7.0;   // 风速 (m/s)，用于计算 Miller-Brown 粗糙度
 };  
 
 enum class ModelType {
@@ -51,7 +45,6 @@ using Matrix = std::vector<std::vector<double>>;
 using LineMap = std::vector<double>;
 using GridMatrix = Eigen::MatrixXd;
 class Propagation_Engine;
-
 class EMC_Engine : public QObject {
     Q_OBJECT
 public:
@@ -65,7 +58,7 @@ public:
             spdlog::error("EMC_Engine initialization failed: fleet is null");
         }
     }
-
+	void InitPropagationEngine();
     void do_PE_computing();
     GridMap do_PE_test();
     void do_Validation_TwoRay();
@@ -107,15 +100,15 @@ signals:
 
 class Propagation_Engine {
 public:
-    Propagation_Engine(ModelType model_type, std::unique_ptr<Fleet> fleet)
-        : _model_type(model_type), _fleet(std::move(fleet)) {}
-
+    Propagation_Engine(ModelType model_type, const Fleet* fleet)
+        : _model_type(model_type), _fleet(fleet) {}
+    std::vector<PE_data> EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet);
     LineMap PEmodel_computing1D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
     GridMatrix PEmodel_computing2D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
-    std::vector<PE_data> EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet);
+
 
 private:
-    std::unique_ptr<Fleet> _fleet;
+    const Fleet* _fleet;
     ModelType _model_type;
     PE_data _PEdata;
     GridMap _LossGrid;
