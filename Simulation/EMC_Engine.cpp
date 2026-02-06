@@ -30,15 +30,20 @@ void EMC_Engine::do_PE_computing() {
     _peDataList = EMC_Engine::EquipmentConvertToMatrix(_fleet.get());
     spdlog::info("Starting PE computations for {} equipment items...", _peDataList.size());
     // 这里可以根据 pe_data 的参数调整接收天线高度，暂时固定为 25.0
+    // TODO: 设置reciever_PE_data, 支持针对不同接收设备来做PE计算
     double receiver_height = 25.0;
     // 计算二维损耗网格
-    Eigen::MatrixXd LossMatrix = Eigen::MatrixXd::Zero(400, 400);
-    for (const auto& pe_data : _peDataList) {
-        // 直接矩阵相加！
-        //TODO:这里使用功率叠加损耗后相加功率
-        LossMatrix += _propagationEngine->PEmodel_computing2D(pe_data, _env, receiver_height);
+    for (auto& pe_data : _peDataList) {
+        pe_data.PowerGrid = eigen_to_vector(pe_data.power_dbm - _propagationEngine->PEmodel_computing2D(pe_data, _env, receiver_height).array());
     }
-    _LossGrid = eigen_to_vector(LossMatrix);
+    //REVIEW: 是否使用GridMatrix优化计算
+    for (const auto& pe_data : _peDataList) {
+        for (size_t i = 0; i < _LossGrid.size(); ++i) {
+            for (size_t j = 0; j < _LossGrid[i].size(); ++j) {
+                _LossGrid[i][j] += pe_data.PowerGrid[i][j];
+            }
+        }
+    }
     // 触发信号，通知UI更新
     emit peComputationFinished(_LossGrid);
 }
@@ -428,6 +433,7 @@ std::vector<Transmitter_PE_data> EMC_Engine::EquipmentConvertToMatrix(Fleet* fle
                 Transmitter* transmitter_ptr = dynamic_cast<Transmitter*>(equip_ptr.get());
                 data.equipmenName = transmitter_ptr->getID();
                 data.antennaType = transmitter_ptr->getAntennaType();
+                data.power_dbm = transmitter_ptr->getPowerDBm();
                 data.antenna_height = transmitter_ptr->getHeight() + ship_ptr->getHeight();
                 data.beamWidth_deg = transmitter_ptr->getBeamWidth();
                 data.antennaPhi_deg = transmitter_ptr->getAntennaPhi();

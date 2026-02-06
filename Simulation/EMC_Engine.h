@@ -26,13 +26,16 @@ struct InterferenceResult {
     bool is_communication_degraded; // 通信是否受损
     bool is_interference_degraded; // 干扰裕度是否超限
 };
+//TODO：单独建立Interface/TransferToPEdata
 struct Transmitter_PE_data {
     std::string equipmenName = "DefaultEquipment"; // 设备名
     AntennaType antennaType = AntennaType::OMNI; // 天线类型
-	double antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
+	double power_dbm = 0.0; // 发射功率 (dBm)
+    double antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
 	double beamWidth_deg = 2.0;     // 波束宽度 (度)
 	double antennaPhi_deg = 2.0;     // 天线仰角 (度)
     double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
+    GridMap PowerGrid = GridMap(0, LineMap(0)); // 传播损耗网格
 };  
 
 enum class ModelType {
