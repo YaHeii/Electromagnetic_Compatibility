@@ -33,7 +33,8 @@ public:
 
 	// 获取船位置
     Point3D getLocation() const { return _location; }
-	// 获取船ID
+	double getHeight() const { return _location.getZ(); }
+    // 获取船ID
     const std::string& getID() const { return _id; }
     // 获取船速
     double getSpeed() const { return _speed; }

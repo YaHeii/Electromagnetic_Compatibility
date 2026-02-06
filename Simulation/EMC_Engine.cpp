@@ -3,6 +3,21 @@
 #define M_PI 3.14159265358979323846
 #endif
 #include <spdlog/spdlog.h>
+// Eigen Matrix -> GridMap
+GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
+    // 预分配外层 vector
+    std::vector<std::vector<double>> vec(mat.rows());
+
+    // 并行拷贝 (如果矩阵非常大，比如 2000x2000，否则单线程即可)
+#pragma omp parallel for
+    for (long i = 0; i < mat.rows(); ++i) {
+        // resize 内层
+        vec[i].resize(mat.cols());
+        Eigen::Map<Eigen::VectorXd>(vec[i].data(), mat.cols()) = mat.row(i);
+    }
+    return vec;
+}
+
 
 
 void EMC_Engine::do_PE_computing() {
@@ -12,7 +27,7 @@ void EMC_Engine::do_PE_computing() {
     }
 
     // 将所有船只和设备转换为 PE_data 列表
-    _peDataList = _propagationEngine->EquipmentConvertToMatrix(std::move(_fleet));
+    _peDataList = EMC_Engine::EquipmentConvertToMatrix(_fleet.get());
     spdlog::info("Starting PE computations for {} equipment items...", _peDataList.size());
     // 这里可以根据 pe_data 的参数调整接收天线高度，暂时固定为 25.0
     double receiver_height = 25.0;
@@ -30,9 +45,9 @@ void EMC_Engine::do_PE_computing() {
 
 GridMap EMC_Engine::do_PE_test() {
     spdlog::info("Starting PE test computation...");
-    PE_data pe_data;
+    Transmitter_PE_data pe_data;
     pe_data.centralF_Ghz = 1;          // 1 GHz (确保单位正确)
-    pe_data.sender_antenna_height = 25.0;
+    pe_data.antenna_height = 25.0;
     pe_data.beamWidth_deg = 2.0;      // 波束宽度
     pe_data.antennaPhi_deg = 0.0;     // 【关键】仰角改为0，确保照射海面
     _env.dx = 10.0;                // 【关键】减小步长以捕捉 7m/s 的海浪
@@ -52,9 +67,9 @@ void EMC_Engine::do_Validation_TwoRay() {
     spdlog::info("Starting Level 1 Validation: Flat Sea & Standard Atmosphere...");
 
     // 1. 设置退化参数
-    PE_data data;
+    Transmitter_PE_data data;
     data.centralF_Ghz = 1;       // 1 GHz
-    data.sender_antenna_height = 25.0; // ht = 25m
+    data.antenna_height = 25.0; // ht = 25m
     data.beamWidth_deg = 20.0;  // 设宽波束，确保能照亮海面反射点
     data.antennaPhi_deg = 0.0;  // 水平发射
     _env.dx = 10.0;
@@ -71,7 +86,7 @@ void EMC_Engine::do_Validation_TwoRay() {
 
     // 3. 运行 PE
     PEModel solver(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
-    solver.initializeGaussian(data.sender_antenna_height, data.beamWidth_deg, data.antennaPhi_deg);
+    solver.initializeGaussian(data.antenna_height, data.beamWidth_deg, data.antennaPhi_deg);
 
     // 4. 准备导出数据
     std::ofstream out("validation_data.csv");
@@ -94,7 +109,7 @@ void EMC_Engine::do_Validation_TwoRay() {
 
         // 传播因子 F (考虑地面的反射)
         // 路径差 delta_R approx 2*ht*hr / r
-        double delta_R = 2.0 * data.sender_antenna_height * receiver_h / r;
+        double delta_R = 2.0 * data.antenna_height * receiver_h / r;
         double phase_diff = (2.0 * M_PI / lambda) * delta_R;
 
         // 理想导体反射系数 Gamma = -1 (即相移 PI)
@@ -104,7 +119,7 @@ void EMC_Engine::do_Validation_TwoRay() {
 
         // 加上天线方向图修正 (因为理论公式假设全向，但我们是高斯)
         // 计算直射波角度，看它在高斯波束的哪个位置
-        double direct_angle = std::atan((receiver_h - data.sender_antenna_height) / r);
+        double direct_angle = std::atan((receiver_h - data.antenna_height) / r);
         // 高斯方向图因子 G(theta)
         // 注意：这里仅仅是粗略修正，为了完美重合，建议理论公式只对比“波峰/波谷的位置”，不强求幅值绝对一致
 
@@ -120,9 +135,9 @@ void EMC_Engine::do_Validation_Roughness() {
     spdlog::info("Starting Level 2 Validation: PLST vs Miller-Brown...");
 
     // 1. 设置测试参数 (典型的 X 波段海面场景)
-    PE_data data;
+    Transmitter_PE_data data;
     data.centralF_Ghz = 10;       // 10 GHz
-    data.sender_antenna_height = 15.0;
+    data.antenna_height = 15.0;
     _env.max_range = 20000.0;    // 20 km
     _env.dx = 10.0; _env.dz = 0.1; _env.nz = 2048;
     _env.wind_speed = 10.0;      // 【关键】较大的风速，确保粗糙度效应明显
@@ -137,8 +152,8 @@ void EMC_Engine::do_Validation_Roughness() {
     PEModel solver_plst(data.centralF_Ghz, _env.dx, _env.dz, _env.nz); // Solver B: PLST
 
     // 初始化同样的高斯波束
-    solver_mb.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
-    solver_plst.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
+    solver_mb.initializeGaussian(data.antenna_height, 2.0, 0.0);
+    solver_plst.initializeGaussian(data.antenna_height, 2.0, 0.0);
 
     // 3. 运行对比仿真
     std::ofstream out("validation_roughness.csv");
@@ -166,9 +181,9 @@ void EMC_Engine::do_Validation_DuctLeakage() {
     spdlog::info("Starting Level 3 Validation: Duct Leakage Effect...");
 
     // 1. 设置通用参数 (X波段，强波导)
-    PE_data data;
+    Transmitter_PE_data data;
     data.centralF_Ghz = 10;       // 10 GHz
-    data.sender_antenna_height = 10.0; // 发射机位于波导内部 (H0=20m, Ht=10m)
+    data.antenna_height = 10.0; // 发射机位于波导内部 (H0=20m, Ht=10m)
     _env.max_range = 50000.0;    // 【关键】距离要足够远 (50km)，累积泄漏才明显
     _env.dx = 10.0;
     _env.dz = 0.1;
@@ -195,8 +210,8 @@ void EMC_Engine::do_Validation_DuctLeakage() {
     PEModel solver_flat(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
     PEModel solver_rough(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
 
-    solver_flat.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
-    solver_rough.initializeGaussian(data.sender_antenna_height, 2.0, 0.0);
+    solver_flat.initializeGaussian(data.antenna_height, 2.0, 0.0);
+    solver_rough.initializeGaussian(data.antenna_height, 2.0, 0.0);
 
     // 4. 运行仿真到最大距离
     // 这里我们不需要中间数据，只需要跑到终点看垂直分布
@@ -240,7 +255,7 @@ void EMC_Engine::InitPropagationEngine() {
     _propagationEngine = new Propagation_Engine(_modelType, _fleet.get());
 }
 
-LineMap Propagation_Engine::PEmodel_computing1D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
+LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
     // 初始化大气模型：蒸发波导高度 20m
     // 对应 Paper 2 Fig. 6(d) 和 Eq. (35)
     AtmosphereModel atm(env.duct_height);
@@ -257,7 +272,7 @@ LineMap Propagation_Engine::PEmodel_computing1D(PE_data PEdata, EnvironmentConfi
     PEModel solver(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
 
     // 初始化高斯波束：天线高度 25m
-    solver.initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg
+    solver.initializeGaussian(PEdata.antenna_height, PEdata.beamWidth_deg
         , PEdata.antennaPhi_deg);
 
     // 开始步进仿真
@@ -282,7 +297,7 @@ LineMap Propagation_Engine::PEmodel_computing1D(PE_data PEdata, EnvironmentConfi
     return _LossLine;
 }
 
-GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
+GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
     spdlog::info("Starting 2D PE model computation for equipment: {}", PEdata.equipmenName);
     spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
         PEdata.centralF_Ghz, env.max_range, env.duct_height, env.wind_speed);
@@ -318,7 +333,7 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data PEdata, EnvironmentCo
     for (int t = 0; t < max_threads; ++t) {
         auto s = std::make_unique<PEModel>(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
         // 预初始化高斯波束
-        s->initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
+        s->initializeGaussian(PEdata.antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
         solvers.push_back(std::move(s));
     }
     
@@ -328,7 +343,7 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data PEdata, EnvironmentCo
         PEModel* solver = solvers[tid].get();
 
         // 每个角度必须重置初始场
-        solver->initializeGaussian(PEdata.sender_antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
+        solver->initializeGaussian(PEdata.antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
 
         double az_deg = i * env.angle_step_deg;
         double az_rad = az_deg * M_PI / 180.0;
@@ -403,60 +418,26 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(PE_data PEdata, EnvironmentCo
 }
 
 
-std::vector<PE_data> Propagation_Engine::EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet) {
-    std::vector<PE_data> pe_data_list;
+std::vector<Transmitter_PE_data> EMC_Engine::EquipmentConvertToMatrix(Fleet* fleet) {
+    std::vector<Transmitter_PE_data> pe_data_list;
     spdlog::info("Converting Fleet to PE_data list...");
     for (const auto& ship_ptr : fleet->getShips()) {
-        const ship& current_ship = *ship_ptr;
-
-        for (const auto& equip_ptr : current_ship.getEquipmentList()) {
-            Equipment* equipment = equip_ptr.get();
-            
-            // 尝试将 Equipment* 动态转换为 Transmitter* 或 Transceiver*
-            Transmitter* tx = dynamic_cast<Transmitter*>(equipment);
-            Transceiver* trx = dynamic_cast<Transceiver*>(equipment);
-
-            if (tx || trx) {
-                PE_data pe_data;
-
-                pe_data.shipID = current_ship.getID();
-                pe_data.equipmenName = equipment->getID();
-
-                // 获取天线和位置信息
-                Point3D ship_pos = current_ship.getLocation();
-                Point3D equip_pos = equipment->getRelativePosition();
-                pe_data.sender_antenna_height = ship_pos._z + equip_pos._z;
-
-                if (tx) {
-                    pe_data.antennaType = tx->getAntennaType_string();
-                    pe_data.beamWidth_deg = tx->getBeamWidth();
-                    pe_data.antennaPhi_deg = tx->getAntennaPhi();
-                    pe_data.centralF_Ghz = tx->getFrequencyMHz() / 1000.0;
-                } else { // trx
-                    pe_data.antennaType = trx->getAntennaType_string();
-                    pe_data.beamWidth_deg = trx->getBeamWidth();
-                    pe_data.antennaPhi_deg = trx->getAntennaPhi();
-                    pe_data.centralF_Ghz = trx->getTXFrequencyMHz() / 1000.0;
-                }
-                
-                pe_data_list.push_back(pe_data);
+        for (const auto& equip_ptr : ship_ptr->getEquipmentList()) {
+            Transmitter_PE_data data;
+            if(equip_ptr->getType() == EquipmentType::TRANSMITTER || equip_ptr->getType() == EquipmentType::TRANSCEIVER) {
+                Transmitter* transmitter_ptr = dynamic_cast<Transmitter*>(equip_ptr.get());
+                data.equipmenName = transmitter_ptr->getID();
+                data.antennaType = transmitter_ptr->getAntennaType();
+                data.antenna_height = transmitter_ptr->getHeight() + ship_ptr->getHeight();
+                data.beamWidth_deg = transmitter_ptr->getBeamWidth();
+                data.antennaPhi_deg = transmitter_ptr->getAntennaPhi();
+                data.centralF_Ghz = transmitter_ptr->getFrequencyGHz();
+                pe_data_list.push_back(data);
+                spdlog::info("Added Transmitter data for equipment: {}", data.equipmenName);
+            } else {
+                spdlog::warn("Skipping Reciever(or else) equipment: {}", equip_ptr->getID());
             }
         }
     }
     return pe_data_list;
 }
-// Eigen Matrix -> vector<vector>
-GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
-    // 预分配外层 vector
-    std::vector<std::vector<double>> vec(mat.rows());
-
-    // 并行拷贝 (如果矩阵非常大，比如 2000x2000，否则单线程即可)
-#pragma omp parallel for
-    for (long i = 0; i < mat.rows(); ++i) {
-        // resize 内层
-        vec[i].resize(mat.cols());
-        Eigen::Map<Eigen::VectorXd>(vec[i].data(), mat.cols()) = mat.row(i);
-    }
-    return vec;
-}
-

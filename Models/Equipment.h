@@ -13,8 +13,8 @@ enum class EquipmentType {
 
 // 参数结构体：发射参数包
 struct TxParams {
-    double _centralF_mhz = 10000.0;
-    double _bandwidth_khz = 100.0;
+    double _centralF_Ghz = 10000.0;
+    double _bandwidth_Mhz = 100.0;
     double _power_dbm = 20.0;
     double _beamWidth = 0.0;
     double _antennaPhi = 0.0; // 指向角
@@ -24,8 +24,8 @@ struct TxParams {
 
 // 参数结构体：接收参数包
 struct RxParams {
-    double _centralF_mhz = 1000.0;
-    double _bandwidth_khz = 100.0;
+    double _centralF_Ghz = 1000.0;
+    double _bandwidth_Mhz = 100.0;
     double _sensitivity_dbm = -100.0;
     double _noise_figure_db = 3.0;
     double _SINR_threshold_db = 10.0;
@@ -52,10 +52,11 @@ public:
     std::string getID() const { return _id; }
     EquipmentType getType() const { return _type; }
     Point3D getRelativePosition() const { return _relative_position; }
+    double getHeight() const { return _relative_position.getZ(); }
     double getPowerDBm() const { return _gain_dbm; }
     Antenna* getAntenna() const { return _antenna.get(); }
     void setAntenna(std::unique_ptr<Antenna> antenna) { _antenna = std::move(antenna); }
-
+    AntennaType getAntennaType() const { return _antenna ? _antenna->getType() : AntennaType::OMNI; }
     // 设置设备相对位置的接口
     void setRelativePosition(const Point3D& position) { _relative_position = position; }
     void setRelativePosition(double x, double y, double z) { _relative_position._x = x; _relative_position._y = y; _relative_position._z = z; }
@@ -95,8 +96,8 @@ public:
 
 
     std::string getID() const { return _id; };
-    double getFrequencyMHz() const { return _params._centralF_mhz; }
-    double getBandWidthKHz() const { return _params._bandwidth_khz; }
+    double getFrequencyGHz() const { return _params._centralF_Ghz; }
+    double getBandWidthMHz() const { return _params._bandwidth_Mhz; }
     double getPowerDBm() const { return _params._power_dbm; }
     double getBeamWidth() const { return _params._beamWidth; }
     double getAntennaPhi() const { return _params._antennaPhi; }
@@ -117,9 +118,9 @@ public:
         : Equipment(id, EquipmentType::RECEIVER, pos, 0),
         _params(params), _transmitter_in_ship_id(tx_id) {}
 
-    double getFrequencyMHz() const { return _params._centralF_mhz; }
+    double getFrequencyGHz() const { return _params._centralF_Ghz; }
     double getSensitivityDBm() const { return _params._sensitivity_dbm; }
-    double getBandwidthKHz() const { return _params._bandwidth_khz; }
+    double getBandwidthKHz() const { return _params._bandwidth_Mhz; }
     double getNoiseFigureDB() const { return _params._noise_figure_db; }
     double getSINRThresholdDB() const { return _params._SINR_threshold_db; }
     double getInterferenceThresholdDB() const { return _params._interference_threshold_db; }
@@ -135,7 +136,7 @@ public:
     }
 
     double getNoiseFloorDBm() const {
-        return calculateNoiseFloor(_params._bandwidth_khz, _params._noise_figure_db);
+        return calculateNoiseFloor(_params._bandwidth_Mhz, _params._noise_figure_db);
     }
 
 private:
@@ -167,8 +168,8 @@ public:
 
     // --- 发射相关接口 ---
     std::string getID() const { return _id; };
-    double getTXFrequencyMHz() const { return _tx_params._centralF_mhz; }
-    double getTXBandWidthKHz() const { return _tx_params._bandwidth_khz; }
+    double getTXFrequencyMHz() const { return _tx_params._centralF_Ghz; }
+    double getTXBandWidthKHz() const { return _tx_params._bandwidth_Mhz; }
     double getPowerDBm() const { return _tx_params._power_dbm; }
     double getBeamWidth() const { return _tx_params._beamWidth; }
     double getAntennaPhi() const { return _tx_params._antennaPhi; }
@@ -176,9 +177,9 @@ public:
     AntennaType getAntennaType_string() const { return _tx_params._antennaType; }
 
     // --- 接收相关接口 ---
-    double getRXFrequencyMHz() const { return _rx_params._centralF_mhz; }
+    double getRXFrequencyMHz() const { return _rx_params._centralF_Ghz; }
     double getSensitivityDBm() const { return _rx_params._sensitivity_dbm; }
-    double getRXBandwidthKHz() const { return _rx_params._bandwidth_khz; }
+    double getRXBandwidthKHz() const { return _rx_params._bandwidth_Mhz; }
     double getNoiseFigureDB() const { return _rx_params._noise_figure_db; }
     double getSINRThresholdDB() const { return _rx_params._SINR_threshold_db; }
     double getInterferenceThresholdDB() const { return _rx_params._interference_threshold_db; }
@@ -190,7 +191,7 @@ public:
     // T0 = 290 K (standard temperature)
     // k*T0 in dBm/Hz = -173.97 dBm/Hz
     double getNoiseFloorDBm() const {
-        return Receiver::calculateNoiseFloor(_rx_params._bandwidth_khz, _rx_params._noise_figure_db);
+        return Receiver::calculateNoiseFloor(_rx_params._bandwidth_Mhz, _rx_params._noise_figure_db);
     }
 
 

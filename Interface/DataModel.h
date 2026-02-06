@@ -51,7 +51,7 @@ struct EquipmentData {
     double noiseFigure = 3.0;           // dB (典型噪声系数)
 
     // --- 发射机参数 ---
-    double CentralF_Transmitter = 0.0;   // MHz
+    double CentralF_Transmitter = 0.0;   // GHz
     double Bandwidth_Transmitter = 0.0;  // MHz
     //REVIEW: 发射机是否要保留增益参数
     double Power_Transmitter = 0.0;      // dBm

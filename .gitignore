@@ -21,3 +21,5 @@ compile_commands.json
 .vs/
 third_party/DSPFilters-master/*
 roo_docs/
+build/
+.vscode/

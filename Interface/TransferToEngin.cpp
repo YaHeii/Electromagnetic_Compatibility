@@ -74,8 +74,8 @@ std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const 
     // --- 发射机 ---
     if (d.equipmentType == "发射机") {
         TxParams params;
-        params._centralF_mhz = d.CentralF_Transmitter;
-        params._bandwidth_khz = d.Bandwidth_Transmitter;
+        params._centralF_Ghz = d.CentralF_Transmitter;
+        params._bandwidth_Mhz = d.Bandwidth_Transmitter;
         params._power_dbm = d.Power_Transmitter;
         params._antennaPhi = d.antennaPhi_Transmitter;
         params._beamWidth = d.Beamwidth_Transmitter;
@@ -90,8 +90,8 @@ std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const 
     // --- 接收机 ---
     else if (d.equipmentType == "接收机") {
         RxParams params;
-        params._centralF_mhz = d.CentralF_Reciever;
-        params._bandwidth_khz = d.Bandwidth_Reciever;
+        params._centralF_Ghz = d.CentralF_Reciever;
+        params._bandwidth_Mhz = d.Bandwidth_Reciever;
         params._sensitivity_dbm = d.Sensitive_reciever;
         params._noise_figure_db = d.noiseFigure;
         params._SINR_threshold_db = d.SINRMargin;
@@ -104,8 +104,8 @@ std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const 
     else if (d.equipmentType == "收发一体机") {
         // 同时构建两套参数
         TxParams txParams;
-        txParams._centralF_mhz = d.CentralF_Transmitter;
-        txParams._bandwidth_khz = d.Bandwidth_Transmitter;
+        txParams._centralF_Ghz = d.CentralF_Transmitter;
+        txParams._bandwidth_Mhz = d.Bandwidth_Transmitter;
         txParams._power_dbm = d.Power_Transmitter;
         txParams._antennaPhi = d.antennaPhi_Transmitter;
         txParams._beamWidth = d.Beamwidth_Transmitter;
@@ -113,8 +113,8 @@ std::unique_ptr<Equipment> TransferToEngine::convertDeviceDataToEquipment(const 
         txParams._antennaType = stringToAntennaType(d.antennaType_Transmitter);
 
         RxParams rxParams;
-        rxParams._centralF_mhz = d.CentralF_Reciever;
-        rxParams._bandwidth_khz = d.Bandwidth_Reciever;
+        rxParams._centralF_Ghz = d.CentralF_Reciever;
+        rxParams._bandwidth_Mhz = d.Bandwidth_Reciever;
         rxParams._sensitivity_dbm = d.Sensitive_reciever;
         rxParams._noise_figure_db = d.noiseFigure;
         rxParams._SINR_threshold_db = d.SINRMargin;

@@ -26,11 +26,10 @@ struct InterferenceResult {
     bool is_communication_degraded; // 通信是否受损
     bool is_interference_degraded; // 干扰裕度是否超限
 };
-struct PE_data {
-    std::string shipID = "DefaultShip"; // 船名
+struct Transmitter_PE_data {
     std::string equipmenName = "DefaultEquipment"; // 设备名
     AntennaType antennaType = AntennaType::OMNI; // 天线类型
-	double sender_antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
+	double antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
 	double beamWidth_deg = 2.0;     // 波束宽度 (度)
 	double antennaPhi_deg = 2.0;     // 天线仰角 (度)
     double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
@@ -64,6 +63,7 @@ public:
     void do_Validation_TwoRay();
     void do_Validation_Roughness();
     void do_Validation_DuctLeakage();
+    std::vector<Transmitter_PE_data> EquipmentConvertToMatrix(Fleet* fleet);
 
     template <typename... Args>
     static void writeCSVRow(std::ofstream& out, Args... args) {
@@ -86,7 +86,7 @@ public:
 
 private:
     GridMap _LossGrid;
-    std::vector<PE_data> _peDataList;
+    std::vector<Transmitter_PE_data> _peDataList;
     using DataSnapshot = DataModel::DataSnapshot; 
 	std::unique_ptr<Fleet> _fleet;
 	DataSnapshot _dataSnapshot;
@@ -102,15 +102,14 @@ class Propagation_Engine {
 public:
     Propagation_Engine(ModelType model_type, const Fleet* fleet)
         : _model_type(model_type), _fleet(fleet) {}
-    std::vector<PE_data> EquipmentConvertToMatrix(std::unique_ptr<Fleet> fleet);
-    LineMap PEmodel_computing1D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
-    GridMatrix PEmodel_computing2D(PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
+    LineMap PEmodel_computing1D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
+    GridMatrix PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
 
 
 private:
     const Fleet* _fleet;
     ModelType _model_type;
-    PE_data _PEdata;
+    Transmitter_PE_data _PEdata;
     GridMap _LossGrid;
     LineMap _LossLine;
 	EnvironmentConfig _env;
