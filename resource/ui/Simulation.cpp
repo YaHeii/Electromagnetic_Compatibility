@@ -83,7 +83,7 @@ void Simulation::on_StartSimulate_clicked() {
     _emcEngine = new EMC_Engine(ModelType::PE, std::move(fleet));
     connect(_emcEngine, &EMC_Engine::peComputationFinished, this, &Simulation::onSimulationFinished);
     
-    spdlog::info("Engine computing 2D loss map in background thread...");
+    spdlog::info("Engine computing 2D loss map");
     _workerThread = std::thread([this]() {
         if (this->_emcEngine) {
             this->_emcEngine->do_PE_computing();

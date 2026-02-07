@@ -28,6 +28,7 @@ struct InterferenceResult {
 };
 //TODO：单独建立Interface/TransferToPEdata
 struct Transmitter_PE_data {
+	std::string shipName = "DefaultShip"; // 船只ID
     std::string equipmenName = "DefaultEquipment"; // 设备名
     AntennaType antennaType = AntennaType::OMNI; // 天线类型
 	double power_dbm = 0.0; // 发射功率 (dBm)

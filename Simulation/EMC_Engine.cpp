@@ -18,8 +18,6 @@ GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
     return vec;
 }
 
-
-
 void EMC_Engine::do_PE_computing() {
     if (isStopRequested) {
         spdlog::info("Computing aborted by user.");
@@ -32,7 +30,10 @@ void EMC_Engine::do_PE_computing() {
 
     // 将所有船只和设备转换为 PE_data 列表
     _peDataList = EMC_Engine::EquipmentConvertToMatrix(_fleet.get());
-    spdlog::info("Starting PE computations for {} equipment items...", _peDataList.size());
+    if(_peDataList.size() == 0) {
+        spdlog::warn("No equipment data found in fleet, PE computing will be skipped.");
+        return;
+	}
     // 这里可以根据 pe_data 的参数调整接收天线高度，暂时固定为 25.0
     // TODO: 设置reciever_PE_data, 支持针对不同接收设备来做PE计算
     double receiver_height = 25.0;
@@ -41,13 +42,18 @@ void EMC_Engine::do_PE_computing() {
         pe_data.PowerGrid = eigen_to_vector(pe_data.power_dbm - _propagationEngine->PEmodel_computing2D(pe_data, _env, receiver_height).array());
     }
     std::ofstream out("PEcomputing.csv");
+    spdlog::info("PEcomputing result will be saved in PEcomputing.csv");
     EMC_Engine::writeCSVRow(out, "_LossGrid[i][j](400*400)\n");
+
     //REVIEW: 是否使用GridMatrix优化计算
     for (const auto& pe_data : _peDataList) {
         for (size_t i = 0; i < _LossGrid.size(); ++i) {
             for (size_t j = 0; j < _LossGrid[i].size(); ++j) {
+                if (isStopRequested) {
+                    spdlog::info("Computing aborted by user.");
+                    return; // 直接退出函数
+                }
                 _LossGrid[i][j] += pe_data.PowerGrid[i][j];
-
                 EMC_Engine::writeCSVRow(out, _LossGrid[i][j]," ");
             }
             EMC_Engine::writeCSVRow(out, "\n");
@@ -312,7 +318,7 @@ LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, Envi
 }
 
 GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
-    spdlog::info("Starting 2D PE model computation for equipment: {}", PEdata.equipmenName);
+    spdlog::info("Starting 2D PE model computation for equipment: {}, on ", PEdata.equipmenName);
     spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
         PEdata.centralF_Ghz, env.max_range, env.duct_height, env.wind_speed);
     // 1. 定义地图网格参数
@@ -440,6 +446,7 @@ std::vector<Transmitter_PE_data> EMC_Engine::EquipmentConvertToMatrix(Fleet* fle
             Transmitter_PE_data data;
             if(equip_ptr->getType() == EquipmentType::TRANSMITTER || equip_ptr->getType() == EquipmentType::TRANSCEIVER) {
                 Transmitter* transmitter_ptr = dynamic_cast<Transmitter*>(equip_ptr.get());
+                data.shipName = ship_ptr->getID();
                 data.equipmenName = transmitter_ptr->getID();
                 data.antennaType = transmitter_ptr->getAntennaType();
                 data.power_dbm = transmitter_ptr->getPowerDBm();
