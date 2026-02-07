@@ -191,7 +191,7 @@ public:
 	void step_PLST(double current_range, const std::vector<double>& n_profile, JONSWAPSurfaceGenerator& surface_gen, double time_sec = 0.0);
 	//二维PLST计算，加入方位角影响
     //得到当前高度下二维平面的损耗分布
-    void step_PLST(double current_range, double azimuth_rad, const std::vector<double>& n_profile, JONSWAPSurfaceGenerator& surface_gen, double time_sec = 0.0);
+    void step_PLST(double current_range, double azimuth_rad, const AtmosphereModel& atm_model, JONSWAPSurfaceGenerator& surface_gen, double time_sec);
     // PE要求垂直场分布u(0,z)
     // 初始化高斯波束 
     // $$u(0, z) = \exp\left( -\frac{(z - z_a)^2}{w_0^2} \right) \cdot \exp(i k z \sin \theta_{tilt})$$
@@ -201,7 +201,7 @@ public:
     // $$u(0, z) = \text{sinc}\left( \frac{z - z_a}{w} \right) \cdot e^{i k z \sin\theta_{tilt}}$$
     // 阵列因子
     // $$u(0, z) = \sum_{n=0}^{N-1} A_n \cdot \exp\left(-\frac{(z - z_n)^2}{w^2}\right) \cdot e^{i \phi_n}$$
-    void initializeGaussian(double antenna_height, double beamWidth_deg, double antennaPhi_deg);
+    void initializeGaussian(double antenna_phys_height, double h_start, double beamWidth_deg, double tilt_deg);
     
 
 

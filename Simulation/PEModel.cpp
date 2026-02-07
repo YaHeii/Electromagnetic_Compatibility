@@ -349,50 +349,53 @@ void PEModel::step_PLST(double current_range, const std::vector<double>& n_profi
 }
 
 //为了避免高性能计算中出现错误，所以选择复制粘贴，加入方位角影响
-void PEModel::step_PLST(double current_range, double azimuth_rad, const std::vector<double>& n_profile, JONSWAPSurfaceGenerator& surface_gen, double time_sec) {
+void PEModel::step_PLST(double current_range, double azimuth_rad, const AtmosphereModel& atm_model, JONSWAPSurfaceGenerator& surface_gen, double time_sec) {
     using Eigen::VectorXcd;
     using Eigen::Map;
-
+	// 1. 获取地形几何信息 (计算斜率 beta)
     double cos_az = std::cos(azimuth_rad);
     double sin_az = std::sin(azimuth_rad);
-
+    // 计算当前和下一步物理坐标
     double x_curr = current_range * cos_az;
     double y_curr = current_range * sin_az;
-
     double x_next = (current_range + _dx) * cos_az;
     double y_next = (current_range + _dx) * sin_az;
-
-
+    // 获取本地海面高度 z(x)
     double z_curr = surface_gen.getSurfaceHeight(x_curr, y_curr, time_sec);
     double z_next = surface_gen.getSurfaceHeight(x_next, y_next, time_sec);
-
+    // 计算斜率 beta: tan(beta) = (h_next - h_curr) / dx
     double slope = (z_next - z_curr) / _dx;
     double beta = std::atan(slope);
     double sin_beta = std::sin(beta);
     double cos_beta = std::cos(beta);
     double sin_sq_beta = sin_beta * sin_beta;
     double cos_sq_beta = cos_beta * cos_beta;
-
+    // 映射 FFTW 内存为 Eigen 向量以利用 SIMD 优化
     Map<VectorXcd> u_space(reinterpret_cast<Complex*>(_in_ptr), _fft_size);
     Map<VectorXcd> u_kspace(reinterpret_cast<Complex*>(_out_ptr), _fft_size);
-
-    double grazing_geom = std::atan(25.0 / (current_range + 1000.0)); // 假设高度25m
-
+    // --- 步骤 A: 空间域处理 (修正后的折射项) ---
+    // 估算局部掠射角（用于计算反射系数 Gamma）
+    double grazing_geom = std::atan(25.0 / (current_range + 1000.0)); //TODO:优化假设值使用外部参数 假设高度25m
     double grazing_local = grazing_geom + beta;
-
-    if (grazing_local < 1e-6) grazing_local = 1e-6;
+    if (grazing_local < 1e-6) grazing_local = 1e-6; // 避免背坡数值异常
 
     Complex eps_sea(80.0, -4.0 * M_PI * 4.0 / (_k0 * 299792458.0));
     Complex Gamma_PLST = calculateFresnel(grazing_local, eps_sea);
 
 #pragma omp parallel for
     for (int i = 0; i < _nz; ++i) {
-        double n = n_profile[i];
+        //double n = n_profile[i];
+        //double n2 = n * n;
+        // 物理高度 z = 网格高度 zeta + 当前海面高度 z_curr
+        double zeta = i * _dz;
+        double z_phys = zeta + z_curr;
+        // 采样物理高度对应的大气折射率
+        double n = atm_model.getRefractiveIndex(z_phys);
         double n2 = n * n;
-
         Complex refraction_term;
+        // 计算 PLST 修正后的空间步进因子
+        // Formula: exp(i * k0 * dx * (sqrt(n^2 - sin^2(beta)) - 1))
         double val = n2 - sin_sq_beta;
-
         if (val >= 0) {
             refraction_term = std::exp(J * _k0 * _dx * (std::sqrt(val) - 1.0));
         }
@@ -402,17 +405,18 @@ void PEModel::step_PLST(double current_range, double azimuth_rad, const std::vec
 
         u_space[i] *= refraction_term * _absorber[i];
     }
-
+    // --- 步骤 B: 镜像法实现海面边界 (u(-zeta) = Gamma * u(zeta)) ---
 #pragma omp parallel for
     for (int i = 1; i < _nz; ++i) {
         u_space[_fft_size - i] = Gamma_PLST * u_space[i];
     }
-    u_space[0] *= (1.0 + Gamma_PLST);
-
+    u_space[0] *= (1.0 + Gamma_PLST); //表面交接处理
+    // --- 步骤 C: 变换到波数域 (FFT) ---
     fftw_execute(_plan_fwd);
-
+    // --- 步骤 D: 波数域衍射 (PLST 修正后的衍射算子) ---
+    // Formula: exp(i * dx * (sqrt(k0^2 * cos^2(beta) - kz^2) - k0))
     double dk_z = 2.0 * M_PI / (_fft_size * _dz);
-    double k_eff_sq = _k0 * _k0 * cos_sq_beta; // k^2 * cos^2(beta)
+    double k_eff_sq = _k0 * _k0 * cos_sq_beta; // k^2 * cos^2(beta) 有效波数项
 
 #pragma omp parallel for
     for (int i = 0; i < _fft_size; ++i) {
@@ -424,44 +428,42 @@ void PEModel::step_PLST(double current_range, double azimuth_rad, const std::vec
         Complex diff_prop;
 
         double val = k_eff_sq - p2;
-
         if (val >= 0) {
-
             diff_prop = std::exp(J * _dx * (std::sqrt(val) - _k0));
         }
         else {
-
             diff_prop = std::exp(-_dx * std::sqrt(-val) - J * _dx * _k0);
         }
-
         u_kspace[i] *= diff_prop;
     }
-
+    // --- 步骤 E: 变回空间域并归一化 (IFFT) ---
     fftw_execute(_plan_bwd);
-
     u_space /= (double)_fft_size;
 }
 
-void PEModel::initializeGaussian(double antenna_height, double beamWidth_deg, double tilt_deg) {
+void PEModel::initializeGaussian(double antenna_phys_height, double h_start, double beamWidth_deg, double tilt_deg) {
     // 将波束宽度（角度）转换为高斯函数的空间宽度参数 w0
     // 公式推导：高斯波束的半功率波束宽度 (HPBW) 与 w0 的关系近似为 w0 = 2 / (k * sin(HPBW/2))
     double w0 = 2.0 / (_k0 * std::sin(beamWidth_deg * M_PI / 360.0));
     // 将仰角转换为弧度，用于计算相位
     double tilt_rad = std::sin(tilt_deg * M_PI / 180.0);
+    // 计算天线在变换后的网格高度 zeta_a
+    double zeta_a = antenna_phys_height - h_start;
+
     for (int i = 0; i < _fft_size; ++i) {
         reinterpret_cast<Complex*>(_in_ptr)[i] = 0.0;
     }
     for (int i = 0; i < _nz; ++i) {
-        double z = i * _dz;
+        double zeta = i * _dz;
         // 幅度部分 (Amplitude): 高斯分布
         // 对应公式：exp(-(z - za)^2 / w0^2)
         // 物理含义：能量集中在天线高度 antenna_height 附近
-        double amp = std::exp(-std::pow(z - antenna_height, 2) / std::pow(w0, 2));
-        // 相位部分 (Phase): 线性相位倾斜
+        // 在网格高度 zeta 上应用高斯分布
+        double amp = std::exp(-std::pow(zeta - zeta_a, 2) / std::pow(w0, 2));        // 相位部分 (Phase): 线性相位倾斜
         // 对应公式：exp(i * k * z * sin(theta))
         // 物理含义：通过改变相位梯度来控制波束的传播方向（仰角）
         // 如果 antennaPhi_deg = 0，则相位为 0，波束水平传播
-        Complex phase = std::exp(J * _k0 * z * tilt_rad);
+        Complex phase = std::exp(J * _k0 * zeta * tilt_rad);
         Complex val = amp * phase;
         // 填充物理空间
         reinterpret_cast<Complex*>(_in_ptr)[i] = val;

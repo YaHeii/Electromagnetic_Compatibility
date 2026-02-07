@@ -44,7 +44,7 @@ void EMC_Engine::do_PE_computing() {
     std::ofstream out("PEcomputing.csv");
     spdlog::info("PEcomputing result will be saved in PEcomputing.csv");
     writeCSVRow(out, "_LossGrid[i][j](400*400)\n");
-
+    _LossGrid.resize(_peDataList[0].PowerGrid.size());
     //REVIEW: 是否使用GridMatrix优化计算
     for (const auto& pe_data : _peDataList) {
         for (size_t i = 0; i < _LossGrid.size(); ++i) {
@@ -55,6 +55,7 @@ void EMC_Engine::do_PE_computing() {
                 }
                 _LossGrid[i][j] += pe_data.PowerGrid[i][j];
                 writeCSVRow(out, _LossGrid[i][j]," ");
+                spdlog::info("TESTING output ,mustbe deleted while running: {}", _LossGrid[i][j]);
             }
             writeCSVRow(out, "\n");
         }
@@ -106,7 +107,7 @@ void EMC_Engine::do_Validation_TwoRay() {
 
     // 3. 运行 PE
     PEModel solver(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
-    solver.initializeGaussian(data.antenna_height, data.beamWidth_deg, data.antennaPhi_deg);
+    //solver.initializeGaussian(data.antenna_height, data.beamWidth_deg, data.antennaPhi_deg);
 
     // 4. 准备导出数据
     std::ofstream out("validation_data.csv");
@@ -116,7 +117,7 @@ void EMC_Engine::do_Validation_TwoRay() {
 
     for (double r = _env.dx; r < _env.max_range; r += _env.dx) {
         // 使用 PLST 步进 (由于 wind=0，PLST 应当退化为标准平坦 PE)
-        solver.step_PLST(r, 0.0, n_profile, surface, 0.0);
+        //solver.step_PLST(r, 0.0, n_profile, surface, 0.0);
 
         // --- A. 获取 PE 结果 ---
         int rx_idx = static_cast<int>(receiver_h / _env.dz);
@@ -171,9 +172,9 @@ void EMC_Engine::do_Validation_Roughness() {
     PEModel solver_mb(data.centralF_Ghz, _env.dx, _env.dz, _env.nz); // Solver A: Miller-Brown
     PEModel solver_plst(data.centralF_Ghz, _env.dx, _env.dz, _env.nz); // Solver B: PLST
 
-    // 初始化同样的高斯波束
-    solver_mb.initializeGaussian(data.antenna_height, 2.0, 0.0);
-    solver_plst.initializeGaussian(data.antenna_height, 2.0, 0.0);
+    //// 初始化同样的高斯波束
+    //solver_mb.initializeGaussian(data.antenna_height, 2.0, 0.0);
+    //solver_plst.initializeGaussian(data.antenna_height, 2.0, 0.0);
 
     // 3. 运行对比仿真
     std::ofstream out("validation_roughness.csv");
@@ -230,8 +231,8 @@ void EMC_Engine::do_Validation_DuctLeakage() {
     PEModel solver_flat(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
     PEModel solver_rough(data.centralF_Ghz, _env.dx, _env.dz, _env.nz);
 
-    solver_flat.initializeGaussian(data.antenna_height, 2.0, 0.0);
-    solver_rough.initializeGaussian(data.antenna_height, 2.0, 0.0);
+    //solver_flat.initializeGaussian(data.antenna_height, 2.0, 0.0);
+    //solver_rough.initializeGaussian(data.antenna_height, 2.0, 0.0);
 
     // 4. 运行仿真到最大距离
     // 这里我们不需要中间数据，只需要跑到终点看垂直分布
@@ -290,8 +291,8 @@ LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, Envi
     PEModel solver(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
 
     // 初始化高斯波束：天线高度 25m
-    solver.initializeGaussian(PEdata.antenna_height, PEdata.beamWidth_deg
-        , PEdata.antennaPhi_deg);
+    //solver.initializeGaussian(PEdata.antenna_height, PEdata.beamWidth_deg
+    //    , PEdata.antennaPhi_deg);
 
     // 开始步进仿真
     //std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
@@ -332,16 +333,11 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
     // 2. 准备环境
     AtmosphereModel atm(env.duct_height);
     JONSWAPSurfaceGenerator surface(env.wind_speed);
-    // 预计算 n_profile 折射率
-    std::vector<double> n_profile(env.nz);
-#pragma omp parallel for
-    for (int i = 0; i < env.nz; ++i) {
-        n_profile[i] = atm.getRefractiveIndex(i * env.dz);
-    }
+
     Eigen::MatrixXd polar_matrix(num_angles, num_ranges);
     polar_matrix.setConstant(noise_floor); // 初始化
 
-    // 创建每个线程专用的 solver 池，避免在并行循环中反复创建/销毁 FFTW 计划
+    // 3. 创建每个线程专用的 solver 池，避免在并行循环中反复创建/销毁 FFTW 计划
     int max_threads = omp_get_max_threads();
     std::vector<std::unique_ptr<PEModel>> solvers;
     solvers.reserve(max_threads);
@@ -351,16 +347,21 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
         auto s = std::make_unique<PEModel>(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
         solvers.push_back(std::move(s));
     }
-    
+    // 4. 角度并行计算
 #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < num_angles; ++i) {
         int tid = omp_get_thread_num();
         PEModel* solver = solvers[tid].get();
 
-        // 每个角度必须重置初始场
-        solver->initializeGaussian(PEdata.antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
         double az_deg = i * env.angle_step_deg;
         double az_rad = az_deg * M_PI / 180.0;
+        double cos_az = std::cos(az_rad);
+        double sin_az = std::sin(az_rad);
+
+        // 每个角度必须重置初始场
+        // 计算起始点 (r=0) 的海面高度，修正初始场高度
+        double h_start = surface.getSurfaceHeight(0.0, 0.0, 0.0);
+        solver->initializeGaussian(PEdata.antenna_height, h_start, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
         int rx_z_idx = static_cast<int>(reciever_antenna_height / env.dz);
 
         // 沿径向步进 (Marching)
@@ -368,12 +369,22 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
         for (double r = env.dx; r < env.max_range && range_idx < num_ranges; r += env.dx) {
 
             // 执行一步 PE 运算
-            solver->step_PLST(r, az_rad, n_profile, surface, 0.0);
-
-            // 获取损耗并存入 Eigen 矩阵
-            // 注意：Eigen 默认是 (row, col)
-            polar_matrix(i, range_idx) = solver->getPathLoss(rx_z_idx, r);
+            solver->step_PLST(r, az_rad, atm, surface, 0.0);
+            // 动态高度跟踪
+            // 计算当前距离 r 处的海面高度 h(r)
+            double h_r = surface.getSurfaceHeight(r * cos_az, r * sin_az, 0.0);
+            // 接收机在 PLST 网格中的相对高度 zeta = z_phys - h(r)
+            double zeta_rx = reciever_antenna_height - h_r;
+            int rx_z_idx = static_cast<int>(zeta_rx / env.dz);
+            // 边界检查：如果接收机被海浪淹没
+            if (rx_z_idx >= 0 && rx_z_idx < env.nz) {
+                polar_matrix(i, range_idx) = solver->getPathLoss(rx_z_idx, r);
+            }
+            else {
+                polar_matrix(i, range_idx) = noise_floor;
+            }
             range_idx++;
+
         }
     }
     //std::ofstream out_polar("PE_Raw_Polar.csv");
