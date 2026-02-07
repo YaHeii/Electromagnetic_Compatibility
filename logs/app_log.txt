@@ -1,3 +1,319 @@
 [2026-01-20 22:26:10.041] [global_logger] [debug] 正在初始化....
 [2026-01-20 22:26:10.246] [global_logger] [info] MainWindow shown.
 [2026-01-20 22:26:45.737] [global_logger] [debug] 无人船 -572662307 已删除
+��ʼ���ɹ�
+
+
+QPixmap::scaled: Pixmap is a null pixmap
+QPixmap::scaled: Pixmap is a null pixmap
+QPixmap::scaled: Pixmap is a null pixmap
+QPixmap::scaled: Pixmap is a null pixmap
+QPixmap::scaled: Pixmap is a null pixmap
+QPixmap::scaled: Pixmap is a null pixmap
+QPixmap::scaled: Pixmap is a null pixmap
+QPixmap::scaled: Pixmap is a null pixmap
+QPixmap::scaled: Pixmap is a null pixmap
+qt.core.qobject.connect: QObject::connect: signal not found in TreeViewManager
+��ע����¼��б� QList("WMWindowClicked")
+[2026-02-07 14:17:02.410] [global_logger] [debug] 正在初始化....
+[2026-02-07 14:17:02.514] [global_logger] [info] MainWindow shown.
+UI Trace: Slot onLogReceived called. Msg: [14:17:02.410] 正在初始化....
+UI Trace: Slot onLogReceived called. Msg: [14:17:02.514] MainWindow shown.
+[2026-02-07 14:17:06.868] [global_logger] [info] Simulation requested...
+[2026-02-07 14:17:06.889] [global_logger] [info] 成功加载文件: D:/code/Electromagnetic_compatibility/tests/Test.json
+[2026-02-07 14:17:06.896] [global_logger] [info] 成功加载船只: USV1 (设备数量: 1)
+[2026-02-07 14:17:06.896] [global_logger] [info] 成功加载船只: USV2 (设备数量: 1)
+[2026-02-07 14:17:06.897] [global_logger] [info] 成功加载船只: USV3 (设备数量: 1)
+[2026-02-07 14:17:06.897] [global_logger] [info] 成功加载船只: USV4 (设备数量: 1)
+[2026-02-07 14:17:06.897] [global_logger] [info] 成功加载船只: USV5 (设备数量: 1)
+[2026-02-07 14:17:06.897] [global_logger] [info] 成功加载船只: USV6 (设备数量: 1)
+[2026-02-07 14:17:06.897] [global_logger] [info] 成功加载船只: USV7 (设备数量: 1)
+[2026-02-07 14:17:06.897] [global_logger] [info] 共加载船只数量: 7;设备数量：7
+[2026-02-07 14:17:06.936] [global_logger] [info] Engine computing 2D loss map
+[2026-02-07 14:17:06.937] [global_logger] [info] Converting Fleet to PE_data list...
+[2026-02-07 14:17:06.937] [global_logger] [infoUI Trace: Slot onLogReceived called. Msg: [14:17:06.868] Simulation requested...
+] Added Transmitter data for equipment: Device1
+[2026-02-07 14:17:06.937] [global_logger] [UI Trace: Slot onLogReceived called. Msg: [14:17:06.889] 成功加载文件: D:/code/Electromagnetic_compatibility/tests/Test.json
+infoUI Trace: Slot onLogReceived called. Msg: [14:17:06.896] 成功加载船只: USV1 (设备数量: 1)
+] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.896] 成功加载船只: USV2 (设备数量: 1)[2026-02-07 14:17:06.938] [global_logger] [
+info] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [2026-02-07 14:17:06.938] [global_logger] [[14:17:06.897] 成功加载船只: USV3 (设备数量: 1)
+info] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.897] 成功加载船只: USV4 (设备数量: 1)
+[2026-02-07 14:17:06.938] [global_logger] [UI Trace: Slot onLogReceived called. Msg: info] Added Transmitter data for equipment: Device1
+[14:17:06.897] 成功加载船只: USV5 (设备数量: 1)[2026-02-07 14:17:06.938] [global_logger] [
+info] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [2026-02-07 14:17:06.938] [global_logger] [[14:17:06.897] 成功加载船只: USV6 (设备数量: 1)
+info] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [2026-02-07 14:17:06.938] [global_logger] [[14:17:06.897] 成功加载船只: USV7 (设备数量: 1)
+info] Starting 2D PE model computation for equipment: Device1, on USV1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.897] 共加载船只数量: 7;设备数量：7
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.936] Engine computing 2D loss map
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.937] Converting Fleet to PE_data list...
+[2026-02-07 14:17:06.945] [global_logger] [info] Phase 1: Computing Polar Scan...
+[2026-02-07 14:17:06.946] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:06.946] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.937] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.937] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.938] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.938] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.938] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.938] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.938] Added Transmitter data for equipment: Device1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.938] Starting 2D PE model computation for equipment: Device1, on USV1
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.945] Phase 1: Computing Polar Scan...
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.946] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.946] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:06.990] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:06.990] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:06.992] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:06.992] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:06.993] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:06.993] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:06.995] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:06.995] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:06.996] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:06.996] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:06.998] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:06.998] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:07.000] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:07.000] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.990] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.990] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.992] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.992] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.993] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.993] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.995] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.995] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.996] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.996] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.998] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:06.998] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:07.000] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:07.000] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:26.909] [global_logger] [info] Starting 2D PE model computation for equipment: Device1, on USV2
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.909] Starting 2D PE model computation for equipment: Device1, on USV2
+[2026-02-07 14:17:26.909] [global_logger] [info] Phase 1: Computing Polar Scan...
+[2026-02-07 14:17:26.910] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:26.910] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.909] Phase 1: Computing Polar Scan...
+[2026-02-07 14:17:26.912] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:26.912] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:26.913] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:26.913] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:26.915] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:26.915] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:26.917] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:26.917] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:26.919] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:26.919] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:26.921] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:26.921] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:26.923] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:26.923] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.910] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.910] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.912] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.912] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.913] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.913] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.915] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.915] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.917] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.917] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.919] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.919] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.921] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.921] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.923] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:26.923] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:46.634] [global_logger] [info] Starting 2D PE model computation for equipment: Device1, on USV3
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.634] Starting 2D PE model computation for equipment: Device1, on USV3
+[2026-02-07 14:17:46.635] [global_logger] [info] Phase 1: Computing Polar Scan...
+[2026-02-07 14:17:46.635] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:46.635] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:46.638] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:46.638] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:46.641] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:46.641] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:46.644] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:46.644] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:46.646] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:46.646] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:46.648] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:46.648] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:46.650] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:46.650] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:17:46.652] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:17:46.652] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.635] Phase 1: Computing Polar Scan...
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.635] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.635] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.638] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.638] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.641] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.641] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.644] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.644] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.646] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.646] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.648] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.648] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.650] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.650] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.652] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:17:46.652] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:06.442] [global_logger] [info] Starting 2D PE model computation for equipment: Device1, on USV4
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.442] Starting 2D PE model computation for equipment: Device1, on USV4
+[2026-02-07 14:18:06.443] [global_logger] [info] Phase 1: Computing Polar Scan...
+[2026-02-07 14:18:06.443] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:06.443] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:06.446] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:06.446] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:06.447] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:06.447] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:06.449] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:06.449] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:06.451] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:06.451] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:06.453] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:06.453] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:06.455] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:06.455] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:06.457] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:06.457] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.443] Phase 1: Computing Polar Scan...
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.443] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.443] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.446] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.446] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.447] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.447] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.449] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.449] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.451] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.451] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.453] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.453] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.455] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.455] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.457] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:06.457] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:26.425] [global_logger] [info] Starting 2D PE model computation for equipment: Device1, on USV5
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.425] Starting 2D PE model computation for equipment: Device1, on USV5
+[2026-02-07 14:18:26.426] [global_logger] [info] Phase 1: Computing Polar Scan...
+[2026-02-07 14:18:26.426] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:26.426] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:26.428] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:26.428] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:26.430] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:26.430] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:26.432] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:26.432] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:26.434] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:26.434] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:26.436] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:26.436] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:26.438] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:26.438] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:26.440] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:26.440] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.426] Phase 1: Computing Polar Scan...
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.426] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.426] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.428] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.428] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.430] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.430] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.432] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.432] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.434] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.434] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.436] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.436] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.438] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.438] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.440] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:26.440] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:47.671] [global_logger] [info] Starting 2D PE model computation for equipment: Device1, on USV6
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.671] Starting 2D PE model computation for equipment: Device1, on USV6
+[2026-02-07 14:18:47.672] [global_logger] [info] Phase 1: Computing Polar Scan...
+[2026-02-07 14:18:47.672] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:47.672] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:47.674] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:47.674] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:47.676] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:47.676] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:47.679] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:47.679] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:47.681] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:47.681] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:47.684] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:47.684] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:47.686] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:47.686] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:18:47.688] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:18:47.688] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.672] Phase 1: Computing Polar Scan...
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.672] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.672] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.674] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.674] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.676] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.676] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.679] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.679] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.681] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.681] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.684] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.684] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.686] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.686] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.688] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:18:47.688] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:19:08.426] [global_logger] [info] Starting 2D PE model computation for equipment: Device1, on USV7
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.426] Starting 2D PE model computation for equipment: Device1, on USV7
+[2026-02-07 14:19:08.427] [global_logger] [info] Phase 1: Computing Polar Scan...
+[2026-02-07 14:19:08.427] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:19:08.427] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.427] Phase 1: Computing Polar Scan...
+[2026-02-07 14:19:08.429] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:19:08.429] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:19:08.431] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:19:08.431] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:19:08.433] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:19:08.433] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:19:08.435] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:19:08.435] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:19:08.437] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:19:08.437] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:19:08.439] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:19:08.439] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:19:08.441] [global_logger] [info] Frequency = 1000000000 Hz
+[2026-02-07 14:19:08.441] [global_logger] [info] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.427] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.427] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.429] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.429] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.431] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.431] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.433] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.433] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.435] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.435] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.437] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.437] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.439] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.439] Wave number k0 = 20.958450219516816 1/m
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.441] Frequency = 1000000000 Hz
+UI Trace: Slot onLogReceived called. Msg: [14:19:08.441] Wave number k0 = 20.958450219516816 1/m
+[2026-02-07 14:19:28.188] [global_logger] [info] PEcomputing result will be saved in PEcomputing.csv
+[2026-02-07 14:19:28.188] [global_logger] [info] Writing a row to CSV with 1 columns
+[2026-02-07 14:19:28.189] [global_logger] [warning] Simulation returned empty or invalid result.
+[2026-02-07 14:19:28.294] [global_logger] [UI Trace: Slot onLogReceived called. Msg: info[14:19:28.188] PEcomputing result will be saved in PEcomputing.csv] Simulation finished.
+
+UI Trace: Slot onLogReceived called. Msg: [14:19:28.188] Writing a row to CSV with 1 columns
+UI Trace: Slot onLogReceived called. Msg: [14:19:28.189] Simulation returned empty or invalid result.
+UI Trace: Slot onLogReceived called. Msg: [14:19:28.294] Simulation finished.

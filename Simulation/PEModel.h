@@ -142,8 +142,8 @@ public:
         : _freq(centralF_Ghz), _dx(dx), _dz(dz), _nz(nz) {
         _freq *= 1000000000;
         _k0 = 2.0 * M_PI * _freq / 299792458.0; // 转换为 Hz 后计算波数
-        spdlog::info("Frequency = {} Hz", _freq);
-		spdlog::info("Wave number k0 = {} 1/m", _k0);
+  //      spdlog::info("Frequency = {} Hz", _freq);
+		//spdlog::info("Wave number k0 = {} 1/m", _k0);
         // 使用镜像法：FFT 大小为 2 * nz
         // 索引 0 ~ nz-1 : 物理空间 (z > 0)
         // 索引 nz ~ 2*nz-1 : 镜像空间 (z < 0)

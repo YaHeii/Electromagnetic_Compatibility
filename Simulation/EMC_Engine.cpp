@@ -28,7 +28,6 @@ void EMC_Engine::do_PE_computing() {
         spdlog::error("Fleet is null, cannot perform PE computing.");
         return;
     }
-
     // 将所有船只和设备转换为 PE_data 列表
     _peDataList = EquipmentConvertToMatrix(_fleet.get());
     if(_peDataList.size() == 0) {
@@ -272,9 +271,7 @@ void EMC_Engine::do_Validation_DuctLeakage() {
     spdlog::info("Validation data saved to validation_leakage.csv");
 }
 
-void EMC_Engine::InitPropagationEngine() {
-    _propagationEngine = new Propagation_Engine(_modelType, _fleet.get());
-}
+
 
 LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, EnvironmentData env, double reciever_antenna_height) {
     // 初始化大气模型：蒸发波导高度 20m
@@ -344,15 +341,14 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
     Eigen::MatrixXd polar_matrix(num_angles, num_ranges);
     polar_matrix.setConstant(noise_floor); // 初始化
 
-    spdlog::info("Phase 1: Computing Polar Scan...");
     // 创建每个线程专用的 solver 池，避免在并行循环中反复创建/销毁 FFTW 计划
     int max_threads = omp_get_max_threads();
     std::vector<std::unique_ptr<PEModel>> solvers;
     solvers.reserve(max_threads);
+    static std::mutex fftw_mutex;
     for (int t = 0; t < max_threads; ++t) {
+        std::lock_guard<std::mutex> lock(fftw_mutex); // 保护 FFTW 计划创建
         auto s = std::make_unique<PEModel>(PEdata.centralF_Ghz, env.dx, env.dz, env.nz);
-        // 预初始化高斯波束
-        s->initializeGaussian(PEdata.antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
         solvers.push_back(std::move(s));
     }
     
@@ -363,7 +359,6 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
 
         // 每个角度必须重置初始场
         solver->initializeGaussian(PEdata.antenna_height, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
-
         double az_deg = i * env.angle_step_deg;
         double az_rad = az_deg * M_PI / 180.0;
         int rx_z_idx = static_cast<int>(reciever_antenna_height / env.dz);
@@ -378,7 +373,6 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
             // 获取损耗并存入 Eigen 矩阵
             // 注意：Eigen 默认是 (row, col)
             polar_matrix(i, range_idx) = solver->getPathLoss(rx_z_idx, r);
-
             range_idx++;
         }
     }
