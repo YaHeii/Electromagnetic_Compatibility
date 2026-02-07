@@ -67,7 +67,6 @@ public:
     void do_Validation_TwoRay();
     void do_Validation_Roughness();
     void do_Validation_DuctLeakage();
-    std::vector<Transmitter_PE_data> EquipmentConvertToMatrix(Fleet* fleet);
 
     template <typename... Args>
     static void writeCSVRow(std::ofstream& out, Args... args) {

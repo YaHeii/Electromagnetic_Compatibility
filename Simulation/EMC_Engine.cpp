@@ -3,6 +3,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 #include <spdlog/spdlog.h>
+#include "Interface/TransferToPEdata.hpp"
 // Eigen Matrix -> GridMap
 GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
     // 预分配外层 vector
@@ -318,9 +319,7 @@ LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, Envi
 }
 
 GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
-    spdlog::info("Starting 2D PE model computation for equipment: {}, on ", PEdata.equipmenName);
-    spdlog::info("Parameters: Frequency = {} GHz, Max Range = {} m, Duct Height = {} m, Wind Speed = {} m/s",
-        PEdata.centralF_Ghz, env.max_range, env.duct_height, env.wind_speed);
+    spdlog::info("Starting 2D PE model computation for equipment: {}, on {}", PEdata.equipmenName, PEdata.shipName);
     // 1. 定义地图网格参数
     double map_size_m = env.max_range;
     double grid_res_m = env.dx; 
@@ -438,28 +437,3 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
 }
 
 
-std::vector<Transmitter_PE_data> EMC_Engine::EquipmentConvertToMatrix(Fleet* fleet) {
-    std::vector<Transmitter_PE_data> pe_data_list;
-    spdlog::info("Converting Fleet to PE_data list...");
-    for (const auto& ship_ptr : fleet->getShips()) {
-        for (const auto& equip_ptr : ship_ptr->getEquipmentList()) {
-            Transmitter_PE_data data;
-            if(equip_ptr->getType() == EquipmentType::TRANSMITTER || equip_ptr->getType() == EquipmentType::TRANSCEIVER) {
-                Transmitter* transmitter_ptr = dynamic_cast<Transmitter*>(equip_ptr.get());
-                data.shipName = ship_ptr->getID();
-                data.equipmenName = transmitter_ptr->getID();
-                data.antennaType = transmitter_ptr->getAntennaType();
-                data.power_dbm = transmitter_ptr->getPowerDBm();
-                data.antenna_height = transmitter_ptr->getHeight() + ship_ptr->getHeight();
-                data.beamWidth_deg = transmitter_ptr->getBeamWidth();
-                data.antennaPhi_deg = transmitter_ptr->getAntennaPhi();
-                data.centralF_Ghz = transmitter_ptr->getFrequencyGHz();
-                pe_data_list.push_back(data);
-                spdlog::info("Added Transmitter data for equipment: {}", data.equipmenName);
-            } else {
-                spdlog::warn("Skipping Reciever(or else) equipment: {}", equip_ptr->getID());
-            }
-        }
-    }
-    return pe_data_list;
-}
