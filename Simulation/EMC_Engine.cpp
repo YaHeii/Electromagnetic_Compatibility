@@ -21,6 +21,10 @@ GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
 
 
 void EMC_Engine::do_PE_computing() {
+    if (isStopRequested) {
+        spdlog::info("Computing aborted by user.");
+        return; // 直接退出函数
+    }
     if (!_fleet) {
         spdlog::error("Fleet is null, cannot perform PE computing.");
         return;
@@ -36,12 +40,17 @@ void EMC_Engine::do_PE_computing() {
     for (auto& pe_data : _peDataList) {
         pe_data.PowerGrid = eigen_to_vector(pe_data.power_dbm - _propagationEngine->PEmodel_computing2D(pe_data, _env, receiver_height).array());
     }
+    std::ofstream out("PEcomputing.csv");
+    EMC_Engine::writeCSVRow(out, "_LossGrid[i][j](400*400)\n");
     //REVIEW: 是否使用GridMatrix优化计算
     for (const auto& pe_data : _peDataList) {
         for (size_t i = 0; i < _LossGrid.size(); ++i) {
             for (size_t j = 0; j < _LossGrid[i].size(); ++j) {
                 _LossGrid[i][j] += pe_data.PowerGrid[i][j];
+
+                EMC_Engine::writeCSVRow(out, _LossGrid[i][j]," ");
             }
+            EMC_Engine::writeCSVRow(out, "\n");
         }
     }
     // 触发信号，通知UI更新

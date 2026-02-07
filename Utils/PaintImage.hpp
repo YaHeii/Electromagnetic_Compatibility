@@ -2,6 +2,8 @@
 #include "Resource/ui/qcustomplot.h"
 #include <QWidget>
 using GridMap = std::vector<std::vector<double>>;
+using Matrix = std::vector<std::vector<double>>;
+using LineMap = std::vector<double>;
 inline void PEmodel_Painting2D(const GridMap& Loss_2D, QCustomPlot* PEmodel_2Dplot) {
     // 1. 检查数据有效性
     if (Loss_2D.empty() || Loss_2D[0].empty()) return;

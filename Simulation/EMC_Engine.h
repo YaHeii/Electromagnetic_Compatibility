@@ -87,7 +87,12 @@ public:
         out << "\n";
     }
 
+    void stop() {
+        isStopRequested = true;
+    }
+
 private:
+    std::atomic<bool> isStopRequested{false}; 
     GridMap _LossGrid;
     std::vector<Transmitter_PE_data> _peDataList;
     using DataSnapshot = DataModel::DataSnapshot; 

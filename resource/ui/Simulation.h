@@ -23,8 +23,7 @@ signals:
 private:
 	void setupUI();
 	EMC_Engine* _emcEngine;
-	void simulationWaiter(std::future<GridMap> future);
-
+	std::thread _workerThread;
 	// UI Components
 	QVBoxLayout* mainLayout;
 	QTabWidget* tabWidget;
@@ -42,7 +41,4 @@ public slots:
 	void on_StartSimulate_clicked();
 	// 槽函数现在接收GridMap作为参数
 	void onSimulationFinished(const GridMap& result);
-	//单张图返回
-	void onSingleGridMapReady(const GridMap& lossGrid);
-
 };

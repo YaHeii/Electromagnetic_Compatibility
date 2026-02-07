@@ -8,17 +8,22 @@
 Simulation::Simulation(QWidget* parent)
 	: QWidget(parent), _emcEngine(nullptr) {
     setupUI();
-	// 连接仿真完成信号到槽
-	connect(this, &Simulation::simulationDone, this, &Simulation::onSimulationFinished);
+
 }
 
 Simulation::~Simulation() {
+    if (_emcEngine) {
+        _emcEngine->stop(); 
+    }
+
+    if (_workerThread.joinable()) {
+        _workerThread.join(); // 阻塞主线程，直到子线程 return
+    }
     if (_emcEngine) {
         delete _emcEngine;
         _emcEngine = nullptr;
     }
 }
-
 void Simulation::setupUI()
 {
     // Main layout
@@ -52,74 +57,57 @@ void Simulation::setupUI()
 
 void Simulation::on_StartSimulate_clicked() {
     spdlog::info("Simulation requested...");
-    if (JsonLoader::LoadFile("D:/code/Electromagnetic_compatibility/tests/Test.json")) {
-
+    if (_workerThread.joinable()) {
+        _workerThread.join();
     }
-    // 准备数据快照 (深拷贝以保证线程安全)
+
+    JsonLoader::LoadFile("D:/code/Electromagnetic_compatibility/tests/Test.json");
     auto dataSnapshot = DataModel::instance()->createSnapshot();
-
-    // UI 状态更新
-    StartSimulate->setEnabled(false);
-    spdlog::info("正在进行电磁仿真计算...");
-
-    // 清空旧的绘图
+    
+    StartSimulate->setEnabled(false); // 禁用按钮防止重复点击
     PEmodel2Dplot->clearPlottables();
     PEmodel2Dplot->replot();
 
-    // 阻塞实现
     auto fleet = TransferToEngine::convertDataModelToFleet(dataSnapshot);
     if (!fleet) {
         spdlog::error("Fleet conversion failed (nullptr).");
         StartSimulate->setEnabled(true);
         return;
     }
-    
+
     if (_emcEngine) {
         delete _emcEngine;
         _emcEngine = nullptr;
     }
-    
+
     _emcEngine = new EMC_Engine(ModelType::PE, std::move(fleet));
-    connect(_emcEngine, &EMC_Engine::peComputationFinished, this, &Simulation::onSingleGridMapReady);
+    connect(_emcEngine, &EMC_Engine::peComputationFinished, this, &Simulation::onSimulationFinished);
     
-    spdlog::info("Engine computing 2D loss map...");
-    
-
-    _emcEngine->do_PE_computing();
-    
-    StartSimulate->setEnabled(true);
-    spdlog::info("Simulation finished.");
-}
-
-void Simulation::simulationWaiter(std::future<GridMap> future) {
-    try {
-        GridMap result = future.get(); // 阻塞直到计算完成
-        emit simulationDone(result);   // 发射信号，将结果传递给UI线程
-    }
-    catch (const std::exception& e) {
-        spdlog::error("Exception in simulation thread: {}", e.what());
-        emit simulationDone(GridMap()); // 发射空结果表示失败
-    }
+    spdlog::info("Engine computing 2D loss map in background thread...");
+    _workerThread = std::thread([this]() {
+        if (this->_emcEngine) {
+            this->_emcEngine->do_PE_computing();
+        }
+       
+        QMetaObject::invokeMethod(this, [this]() {
+            // 只有当 this 还存在时才会执行这里
+            this->StartSimulate->setEnabled(true);
+            spdlog::info("Simulation finished.");
+        }, Qt::QueuedConnection);
+    });
 }
 
 void Simulation::onSimulationFinished(const GridMap& result) {
-
-    StartSimulate->setEnabled(true);
     // statusbar->showMessage("仿真完成", 5000);
-
     if (result.empty() || (result.size() > 0 && result[0].empty())) {
         spdlog::warn("Simulation returned empty or invalid result.");
         QMessageBox::warning(this, "仿真警告", "仿真结果为空或无效，无法绘图。");
         return;
     }
 
-    // 3. 调用 PaintImage.hpp 中的函数进行绘图
     try {
         spdlog::info("Painting results to QCustomPlot...");
-
-        // 直接调用提供的内联函数
         PEmodel_Painting2D(result, PEmodel2Dplot);
-
         // 强制刷新显示
         PEmodel2Dplot->replot();
 
@@ -130,14 +118,3 @@ void Simulation::onSimulationFinished(const GridMap& result) {
     }
 }
 
-void Simulation::onSingleGridMapReady(const GridMap& lossGrid) {
-    //spdlog::debug("Received single GridMap for ship: {}, equipment: {}", shipID, equipmentName);
-    
-
-    try {
-         PEmodel_Painting2D(lossGrid, PEmodel2Dplot);
-         PEmodel2Dplot->replot();
-    } catch (const std::exception& e) {
-        spdlog::error("Error painting single grid map: {}", e.what());
-    }
-}

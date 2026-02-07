@@ -20,7 +20,7 @@ public:
 
         QString jsonString = file.readAll();
         file.close();
-
+		spdlog::info("成功加载文件: {}", filePath.toStdString());
         // 1. 清洗注释
         QRegularExpression re("//[^\n]*");
         jsonString.replace(re, "");
@@ -100,11 +100,13 @@ public:
             auto validateRes = ship.validate_Ship();
             if (validateRes.first) {
                 model->allShips.push_back(ship);
+				spdlog::info("成功加载船只: {} (设备数量: {})", ship.shipID, ship.Equipments.size());
             }
             else {
                 spdlog::warn("忽略无效船只( {} ): {}", ship.shipID, validateRes.second.toStdString());
             }
         }
+		spdlog::info("共加载船只数量: {};设备数量：{}", model->allShips.size(), model->allEquipments.size());
 
         return true;
     }
