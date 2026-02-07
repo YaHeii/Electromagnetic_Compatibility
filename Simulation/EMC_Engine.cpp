@@ -30,7 +30,7 @@ void EMC_Engine::do_PE_computing() {
     }
 
     // 将所有船只和设备转换为 PE_data 列表
-    _peDataList = EMC_Engine::EquipmentConvertToMatrix(_fleet.get());
+    _peDataList = EquipmentConvertToMatrix(_fleet.get());
     if(_peDataList.size() == 0) {
         spdlog::warn("No equipment data found in fleet, PE computing will be skipped.");
         return;
@@ -276,7 +276,7 @@ void EMC_Engine::InitPropagationEngine() {
     _propagationEngine = new Propagation_Engine(_modelType, _fleet.get());
 }
 
-LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
+LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, EnvironmentData env, double reciever_antenna_height) {
     // 初始化大气模型：蒸发波导高度 20m
     // 对应 Paper 2 Fig. 6(d) 和 Eq. (35)
     AtmosphereModel atm(env.duct_height);
@@ -318,7 +318,7 @@ LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, Envi
     return _LossLine;
 }
 
-GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height) {
+GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentData env, double reciever_antenna_height) {
     spdlog::info("Starting 2D PE model computation for equipment: {}, on {}", PEdata.equipmenName, PEdata.shipName);
     // 1. 定义地图网格参数
     double map_size_m = env.max_range;

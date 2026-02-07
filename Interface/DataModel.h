@@ -171,6 +171,20 @@ struct ShipData {
     }
 };
 
+struct EnvironmentData {
+    double max_range = 2000.0;// 2 km
+    double duct_height = 20.0; // 蒸发波导高度 H0 (m)
+    double wind_speed = 7.0;   // 风速 (m/s)，用于计算 Miller-Brown 粗糙度
+    double dx = 5.0;          // 步进 50m
+    double dz = 0.2;           // 垂直分辨率 0.2m (越高越好，建议 <= lambda/2)
+    int nz = 2048;             // 物理高度网格 (总高度 ~400m)
+    int angle_step_deg = 5; // 角度步进 5度 (用于2D仿真)
+    std::pair<bool,QString> validate_EnvironmentConfig() const {
+        if (max_range < 0 || duct_height < 0 || wind_speed < 0 || dx < 0 || dz < 0 || nz < 0 || angle_step_deg < 0 ) {
+            return { false, "环境参数应大于0" };
+        }
+    }
+};
 
 /// <summary>
 /// 全局数据模型 (单例管理的数据容器)
@@ -182,6 +196,7 @@ public:
     struct DataSnapshot {
         std::vector<EquipmentData> allEquipments;
         std::vector<ShipData> allShips;
+		EnvironmentData environmentConfig;
     };
 
     static DataModel* instance() {
@@ -193,12 +208,13 @@ public:
     DataSnapshot createSnapshot() const {
         // 这里可以加锁（如果需要的话），保证创建快照时的原子性
         // std::lock_guard<std::mutex> lock(m_mutex);
-        return { allEquipments, allShips };
+        return { allEquipments, allShips, environmentConfig };
     }
 
     // 全局数据存储
     std::vector<EquipmentData> allEquipments; // 设备库
     std::vector<ShipData> allShips;           // 部署的船只
+    EnvironmentData environmentConfig;
 
     // 根据ID查找设备的辅助函数
     const EquipmentData* findEquipmentByID(const QString& id) const {

@@ -10,7 +10,20 @@
 #include <spdlog/spdlog.h>
 #include <fstream>
 #include "Utils/PaintImage.hpp"
-#include "EnvironmentConfig.h"
+
+
+//TODO：单独建立Interface/TransferToPEdata
+struct Transmitter_PE_data {
+    std::string shipName = "DefaultShip"; // 船只ID
+    std::string equipmenName = "DefaultEquipment"; // 设备名
+    AntennaType antennaType = AntennaType::OMNI; // 天线类型
+    double power_dbm = 0.0; // 发射功率 (dBm)
+    double antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
+    double beamWidth_deg = 2.0;     // 波束宽度 (度)
+    double antennaPhi_deg = 2.0;     // 天线仰角 (度)
+    double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
+    GridMap PowerGrid = GridMap(0, LineMap(0)); // 传播损耗网格
+};
 
 std::vector<Transmitter_PE_data> EquipmentConvertToMatrix(Fleet* fleet) {
     std::vector<Transmitter_PE_data> pe_data_list;

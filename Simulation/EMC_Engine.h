@@ -10,7 +10,7 @@
 #include <spdlog/spdlog.h>
 #include <fstream>
 #include "Utils/PaintImage.hpp"
-#include "EnvironmentConfig.h"
+#include "Interface/TransferToPEdata.hpp"
 
 struct InterferenceResult {
     std::string aggressor_ship_id;//干扰源船ID
@@ -26,18 +26,6 @@ struct InterferenceResult {
     bool is_communication_degraded; // 通信是否受损
     bool is_interference_degraded; // 干扰裕度是否超限
 };
-//TODO：单独建立Interface/TransferToPEdata
-struct Transmitter_PE_data {
-	std::string shipName = "DefaultShip"; // 船只ID
-    std::string equipmenName = "DefaultEquipment"; // 设备名
-    AntennaType antennaType = AntennaType::OMNI; // 天线类型
-	double power_dbm = 0.0; // 发射功率 (dBm)
-    double antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
-	double beamWidth_deg = 2.0;     // 波束宽度 (度)
-	double antennaPhi_deg = 2.0;     // 天线仰角 (度)
-    double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
-    GridMap PowerGrid = GridMap(0, LineMap(0)); // 传播损耗网格
-};  
 
 enum class ModelType {
     PE,
@@ -100,7 +88,7 @@ private:
 	DataSnapshot _dataSnapshot;
     ModelType _modelType;
     Propagation_Engine* _propagationEngine;
-	EnvironmentConfig _env;
+    EnvironmentData _env;
 signals:
     void peComputationFinished(const GridMap& lossGrid);
 };
@@ -110,8 +98,8 @@ class Propagation_Engine {
 public:
     Propagation_Engine(ModelType model_type, const Fleet* fleet)
         : _model_type(model_type), _fleet(fleet) {}
-    LineMap PEmodel_computing1D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
-    GridMatrix PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentConfig env, double reciever_antenna_height);
+    LineMap PEmodel_computing1D(Transmitter_PE_data PEdata, EnvironmentData env, double reciever_antenna_height);
+    GridMatrix PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentData env, double reciever_antenna_height);
 
 
 private:
@@ -120,5 +108,5 @@ private:
     Transmitter_PE_data _PEdata;
     GridMap _LossGrid;
     LineMap _LossLine;
-	EnvironmentConfig _env;
+    EnvironmentData _env;
 };
