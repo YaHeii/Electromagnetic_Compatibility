@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <vector>
 #include <string>
 #include "Simulation/PEModel.h"
@@ -11,21 +11,34 @@
 #include <fstream>
 #include "Utils/PaintImage.hpp"
 
-
-//TODO£ºµ¥¶À½¨Á¢Interface/TransferToPEdata
-struct Transmitter_PE_data {
-    std::string shipName = "DefaultShip"; // ´¬Ö»ID
-    std::string equipmenName = "DefaultEquipment"; // Éè±¸Ãû
-    AntennaType antennaType = AntennaType::OMNI; // ÌìÏßÀàĞÍ
-    double power_dbm = 0.0; // ·¢Éä¹¦ÂÊ (dBm)
-    double antenna_height = 25.0; // ÌìÏß¸ß¶È (m)(Éè±¸¸ß¶È+ÌìÏß¸ß¶È)
-    double beamWidth_deg = 2.0;     // ²¨Êø¿í¶È (¶È)
-    double antennaPhi_deg = 2.0;     // ÌìÏßÑö½Ç (¶È)
-    double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
-    GridMap PowerGrid = GridMap(0, LineMap(0)); // ´«²¥ËğºÄÍø¸ñ
+struct InterferenceResult {
+    std::string aggressor_ship_id;//å¹²æ‰°æºèˆ¹ID
+    std::string aggressor_equip_id;//å¹²æ‰°æºè®¾å¤‡ID
+    std::string victim_ship_id;//å—å®³èˆ¹ID
+    std::string victim_equip_id;//å—å®³è®¾å¤‡ID 
+    double victim_rx_freq_mhz;//å—å®³è®¾å¤‡æ¥æ”¶é¢‘ç‡
+    double interference_power_at_rx_input_dbm;//åœ¨å—å¹²æ‰°è®¾å¤‡æ¥æ”¶ç«¯å£å¤„æµ‹å¾—çš„å¹²æ‰°åŠŸç‡ï¼ˆå•ä½ï¼šdBm
+    double victim_noise_floor_dbm;//å—å¹²æ‰°è®¾å¤‡çš„å™ªå£°åº•ï¼ˆå•ä½ï¼šdBmï¼‰
+    double interference_plus_noise_dbm; // I+N
+    double interference_margin_db; // Sensitivity - (I+N)ï¼Œå¹²æ‰°è£•åº¦
+    double communication_performance_db; // é€šä¿¡æ€§èƒ½ï¼ŒSINR
+    bool is_communication_degraded; // é€šä¿¡æ˜¯å¦å—æŸ
+    bool is_interference_degraded; // å¹²æ‰°è£•åº¦æ˜¯å¦è¶…é™
 };
 
-std::vector<Transmitter_PE_data> EquipmentConvertToMatrix(Fleet* fleet) {
+struct Transmitter_PE_data {
+    std::string shipName = "DefaultShip"; // èˆ¹åªID
+    std::string equipmenName = "DefaultEquipment"; // è®¾å¤‡å
+    AntennaType antennaType = AntennaType::OMNI; // å¤©çº¿ç±»å‹
+    double power_dbm = 0.0; // å‘å°„åŠŸç‡ (dBm)
+    double antenna_height = 25.0; // å¤©çº¿é«˜åº¦ (m)(è®¾å¤‡é«˜åº¦+å¤©çº¿é«˜åº¦)
+    double beamWidth_deg = 2.0;     // æ³¢æŸå®½åº¦ (åº¦)
+    double antennaPhi_deg = 2.0;     // å¤©çº¿ä»°è§’ (åº¦)
+    double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)
+    GridMap PowerGrid = GridMap(0, LineMap(0)); // ä¼ æ’­æŸè€—ç½‘æ ¼
+};
+
+inline std::vector<Transmitter_PE_data> EquipmentConvertToMatrix(Fleet* fleet) {
     std::vector<Transmitter_PE_data> pe_data_list;
     spdlog::info("Converting Fleet to PE_data list...");
     for (const auto& ship_ptr : fleet->getShips()) {

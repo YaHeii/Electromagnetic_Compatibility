@@ -44,7 +44,7 @@ void EMC_Engine::do_PE_computing() {
     }
     std::ofstream out("PEcomputing.csv");
     spdlog::info("PEcomputing result will be saved in PEcomputing.csv");
-    EMC_Engine::writeCSVRow(out, "_LossGrid[i][j](400*400)\n");
+    writeCSVRow(out, "_LossGrid[i][j](400*400)\n");
 
     //REVIEW: 是否使用GridMatrix优化计算
     for (const auto& pe_data : _peDataList) {
@@ -55,9 +55,9 @@ void EMC_Engine::do_PE_computing() {
                     return; // 直接退出函数
                 }
                 _LossGrid[i][j] += pe_data.PowerGrid[i][j];
-                EMC_Engine::writeCSVRow(out, _LossGrid[i][j]," ");
+                writeCSVRow(out, _LossGrid[i][j]," ");
             }
-            EMC_Engine::writeCSVRow(out, "\n");
+            writeCSVRow(out, "\n");
         }
     }
     // 触发信号，通知UI更新
@@ -299,7 +299,7 @@ LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, Envi
     // 开始步进仿真
     //std::cout << "Range(km) \t Loss(dB) \t (Atmosphere: Evaporation Duct 20m)" << std::endl;
     std::ofstream out("PEmodel_computing1D.csv");
-    EMC_Engine::writeCSVRow(out, "Range", "Loss");
+    writeCSVRow(out, "Range", "Loss");
     //r为仿真距离（剖面）
     for (double r = env.dx; r < env.max_range; r += env.dx) {
         // 将预计算好的大气剖面传递给求解器
@@ -311,7 +311,7 @@ LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, Envi
             // 获取接收天线高度 15m 处的损耗
             int rx_idx = static_cast<int>(reciever_antenna_height / env.dz);
             double loss = solver.getPathLoss(rx_idx, r);
-            EMC_Engine::writeCSVRow(out, r, loss);
+            writeCSVRow(out, r, loss);
             _LossLine.push_back(loss);
         }
     }

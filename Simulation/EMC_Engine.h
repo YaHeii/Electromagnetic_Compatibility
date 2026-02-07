@@ -11,21 +11,7 @@
 #include <fstream>
 #include "Utils/PaintImage.hpp"
 #include "Interface/TransferToPEdata.hpp"
-
-struct InterferenceResult {
-    std::string aggressor_ship_id;//干扰源船ID
-    std::string aggressor_equip_id;//干扰源设备ID
-    std::string victim_ship_id;//受害船ID
-    std::string victim_equip_id;//受害设备ID 
-    double victim_rx_freq_mhz;//受害设备接收频率
-    double interference_power_at_rx_input_dbm;//在受干扰设备接收端口处测得的干扰功率（单位：dBm
-    double victim_noise_floor_dbm;//受干扰设备的噪声底（单位：dBm）
-    double interference_plus_noise_dbm; // I+N
-    double interference_margin_db; // Sensitivity - (I+N)，干扰裕度
-    double communication_performance_db; // 通信性能，SINR
-    bool is_communication_degraded; // 通信是否受损
-    bool is_interference_degraded; // 干扰裕度是否超限
-};
+#include "Interface/TransferToFile.hpp"
 
 enum class ModelType {
     PE,
@@ -36,6 +22,7 @@ using Matrix = std::vector<std::vector<double>>;
 using LineMap = std::vector<double>;
 using GridMatrix = Eigen::MatrixXd;
 class Propagation_Engine;
+
 class EMC_Engine : public QObject {
     Q_OBJECT
 public:
@@ -48,6 +35,7 @@ public:
         if (!_fleet) {
             spdlog::error("EMC_Engine initialization failed: fleet is null");
         }
+		_env = _dataSnapshot.environmentConfig;
     }
 	void InitPropagationEngine();
     void do_PE_computing();
@@ -55,26 +43,6 @@ public:
     void do_Validation_TwoRay();
     void do_Validation_Roughness();
     void do_Validation_DuctLeakage();
-
-    template <typename... Args>
-    static void writeCSVRow(std::ofstream& out, Args... args) {
-        // 使用 lambda 和 C++17 折叠表达式来处理逗号分隔
-        bool first = true;
-        auto print_arg = [&](const auto& val) {
-            if (!first) {
-                out << ",";
-            }
-            out << val;
-            first = false;
-            };
-
-        // 折叠表达式：对 args 参数包中的每一个元素调用 print_arg
-        (print_arg(args), ...);
-
-        // 每一行结束后换行
-        out << "\n";
-    }
-
     void stop() {
         isStopRequested = true;
     }
