@@ -4,6 +4,8 @@
 #endif
 #include <spdlog/spdlog.h>
 #include "Interface/TransferToPEdata.hpp"
+#include "Utils/conversions.h"
+
 // Eigen Matrix -> GridMap
 GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
     // 预分配外层 vector
@@ -37,28 +39,41 @@ void EMC_Engine::do_PE_computing() {
     // 这里可以根据 pe_data 的参数调整接收天线高度，暂时固定为 25.0
     // TODO: 设置reciever_PE_data, 支持针对不同接收设备来做PE计算
     double receiver_height = 25.0;
+
+    // XXX: 此处使用预计算来分配尺寸，优化使用参数分配
+    auto first_loss_mat = _propagationEngine->PEmodel_computing2D(_peDataList[0], _env, receiver_height);
+    int rows = static_cast<int>(first_loss_mat.rows());
+    int cols = static_cast<int>(first_loss_mat.cols());
+    // 初始化线性功率累加矩阵 (单位: mW)
+    Eigen::MatrixXd total_power_mw = Eigen::MatrixXd::Zero(rows, cols);
+    
     // 计算二维损耗网格
     for (auto& pe_data : _peDataList) {
-        pe_data.PowerGrid = eigen_to_vector(pe_data.power_dbm - _propagationEngine->PEmodel_computing2D(pe_data, _env, receiver_height).array());
+        if (isStopRequested) return;
+        Eigen::MatrixXd current_loss = _propagationEngine->PEmodel_computing2D(pe_data, _env, receiver_height);
+        Eigen::MatrixXd current_tx_dbm = pe_data.power_dbm - current_loss.array();
+        // [在线性空间 (mW) 进行累加，避免 dBm 直接相加的错误
+        accumulatePowerLinear(total_power_mw, current_tx_dbm);
+
+        pe_data.PowerGrid = eigen_to_vector(current_tx_dbm);
+
+        //spdlog::info("TESTING output PowerGrid, mustbe deleted while running: {}", pe_data.PowerGrid[5][5]);
     }
-    std::ofstream out("PEcomputing.csv");
-    spdlog::info("PEcomputing result will be saved in PEcomputing.csv");
-    writeCSVRow(out, "_LossGrid[i][j](400*400)\n");
-    _LossGrid.resize(_peDataList[0].PowerGrid.size());
-    //REVIEW: 是否使用GridMatrix优化计算
-    for (const auto& pe_data : _peDataList) {
-        for (size_t i = 0; i < _LossGrid.size(); ++i) {
-            for (size_t j = 0; j < _LossGrid[i].size(); ++j) {
-                if (isStopRequested) {
-                    spdlog::info("Computing aborted by user.");
-                    return; // 直接退出函数
-                }
-                _LossGrid[i][j] += pe_data.PowerGrid[i][j];
-                writeCSVRow(out, _LossGrid[i][j]," ");
-                spdlog::info("TESTING output ,mustbe deleted while running: {}", _LossGrid[i][j]);
-            }
-            writeCSVRow(out, "\n");
+    // 将总线性功率转回 dBm 存入 _LossGrid
+    Eigen::MatrixXd final_total_dbm = total_power_mw.unaryExpr([](double mw) {
+        return mwToDbm(mw);
+    });
+    _LossGrid = eigen_to_vector(final_total_dbm);
+
+    // 数据落地
+
+    std::ofstream out("PEcomputing_LinearAggregated.csv");
+    spdlog::info("PEcomputing result will be saved in PEcomputing_LinearAggregated.csv");
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            writeCSVRow(out, final_total_dbm(i, j), " ");
         }
+        writeCSVRow(out, "\n");
     }
     // 触发信号，通知UI更新
     emit peComputationFinished(_LossGrid);
