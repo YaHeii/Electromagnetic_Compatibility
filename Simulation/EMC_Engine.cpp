@@ -55,7 +55,7 @@ void EMC_Engine::do_PE_computing() {
         // [在线性空间 (mW) 进行累加，避免 dBm 直接相加的错误
         accumulatePowerLinear(total_power_mw, current_tx_dbm);
 
-        pe_data.PowerGrid = eigen_to_vector(current_tx_dbm);
+        pe_data.PowerGrid = eigen_to_vector(current_loss);
 
         //spdlog::info("TESTING output PowerGrid, mustbe deleted while running: {}", pe_data.PowerGrid[5][5]);
     }
@@ -71,7 +71,10 @@ void EMC_Engine::do_PE_computing() {
     spdlog::info("PEcomputing result will be saved in PEcomputing_LinearAggregated.csv");
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            writeCSVRow(out, final_total_dbm(i, j), " ");
+            // XXX: writeCSV函数对于逗号和换行的处理并不完善，考虑引入第三方库
+            writeCSVRow(out, final_total_dbm(i, j));
+            writeCSVRow(out, ",");
+
         }
         writeCSVRow(out, "\n");
     }
@@ -343,7 +346,7 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
     const int num_ranges = static_cast<int>(env.max_range / env.dx);
 
     // 默认底噪值 (dB)
-    const double noise_floor = -200.0;
+    const double noise_floor = 200;
 
     // 2. 准备环境
     AtmosphereModel atm(env.duct_height);
@@ -415,6 +418,8 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
     //}
     //out_polar.close();
     // 4. 坐标映射 (填满车轮空隙)
+
+
     GridMatrix cartesian_grid = GridMatrix::Constant(grid_dim, grid_dim, static_cast<int>(noise_floor));
     double center_idx = grid_dim / 2.0;
     const double deg_to_idx = 1.0 / env.angle_step_deg;
@@ -448,7 +453,7 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
             // 边界检查并赋值
             if (r_idx >= 0 && r_idx < num_ranges) {
                 // 读取 double，转为 int 存入结果矩阵
-                cartesian_grid(y, x) = static_cast<int>(polar_matrix(az_idx, r_idx));
+                cartesian_grid(y, x) = polar_matrix(az_idx, r_idx);
             }
         }
     }

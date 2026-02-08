@@ -14,7 +14,7 @@
       "Location_Offset": [ 1, 0, 2 ],
       "Central_F": "1", //GHZ
       "Bandwith": "100", //MHz
-      "Power": "0", //for antenna,0 is available
+      "Power": "43", //dbm, for antenna,0 is available
       "angle": "30", //phi
       "BeamWidth": "20", //angle
       "PolarizationMethod": "垂直极化",
@@ -49,7 +49,7 @@
       "Location_Offset": [ 1, 0, 2 ],
       "Central_F": "1",
       "Bandwith": "100",
-      "Power": "0",
+      "Power": "43",
       "angle": "30",
       "BeamWidth": "20",
       "PolarizationMethod": "垂直极化",
@@ -84,7 +84,7 @@
       "Location_Offset": [ 1, 0, 2 ],
       "Central_F": "1",
       "Bandwith": "100",
-      "Power": "0",
+      "Power": "43",
       "angle": "30",
       "BeamWidth": "20",
       "PolarizationMethod": "垂直极化",
@@ -119,7 +119,7 @@
       "Location_Offset": [ 1, 0, 2 ],
       "Central_F": "1",
       "Bandwith": "100",
-      "Power": "0",
+      "Power": "43",
       "angle": "30",
       "BeamWidth": "20",
       "PolarizationMethod": "垂直极化",
@@ -154,7 +154,7 @@
       "Location_Offset": [ 1, 0, 2 ],
       "Central_F": "1",
       "Bandwith": "100",
-      "Power": "0",
+      "Power": "43",
       "angle": "30",
       "BeamWidth": "20",
       "PolarizationMethod": "垂直极化",
@@ -189,7 +189,7 @@
       "Location_Offset": [ 1, 0, 2 ],
       "Central_F": "1",
       "Bandwith": "100",
-      "Power": "0",
+      "Power": "43",
       "angle": "30",
       "BeamWidth": "20",
       "PolarizationMethod": "垂直极化",
@@ -224,7 +224,7 @@
       "Location_Offset": [ 1, 0, 2 ],
       "Central_F": "1",
       "Bandwith": "100",
-      "Power": "0",
+      "Power": "43",
       "angle": "30",
       "BeamWidth": "20",
       "PolarizationMethod": "垂直极化",
