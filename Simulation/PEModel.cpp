@@ -449,6 +449,11 @@ void PEModel::initializeGaussian(double antenna_phys_height, double h_start, dou
     double tilt_rad = std::sin(tilt_deg * M_PI / 180.0);
     // 计算天线在变换后的网格高度 zeta_a
     double zeta_a = antenna_phys_height - h_start;
+    // 计算归一化系数
+    // 使得 integral(|u|^2) = 1
+    // 高斯积分公式: int exp(-2*(z-za)^2/w0^2) dz = w0 * sqrt(pi/2)
+    double total_energy = w0 * std::sqrt(M_PI / 2.0);
+    double norm_factor = 1.0 / std::sqrt(total_energy);
 
     for (int i = 0; i < _fft_size; ++i) {
         reinterpret_cast<Complex*>(_in_ptr)[i] = 0.0;
@@ -459,7 +464,7 @@ void PEModel::initializeGaussian(double antenna_phys_height, double h_start, dou
         // 对应公式：exp(-(z - za)^2 / w0^2)
         // 物理含义：能量集中在天线高度 antenna_height 附近
         // 在网格高度 zeta 上应用高斯分布
-        double amp = std::exp(-std::pow(zeta - zeta_a, 2) / std::pow(w0, 2));        // 相位部分 (Phase): 线性相位倾斜
+        double amp = norm_factor * std::exp(-std::pow(zeta - zeta_a, 2) / std::pow(w0, 2));        // 相位部分 (Phase): 线性相位倾斜
         // 对应公式：exp(i * k * z * sin(theta))
         // 物理含义：通过改变相位梯度来控制波束的传播方向（仰角）
         // 如果 antennaPhi_deg = 0，则相位为 0，波束水平传播
