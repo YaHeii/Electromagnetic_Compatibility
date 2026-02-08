@@ -108,8 +108,6 @@ void Simulation::onSimulationFinished(const GridMap& result) {
     try {
         spdlog::info("Painting results to QCustomPlot...");
         PEmodel_Painting2D(result, PEmodel2Dplot);
-        // 强制刷新显示
-        PEmodel2Dplot->replot();
 
     }
     catch (const std::exception& e) {

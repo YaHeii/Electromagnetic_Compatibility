@@ -334,12 +334,16 @@ LineMap Propagation_Engine::PEmodel_computing1D(Transmitter_PE_data PEdata, Envi
     return _LossLine;
 }
 
+// XXX:目前使用笛卡尔坐标系反向映射极坐标数据
 GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentData env, double reciever_antenna_height) {
     spdlog::info("Starting 2D PE model computation for equipment: {}, on {}", PEdata.equipmenName, PEdata.shipName);
     // 1. 定义地图网格参数
-    double map_size_m = env.max_range;
-    double grid_res_m = env.dx; 
-    const int grid_dim = static_cast<int>(map_size_m / grid_res_m);
+    // XXX: 是否解耦最大辐射半径和地图半径
+    double map_width_m = env.max_range; // 示例：生成足够大的地图
+    double map_height_m = env.max_range;
+
+    int grid_w = static_cast<int>(map_width_m / env.dx);
+    int grid_h = static_cast<int>(map_height_m / env.dx);
 
     // 角度与距离参数
     const int num_angles = 360 / env.angle_step_deg;
@@ -347,6 +351,17 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
 
     // 默认底噪值 (dB)
     const double noise_floor = 200;
+	// 坐标原点 (0,0) 对应 output_grid(0,0),位于左上角，向右是X正方向，向下是Y正方向
+    GridMatrix output_grid = GridMatrix::Constant(grid_h, grid_w, noise_floor);
+
+    // 预计算常量以加速循环
+    const double inv_dx = 1.0 / env.dx;
+    const double deg_to_idx = 1.0 / env.angle_step_deg;
+    const double two_pi = 2.0 * M_PI;
+
+    // 发射机绝对坐标
+    const double tx_x = PEdata.X_offset;
+    const double tx_y = PEdata.Y_offset;
 
     // 2. 准备环境
     AtmosphereModel atm(env.duct_height);
@@ -378,9 +393,8 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
 
         // 每个角度必须重置初始场
         // 计算起始点 (r=0) 的海面高度，修正初始场高度
-        double h_start = surface.getSurfaceHeight(0.0, 0.0, 0.0);
-        solver->initializeGaussian(PEdata.antenna_height, h_start, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
-        int rx_z_idx = static_cast<int>(reciever_antenna_height / env.dz);
+        double tx_h_surface = surface.getSurfaceHeight(PEdata.X_offset, PEdata.Y_offset, 0.0);
+        solver->initializeGaussian(PEdata.antenna_height, tx_h_surface, PEdata.beamWidth_deg, PEdata.antennaPhi_deg);
 
         // 沿径向步进 (Marching)
         int range_idx = 0;
@@ -388,9 +402,12 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
 
             // 执行一步 PE 运算
             solver->step_PLST(r, az_rad, atm, surface, 0.0);
+            // 计算当前点 (相对于Tx距离r) 的绝对物理坐标
+            double current_x_world = PEdata.X_offset + r * cos_az;
+            double current_y_world = PEdata.Y_offset + r * sin_az;
             // 动态高度跟踪
             // 计算当前距离 r 处的海面高度 h(r)
-            double h_r = surface.getSurfaceHeight(r * cos_az, r * sin_az, 0.0);
+            double h_r = surface.getSurfaceHeight(current_x_world, current_y_world, 0.0);
             // 接收机在 PLST 网格中的相对高度 zeta = z_phys - h(r)
             double zeta_rx = reciever_antenna_height - h_r;
             int rx_z_idx = static_cast<int>(zeta_rx / env.dz);
@@ -405,60 +422,71 @@ GridMatrix Propagation_Engine::PEmodel_computing2D(Transmitter_PE_data PEdata, E
 
         }
     }
-    //std::ofstream out_polar("PE_Raw_Polar.csv");
-    //EMC_Engine::writeCSVRow(out_polar, "Angle_Deg", "Range_m", "Loss_dB");
 
-    //for (int i = 0; i < num_angles; ++i) {
-    //    double az_deg = i * angle_step_deg;
-    //    for (int j = 0; j < num_ranges; ++j) {
-    //        double r_m = (j + 1) * PEdata.dx;
-    //        double loss = polar_matrix(i, j);
-    //        EMC_Engine::writeCSVRow(out_polar, az_deg, r_m, loss);
-    //    }
-    //}
-    //out_polar.close();
-    // 4. 坐标映射 (填满车轮空隙)
-
-
-    GridMatrix cartesian_grid = GridMatrix::Constant(grid_dim, grid_dim, static_cast<int>(noise_floor));
-    double center_idx = grid_dim / 2.0;
-    const double deg_to_idx = 1.0 / env.angle_step_deg;
-    const double inv_dx = 1.0 / env.dx;
-    const double two_pi = 2.0 * M_PI;
+	// 5. 极坐标 -> 笛卡尔坐标映射
 #pragma omp parallel for collapse(2)
-    for (int y = 0; y < grid_dim; ++y) {
-        for (int x = 0; x < grid_dim; ++x) {
-            // 1. 像素 -> 物理坐标 (m)
-            double px = (x - center_idx) * grid_res_m;
-            double py = (y - center_idx) * grid_res_m; // 假设 y 向上为正，若绘图库相反需调整
+    for (int y = 0; y < grid_h; ++y) {
+        for (int x = 0; x < grid_w; ++x) {
+            // A. 当前像素的绝对物理坐标 (World Coordinates)
+             // 假设 (0,0) 在左上角，X向右，Y向下 (图像坐标系)
+             // 如果是地理坐标系 Y向上，则 py = (grid_h - y) * env.dx
+            double px_world = x * env.dx;
+            double py_world = y * env.dx;
 
-            // 2. 物理坐标 -> 极坐标 (r, theta)
-            double r = std::hypot(px, py); // 更快更安全的 sqrt(x^2+y^2)
+            // B. 计算相对于发射机的矢量 (Relative Vector)
+            double dx = px_world - tx_x;
+            double dy = py_world - tx_y; // 注意坐标系方向一致性即可
 
-            // 超出最大射程直接跳过 (保留默认值)
-            if (r >= env.max_range) continue;
+            // C. 转换为极坐标 (r, theta)
+            double r = std::hypot(dx, dy);
 
-            double theta = std::atan2(py, px); // (-PI, PI]
-            if (theta < 0) theta += two_pi;    // [0, 2PI)
+            // D. 范围检查 (超出射频范围直接跳过)
+            if (r >= env.max_range || r < env.dx) continue;
 
-            // 3. 极坐标 -> 索引 (最近邻插值 Nearest Neighbor)
-            // 角度索引
-            double az_deg = theta * 180.0 / M_PI;
-            int az_idx = static_cast<int>(std::round(az_deg * deg_to_idx));
-            if (az_idx >= num_angles) az_idx = 0; // 处理 360度
+            // E. 计算角度
+            // atan2 返回 (-PI, PI]，0 指向 X 正轴
+            double theta = std::atan2(dy, dx);
+            if (theta < 0) theta += two_pi; // 归一化到 [0, 2PI)
 
-            // 距离索引
-            int r_idx = static_cast<int>(r * inv_dx);
+            // F. 采样 (Nearest Neighbor)
+            // --- 双线性插值 (Bilinear Interpolation) 开始 ---
 
-            // 边界检查并赋值
-            if (r_idx >= 0 && r_idx < num_ranges) {
-                // 读取 double，转为 int 存入结果矩阵
-                cartesian_grid(y, x) = polar_matrix(az_idx, r_idx);
-            }
+            // 计算浮点索引
+            double az_float = theta * 180.0 / M_PI * deg_to_idx;
+            double r_float = r * inv_dx;
+
+            // 获取四个相邻点的整数索引
+            int a0 = static_cast<int>(std::floor(az_float));
+            int a1 = (a0 + 1) % num_angles; // 角度循环衔接 359 -> 0
+            int r0 = static_cast<int>(std::floor(r_float));
+            int r1 = r0 + 1;
+
+            // 边界保护
+            if (r1 >= num_ranges) r1 = r0;
+
+            // 计算权重
+            double wa = az_float - a0; // 角度方向权重
+            double wr = r_float - r0;  // 距离方向权重
+
+            // 采样四个点
+            double v00 = polar_matrix(a0, r0);
+            double v10 = polar_matrix(a1, r0);
+            double v01 = polar_matrix(a0, r1);
+            double v11 = polar_matrix(a1, r1);
+
+            // 双线性插值公式
+            // 先在角度方向插值
+            double v_r0 = v00 * (1 - wa) + v10 * wa;
+            double v_r1 = v01 * (1 - wa) + v11 * wa;
+            // 再在距离方向插值
+            double val = v_r0 * (1 - wr) + v_r1 * wr;
+
+            output_grid(y, x) = val;
+            // --- 双线性插值 结束 ---
         }
     }
 
-    return cartesian_grid; 
+    return output_grid;
 }
 
 

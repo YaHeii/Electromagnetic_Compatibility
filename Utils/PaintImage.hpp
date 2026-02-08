@@ -46,11 +46,11 @@ inline void PEmodel_Painting2D(const GridMap& Loss_2D, QCustomPlot* PEmodel_2Dpl
     colorMap->setGradient(QCPColorGradient::gpJet);
 
     // 8. 设置颜色数据范围，增强梯度对比
-    colorMap->setDataRange(QCPRange(60.0, 140.0));
+    colorMap->setDataRange(QCPRange(-120, 0));
     colorMap->rescaleAxes();//放缩坐标轴
     // 9. 重新绘制
     PEmodel_2Dplot->replot();
 }
 
-//TODO: 结合双重叠加法结果绘制不同海况下海面情况。
-void PaintMarineSurface_3D();
+////TODO: 结合双重叠加法结果绘制不同海况下海面情况。
+//void PaintMarineSurface_3D();

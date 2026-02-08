@@ -29,6 +29,9 @@ struct InterferenceResult {
 struct Transmitter_PE_data {
     std::string shipName = "DefaultShip"; // 船只ID
     std::string equipmenName = "DefaultEquipment"; // 设备名
+    double X_offset = 0.0;  //X绝对坐标
+	double Y_offset = 0.0;  //Y绝对坐标
+	double Z_offset = 0.0;  //Z绝对坐标
     AntennaType antennaType = AntennaType::OMNI; // 天线类型
     double power_dbm = 0.0; // 发射功率 (dBm)
     double antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
@@ -48,6 +51,9 @@ inline std::vector<Transmitter_PE_data> EquipmentConvertToMatrix(Fleet* fleet) {
                 Transmitter* transmitter_ptr = dynamic_cast<Transmitter*>(equip_ptr.get());
                 data.shipName = ship_ptr->getID();
                 data.equipmenName = transmitter_ptr->getID();
+				data.X_offset = ship_ptr->getLocation().getX() + equip_ptr->getRelativePosition().getX();
+				data.Y_offset = ship_ptr->getLocation().getY() + equip_ptr->getRelativePosition().getY();
+				data.Z_offset = ship_ptr->getLocation().getZ() + equip_ptr->getRelativePosition().getZ();
                 data.antennaType = transmitter_ptr->getAntennaType();
                 data.power_dbm = transmitter_ptr->getPowerDBm();
                 data.antenna_height = transmitter_ptr->getHeight() + ship_ptr->getHeight();
