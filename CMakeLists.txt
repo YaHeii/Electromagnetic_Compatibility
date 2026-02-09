@@ -78,8 +78,8 @@ add_executable(${APP_TARGET_NAME}
 # Add Qt resource files to the target
 # Use consistent indentation and argument naming for clarity
 qt_add_resources(${APP_TARGET_NAME} "app_images"
-    PREFIX "/Image"    
-    BASE "Resource/Image"     
+    PREFIX "/"    
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/Resource/Image"     
     FILES ${RESOURCE_IMAGES}  
 )
 

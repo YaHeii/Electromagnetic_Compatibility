@@ -23,7 +23,7 @@
 #include "ElaToolButton.h"
 
 #include "ExamplePage/T_Home.h"
-#include "ExamplePage/T_About.h"
+#include "About.h"
 #include "ExamplePage/T_BaseComponents.h"
 #include "ExamplePage/T_Card.h"
 #include "ExamplePage/T_Graphics.h"
@@ -297,7 +297,7 @@ void MainWindow::initContent()
     addExpanderNode("TEST_EXPAND_NODE16", testKey_1, ElaIconType::Acorn);
 
     addFooterNode("About", nullptr, _aboutKey, 0, ElaIconType::User);
-    _aboutPage = new T_About();
+    _aboutPage = new About();
 
     _aboutPage->hide();
     connect(this, &ElaWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) {

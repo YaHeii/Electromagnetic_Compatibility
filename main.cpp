@@ -76,9 +76,24 @@ void qt_message_handler(QtMsgType type, const QMessageLogContext& context, const
         break;
     }
 }
-
+#include <QApplication>
+#include <QDirIterator>
+#include <QDebug>
 int main(int argc, char *argv[])
 {
+    // --- 调试代码开始 ---
+    qDebug() << "--------- 已加载资源列表 ---------";
+    // 递归遍历资源根目录 ":"
+    QDirIterator it(":", QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        QString resourcePath = it.next();
+        // 过滤掉 Qt 内部资源，只看你自己的资源
+        if (!resourcePath.startsWith(":/qt-project.org")) {
+            qDebug() << resourcePath;
+        }
+    }
+    qDebug() << "---------------------------------";
+    // --- 调试代码结束 ---
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
     //初始化大小
