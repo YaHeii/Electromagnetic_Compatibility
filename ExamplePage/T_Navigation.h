@@ -1,12 +1,12 @@
 #ifndef T_NAVIGATION_H
 #define T_NAVIGATION_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 
 class ElaPivot;
 class ElaTabWidget;
 class ElaBreadcrumbBar;
-class T_Navigation : public T_BasePage
+class T_Navigation : public BasePage
 {
     Q_OBJECT
 public:

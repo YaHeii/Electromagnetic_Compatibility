@@ -1,7 +1,7 @@
 ﻿#ifndef T_BASECOMPONENTS_H
 #define T_BASECOMPONENTS_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 
 class ElaToggleSwitch;
 class ElaToggleButton;
@@ -14,7 +14,7 @@ class ElaSlider;
 class ElaRadioButton;
 class ElaProgressBar;
 class ElaProgressRing;
-class T_BaseComponents : public T_BasePage
+class T_BaseComponents : public BasePage
 {
     Q_OBJECT
 public:

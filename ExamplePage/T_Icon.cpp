@@ -12,7 +12,7 @@
 #include "ModelView/T_IconDelegate.h"
 #include "ModelView/T_IconModel.h"
 T_Icon::T_Icon(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaIcon");

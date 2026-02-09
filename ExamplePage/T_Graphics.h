@@ -1,9 +1,9 @@
 #ifndef T_GRAPHICS_H
 #define T_GRAPHICS_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 
-class T_Graphics : public T_BasePage
+class T_Graphics : public BasePage
 {
     Q_OBJECT
 public:

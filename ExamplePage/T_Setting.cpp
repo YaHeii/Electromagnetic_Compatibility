@@ -15,7 +15,7 @@
 #include "ElaWindow.h"
 #include <QButtonGroup>
 T_Setting::T_Setting(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     ElaWindow* window = dynamic_cast<ElaWindow*>(parent);

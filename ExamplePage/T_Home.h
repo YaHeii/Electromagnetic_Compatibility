@@ -1,9 +1,9 @@
 ﻿#ifndef T_HOME_H
 #define T_HOME_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 class ElaMenu;
-class T_Home : public T_BasePage
+class T_Home : public BasePage
 {
     Q_OBJECT
 public:

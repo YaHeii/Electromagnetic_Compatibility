@@ -8,7 +8,7 @@
 #include "ElaText.h"
 #include "ModelView/T_TableViewModel.h"
 T_TableView::T_TableView(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaTableView");

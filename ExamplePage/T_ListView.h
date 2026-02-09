@@ -1,10 +1,10 @@
 #ifndef T_LISTVIEW_H
 #define T_LISTVIEW_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 
 class ElaListView;
-class T_ListView : public T_BasePage
+class T_ListView : public BasePage
 {
     Q_OBJECT
 public:

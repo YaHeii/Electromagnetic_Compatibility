@@ -7,7 +7,7 @@
 #include "ElaGraphicsScene.h"
 #include "ElaGraphicsView.h"
 T_Graphics::T_Graphics(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaGraphics");

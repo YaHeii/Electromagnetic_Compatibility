@@ -1,10 +1,10 @@
 #ifndef T_TABLEVIEW_H
 #define T_TABLEVIEW_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 
 class ElaTableView;
-class T_TableView : public T_BasePage
+class T_TableView : public BasePage
 {
     Q_OBJECT
 public:

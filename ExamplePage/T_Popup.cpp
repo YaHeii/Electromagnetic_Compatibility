@@ -20,7 +20,7 @@
 #include <QVBoxLayout>
 
 T_Popup::T_Popup(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaPopup");

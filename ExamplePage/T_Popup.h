@@ -1,7 +1,7 @@
 #ifndef T_POPUP_H
 #define T_POPUP_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 
 class ElaToolButton;
 class ElaColorDialog;
@@ -11,7 +11,7 @@ class ElaKeyBinder;
 class ElaRoller;
 class ElaRollerPicker;
 class ElaDrawerArea;
-class T_Popup : public T_BasePage
+class T_Popup : public BasePage
 {
     Q_OBJECT
 public:

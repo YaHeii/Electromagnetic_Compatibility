@@ -11,7 +11,7 @@
 #include "ElaTreeView.h"
 #include "ModelView/T_TreeViewModel.h"
 T_TreeView::T_TreeView(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaTreeView");

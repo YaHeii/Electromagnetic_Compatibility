@@ -8,7 +8,7 @@
 #include "ElaText.h"
 #include "ModelView/T_ListViewModel.h"
 T_ListView::T_ListView(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaListView");

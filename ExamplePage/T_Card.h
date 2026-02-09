@@ -1,12 +1,12 @@
 #ifndef T_CARD_H
 #define T_CARD_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 
 class ElaLCDNumber;
 class ElaPromotionCard;
 class ElaPromotionView;
-class T_Card : public T_BasePage
+class T_Card : public BasePage
 {
     Q_OBJECT
 public:

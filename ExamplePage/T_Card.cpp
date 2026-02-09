@@ -6,7 +6,7 @@
 #include "ElaPromotionCard.h"
 #include "ElaPromotionView.h"
 T_Card::T_Card(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaCard");

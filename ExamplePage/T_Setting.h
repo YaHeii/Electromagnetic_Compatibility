@@ -1,11 +1,11 @@
 #ifndef T_SETTING_H
 #define T_SETTING_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 class ElaRadioButton;
 class ElaToggleSwitch;
 class ElaComboBox;
-class T_Setting : public T_BasePage
+class T_Setting : public BasePage
 {
     Q_OBJECT
 public:

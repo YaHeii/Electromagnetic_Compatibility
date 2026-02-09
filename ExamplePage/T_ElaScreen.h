@@ -3,11 +3,11 @@
 #include <QWidget>
 
 #ifdef Q_OS_WIN
-#include "T_BasePage.h"
+#include "BasePage.h"
 
 class ElaDxgiScreen;
 class ElaComboBox;
-class T_ElaScreen : public T_BasePage
+class T_ElaScreen : public BasePage
 {
     Q_OBJECT
 public:

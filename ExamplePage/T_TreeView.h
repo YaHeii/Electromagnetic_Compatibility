@@ -1,10 +1,10 @@
 #ifndef T_TREEVIEW_H
 #define T_TREEVIEW_H
 
-#include "T_BasePage.h"
+#include "BasePage.h"
 
 class ElaTreeView;
-class T_TreeView : public T_BasePage
+class T_TreeView : public BasePage
 {
     Q_OBJECT
 public:

@@ -20,7 +20,7 @@
 #include <QVBoxLayout>
 
 T_BaseComponents::T_BaseComponents(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaBaseComponents");

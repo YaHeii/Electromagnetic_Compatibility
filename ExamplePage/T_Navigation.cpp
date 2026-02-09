@@ -11,7 +11,7 @@
 #include "ElaTabWidget.h"
 #include "ElaText.h"
 T_Navigation::T_Navigation(QWidget* parent)
-    : T_BasePage(parent)
+    : BasePage(parent)
 {
     // 预览窗口标题
     setWindowTitle("ElaNavigation");
