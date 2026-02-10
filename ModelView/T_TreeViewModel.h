@@ -1,8 +1,8 @@
-#ifndef T_TREEVIEWMODEL_H
-#define T_TREEVIEWMODEL_H
+#pragma once
 
 #include <QAbstractItemModel>
 #include <QObject>
+#include "Interface/DataModel.h"
 
 class T_TreeItem;
 class T_TreeViewModel : public QAbstractItemModel
@@ -22,9 +22,20 @@ public:
 
     int getItemCount() const;
 
+    // 自定义方法
+    void clear();
+    void addShip(const ShipData& ship);
+    void addDevice(const EquipmentData& device);
+    void removeItem(const QString& itemId);
+    QModelIndex findItemIndex(const QString& itemId) const;
+    T_TreeItem* getItemFromIndex(const QModelIndex& index) const;
+
+
+    T_TreeItem* findItemById(T_TreeItem* item, const QString& itemId) const;
+
+    T_TreeItem* _rootItem;
+
 private:
     QMap<QString, T_TreeItem*> _itemsMap;
     T_TreeItem* _rootItem{nullptr};
 };
-
-#endif // T_TREEVIEWMODEL_H

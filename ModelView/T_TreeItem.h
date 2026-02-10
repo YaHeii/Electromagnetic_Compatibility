@@ -16,6 +16,7 @@ public:
         Root,
         Fleet,
         Ship,
+        Device,
         Tranmitter,
         Receiver,
         Transceiver
