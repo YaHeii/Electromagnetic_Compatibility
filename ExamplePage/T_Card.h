@@ -1,7 +1,7 @@
 #ifndef T_CARD_H
 #define T_CARD_H
 
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 
 class ElaLCDNumber;
 class ElaPromotionCard;

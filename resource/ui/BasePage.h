@@ -1,5 +1,4 @@
-#ifndef T_BASEPAGE_H
-#define T_BASEPAGE_H
+#pragma once
 
 #include <ElaScrollPage.h>
 
@@ -15,4 +14,3 @@ protected:
     void createCustomWidget(QString desText);
 };
 
-#endif // T_BASEPAGE_H

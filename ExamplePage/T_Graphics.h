@@ -1,7 +1,7 @@
 #ifndef T_GRAPHICS_H
 #define T_GRAPHICS_H
 
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 
 class T_Graphics : public BasePage
 {

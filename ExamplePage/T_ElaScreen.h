@@ -3,7 +3,7 @@
 #include <QWidget>
 
 #ifdef Q_OS_WIN
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 
 class ElaDxgiScreen;
 class ElaComboBox;

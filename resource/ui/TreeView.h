@@ -4,12 +4,12 @@
 #include "BasePage.h"
 
 class ElaTreeView;
-class T_TreeView : public BasePage
+class TreeView : public BasePage
 {
     Q_OBJECT
 public:
-    Q_INVOKABLE explicit T_TreeView(QWidget* parent = nullptr);
-    ~T_TreeView();
+    Q_INVOKABLE explicit TreeView(QWidget* parent = nullptr);
+    ~TreeView();
 
     //void syncViewWithModel();
     //void expandAll();

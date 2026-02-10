@@ -1,7 +1,7 @@
 #ifndef T_NAVIGATION_H
 #define T_NAVIGATION_H
 
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 
 class ElaPivot;
 class ElaTabWidget;

@@ -22,15 +22,16 @@
 #include "ElaToolBar.h"
 #include "ElaToolButton.h"
 
-#include "ExamplePage/T_Home.h"
+#include "Home.h"
 #include "About.h"
+#include "TreeView.h"
 #include "ExamplePage/T_BaseComponents.h"
 #include "ExamplePage/T_Card.h"
 #include "ExamplePage/T_Graphics.h"
 #include "ExamplePage/T_ListView.h"
 #include "ExamplePage/T_Setting.h"
 #include "ExamplePage/T_TableView.h"
-#include "ExamplePage/T_TreeView.h"
+
 
 #include "ExamplePage/T_ElaScreen.h"
 #include "ExamplePage/T_Icon.h"
@@ -242,7 +243,7 @@ void MainWindow::initEdgeLayout()
 // REVIEW:参考页面
 void MainWindow::initContent()
 {
-    _homePage = new T_Home(this);
+    _homePage = new Home(this);
 #ifdef Q_OS_WIN
     _elaScreenPage = new T_ElaScreen(this);
 #endif
@@ -254,7 +255,7 @@ void MainWindow::initContent()
     _cardPage = new T_Card(this);
     _listViewPage = new T_ListView(this);
     _tableViewPage = new T_TableView(this);
-    _treeViewPage = new T_TreeView(this);
+    _treeViewPage = new TreeView(this);
     _settingPage = new T_Setting(this);
     FleetInput* FleetWidget = new FleetInput(this);
     Simulation* SimulationWidget = new Simulation(this);
@@ -312,20 +313,20 @@ void MainWindow::initContent()
         this->navigation(_homePage->property("ElaPageKey").toString());
     });
 #ifdef Q_OS_WIN
-    connect(_homePage, &T_Home::elaScreenNavigation, this, [=]() {
+    connect(_homePage, &Home::elaScreenNavigation, this, [=]() {
         this->navigation(_elaScreenPage->property("ElaPageKey").toString());
     });
 #endif
-    connect(_homePage, &T_Home::elaBaseComponentNavigation, this, [=]() {
+    connect(_homePage, &Home::elaBaseComponentNavigation, this, [=]() {
         this->navigation(_baseComponentsPage->property("ElaPageKey").toString());
     });
-    connect(_homePage, &T_Home::elaSceneNavigation, this, [=]() {
+    connect(_homePage, &Home::elaSceneNavigation, this, [=]() {
         this->navigation(_graphicsPage->property("ElaPageKey").toString());
     });
-    connect(_homePage, &T_Home::elaIconNavigation, this, [=]() {
+    connect(_homePage, &Home::elaIconNavigation, this, [=]() {
         this->navigation(_iconPage->property("ElaPageKey").toString());
     });
-    connect(_homePage, &T_Home::elaCardNavigation, this, [=]() {
+    connect(_homePage, &Home::elaCardNavigation, this, [=]() {
         this->navigation(_cardPage->property("ElaPageKey").toString());
     });
 

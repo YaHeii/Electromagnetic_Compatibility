@@ -1,4 +1,4 @@
-#include "T_TreeView.h"
+#include "TreeView.h"
 
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -10,14 +10,14 @@
 #include "ElaText.h"
 #include "ElaTreeView.h"
 #include "ModelView/T_TreeViewModel.h"
-T_TreeView::T_TreeView(QWidget* parent)
+TreeView::TreeView(QWidget* parent)
     : BasePage(parent)
 {
-    // 预览窗口标题
-    setWindowTitle("编队树");
+    //// 预览窗口标题
+    //setWindowTitle("编队树");
 
-    // 顶部元素
-    createCustomWidget("树型视图被放置于此，可在此界面观察目前数据模型");
+    //// 顶部元素
+    //createCustomWidget("树型视图被放置于此，可在此界面观察目前数据模型");
 
     // ElaTreeView
     T_TreeViewModel* treeModel = new T_TreeViewModel(this);
@@ -103,6 +103,6 @@ T_TreeView::T_TreeView(QWidget* parent)
     addCentralWidget(centralWidget, true, false, 0);
 }
 
-T_TreeView::~T_TreeView()
+TreeView::~TreeView()
 {
 }

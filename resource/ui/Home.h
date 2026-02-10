@@ -3,12 +3,12 @@
 
 #include "BasePage.h"
 class ElaMenu;
-class T_Home : public BasePage
+class Home : public BasePage
 {
     Q_OBJECT
 public:
-    Q_INVOKABLE explicit T_Home(QWidget* parent = nullptr);
-    ~T_Home();
+    Q_INVOKABLE explicit Home(QWidget* parent = nullptr);
+    ~Home();
 Q_SIGNALS:
     Q_SIGNAL void elaScreenNavigation();
     Q_SIGNAL void elaBaseComponentNavigation();

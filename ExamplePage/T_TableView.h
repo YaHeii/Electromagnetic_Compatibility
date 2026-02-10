@@ -1,7 +1,7 @@
 #ifndef T_TABLEVIEW_H
 #define T_TABLEVIEW_H
 
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 
 class ElaTableView;
 class T_TableView : public BasePage

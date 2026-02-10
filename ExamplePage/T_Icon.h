@@ -3,7 +3,7 @@
 
 #include <QMetaEnum>
 
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 class ElaLineEdit;
 class ElaListView;
 class T_IconModel;

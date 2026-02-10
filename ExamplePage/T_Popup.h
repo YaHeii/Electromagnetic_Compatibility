@@ -1,7 +1,7 @@
 #ifndef T_POPUP_H
 #define T_POPUP_H
 
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 
 class ElaToolButton;
 class ElaColorDialog;

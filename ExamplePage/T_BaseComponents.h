@@ -1,7 +1,7 @@
 ﻿#ifndef T_BASECOMPONENTS_H
 #define T_BASECOMPONENTS_H
 
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 
 class ElaToggleSwitch;
 class ElaToggleButton;

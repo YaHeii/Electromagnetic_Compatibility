@@ -1,7 +1,7 @@
 #ifndef T_SETTING_H
 #define T_SETTING_H
 
-#include "BasePage.h"
+#include "Resource/ui/BasePage.h"
 class ElaRadioButton;
 class ElaToggleSwitch;
 class ElaComboBox;
