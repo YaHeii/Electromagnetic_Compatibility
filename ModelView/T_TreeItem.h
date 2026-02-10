@@ -12,19 +12,29 @@ class T_TreeItem : public QObject
     Q_PROPERTY_CREATE(bool, IsChecked)
     Q_PRIVATE_CREATE(T_TreeItem*, ParentItem)
 public:
-    explicit T_TreeItem(QString itemTitle, T_TreeItem* parent = nullptr);
+    enum ItemType {
+        Root,
+        Fleet,
+        Ship,
+        Tranmitter,
+        Receiver,
+        Transceiver
+    };
+public:
+    explicit T_TreeItem(QString itemTitle, ItemType itemType, T_TreeItem* parent = nullptr);
     ~T_TreeItem();
     QString getItemKey() const;
     QString getItemTitle() const;
 
     void setChildChecked(bool isChecked);
     Qt::CheckState getChildCheckState();
-
+    ItemType getItemType() const { return _pItemType; }
     void appendChildItem(T_TreeItem* childItem);
     bool getIsHasChild() const;
     int getRow() const;
 
 private:
+    ItemType _pItemType;
     QString _itemKey = "";
     QString _itemTitle = "";
     bool _isExpanded{false};

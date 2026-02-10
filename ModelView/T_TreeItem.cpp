@@ -1,10 +1,12 @@
 #include "T_TreeItem.h"
 
 #include <QUuid>
-T_TreeItem::T_TreeItem(QString itemTitle, T_TreeItem* parent)
+
+T_TreeItem::T_TreeItem(QString itemTitle, ItemType itemType, T_TreeItem* parent)
     : QObject{parent}
 {
     _itemKey = QUuid::createUuid().toString().remove("{").remove("}").remove("-");
+    _pItemType = itemType;
     _itemTitle = itemTitle;
     _pParentItem = parent;
     _pIsChecked = false;
