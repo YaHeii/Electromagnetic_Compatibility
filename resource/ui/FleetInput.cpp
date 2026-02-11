@@ -1,5 +1,4 @@
 #include "FleetInput.h"
-#include "TreeViewManager.h"
 #include "DeviceWidget.h"
 #include "shipwidget.h"
 #include <QMessageBox>
@@ -23,7 +22,6 @@ FleetInput::FleetInput(QWidget* parent)
     //shipScrollArea->viewport()->setStyleSheet("background-color: transparent;");
     //shipsContentsWidget->setAttribute(Qt::WA_TranslucentBackground);
     //
-    _treeView = new TreeViewManager(treeView, this);
     connectTreeViewSignals();
 }
 
@@ -33,9 +31,10 @@ FleetInput::~FleetInput() {
 void FleetInput::connectTreeViewSignals()
 {
     // 可以在这里连接树视图的信号，比如选中项变化等
-    connect(_treeView, &TreeViewManager::syncViewWithModel, this, [this]() {
-        // 当树视图同步时，可以执行一些操作
-    });
+    // TODO:connet with treeview
+    //connect(_treeView, &TreeViewManager::syncViewWithModel, this, [this]() {
+    //    // 当树视图同步时，可以执行一些操作
+    //});
 }
 
 void FleetInput::setupUI()
@@ -165,7 +164,7 @@ void FleetInput::on_addDeviceButton_clicked()
     connect(widget, &DeviceWidget::removalRequested, this, &FleetInput::onDeviceWidgetRemovalRequested);
     
     //同步treeView
-    _treeView->syncViewWithModel();
+    //_treeView->syncViewWithModel();
 }
 
 void FleetInput::on_addShipButton_clicked()
@@ -178,7 +177,7 @@ void FleetInput::on_addShipButton_clicked()
     ShipWidget* widget = new ShipWidget();
     widget->setData(newShip); // 关联UI与数据
     shipsLayout->addWidget(widget);
-    _treeView->syncViewWithModel();
+    //_treeView->syncViewWithModel();
 }
 
 void FleetInput::on_DeviceSave_clicked()
@@ -225,7 +224,7 @@ bool FleetInput::updateShipModelFromView()
     }
 
     // 3. 同步 TreeView (如果校验通过)
-    _treeView->syncViewWithModel();
+    //_treeView->syncViewWithModel();
     return true;
 }
 
@@ -258,7 +257,7 @@ bool FleetInput::updateDeviceModelFromView()
         }
     }
 
-    _treeView->syncViewWithModel();
+    //_treeView->syncViewWithModel();
     return true;
 }
 
@@ -289,7 +288,7 @@ void FleetInput::onDeviceWidgetRemovalRequested(const QString& id)
         }
 
         // 3. 更新TreeView
-        _treeView->syncViewWithModel();
+        //_treeView->syncViewWithModel();
     }
     else {
         spdlog::warn("请求删除设备 {}，但在数据模型中未找到。", id.toStdString());

@@ -1,7 +1,5 @@
 #pragma once
 #include <QWidget>
-
-#include <QWidget>
 #include <QAbstractListModel>
 #include <QListView>
 #include <vector>
@@ -9,9 +7,14 @@
 #include <QString>
 #include "spdlog/spdlog.h"
 #include "Utils/QtSpdlogSink.h"
+#include "ElaComboBox.h"
+#include "ElaToolButton.h"
+#include "ElaText.h"
+#include "ElaListView.h"
+#include "Resource/ui/BasePage.h"
 
 class T_LogModel;
-class LogWidget : public QWidget
+class LogWidget : public BasePage
 {
     Q_OBJECT
 public:

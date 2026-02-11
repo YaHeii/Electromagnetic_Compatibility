@@ -1,5 +1,7 @@
 #pragma once
 #include <QAbstractListModel>
+#include <QColor>
+#include "spdlog/spdlog.h"
 
 class T_LogModel : public QAbstractListModel
 {
@@ -13,10 +15,9 @@ public:
 public:
     explicit T_LogModel(QObject* parent = nullptr);
     ~T_LogModel();
-    void setLogList(QStringList list);
-    void appendLogList(QString log);
-    QStringList getLogList() const;
-    // custom method
+    void setLogList(QList<LogEntry> logEntries);
+    QList<LogEntry> getLogList() const;
+    void appendLogList(LogEntry log);
     void appendLogList(const QString &message, spdlog::level::level_enum level);
     void clearLogList();
     void filterLogList(const QString &level);
@@ -26,6 +27,6 @@ protected:
 
 private:
     // QStringList _logList;
-    QList<LogEntry> logEntries;
+    QList<LogEntry> _logEntries;
 };
 

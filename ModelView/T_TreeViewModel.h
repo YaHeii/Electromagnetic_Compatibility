@@ -33,7 +33,6 @@ public:
 
     T_TreeItem* findItemById(T_TreeItem* item, const QString& itemId) const;
 
-    T_TreeItem* _rootItem;
 
 private:
     QMap<QString, T_TreeItem*> _itemsMap;

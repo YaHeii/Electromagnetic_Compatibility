@@ -34,7 +34,7 @@
 
 
 #include "ExamplePage/T_Icon.h"
-#include "ExamplePage/T_LogWidget.h"
+#include "LogWidget.h"
 #include "ExamplePage/T_Navigation.h"
 #include "ExamplePage/T_Popup.h"
 #include "ExamplePage/T_UpdateWidget.h"
@@ -307,17 +307,17 @@ void MainWindow::initContent()
     connect(this, &MainWindow::userInfoCardClicked, this, [=]() {
         this->navigation(_homePage->property("ElaPageKey").toString());
     });
-#ifdef Q_OS_WIN
-    connect(_homePage, &Home::elaScreenNavigation, this, [=]() {
-        this->navigation(_elaScreenPage->property("ElaPageKey").toString());
-    });
-#endif
+//#ifdef Q_OS_WIN
+//    connect(_homePage, &Home::elaScreenNavigation, this, [=]() {
+//        this->navigation(_elaScreenPage->property("ElaPageKey").toString());
+//    });
+//#endif
     connect(_homePage, &Home::elaBaseComponentNavigation, this, [=]() {
         this->navigation(_baseComponentsPage->property("ElaPageKey").toString());
     });
-    connect(_homePage, &Home::elaSceneNavigation, this, [=]() {
-        this->navigation(_graphicsPage->property("ElaPageKey").toString());
-    });
+    //connect(_homePage, &Home::elaSceneNavigation, this, [=]() {
+    //    this->navigation(_graphicsPage->property("ElaPageKey").toString());
+    //});
     connect(_homePage, &Home::elaIconNavigation, this, [=]() {
         this->navigation(_iconPage->property("ElaPageKey").toString());
     });

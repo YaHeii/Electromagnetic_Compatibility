@@ -1,4 +1,4 @@
-#include "T_LogWidget.h"
+#include "LogWidget.h"
 
 #include <ElaListView.h>
 
@@ -6,6 +6,7 @@
 #include "Resource/ui/BasePage.h"
 #include "ElaLog.h"
 #include "ModelView/T_LogModel.h"
+#include "ElaMessageBar.h"
 LogWidget::LogWidget(QWidget* parent)
     : BasePage{parent}
 {
@@ -78,9 +79,15 @@ LogWidget::LogWidget(QWidget* parent)
     mainLayout->addWidget(logView);
     mainLayout->setContentsMargins(0, 5, 5, 0);
 
-    connect(ElaLog::getInstance(), &ElaLog::logMessage, this, [=](QString log) {
-        _logModel->appendLogList(log);
-    });
+	//TODO:处理spdlog输出到UI
+    _logEmitter = new LogEmitter(this);
+    connect(_logEmitter, &LogEmitter::newLog,
+        this, &LogWidget::onLogReceived,
+        Qt::QueuedConnection);
+
+    //connect(ElaLog::getInstance(), &ElaLog::logMessage, this, [=](QString log) {
+    //    _logModel->appendLogList(log);
+    //});
 
 }
 
@@ -121,7 +128,7 @@ void LogWidget::onLogReceived(const QString& message, int level)
     
     // 根据级别过滤和显示
     if (shouldDisplayLog(logLevel)) {
-        _logModel->appendLog(message, logLevel);
+        _logModel->appendLogList(message, logLevel);
     }
 }
 
@@ -135,10 +142,10 @@ void LogWidget::updateStatistics(spdlog::level::level_enum level)
         infoLogs++;
     }
     
-    // 更新显示
-    totalLabel->setText(QString("总计: %1").arg(totalLogs));
-    errorLabel->setText(QString("错误: %1").arg(errorLogs));
-    infoLabel->setText(QString("信息: %1").arg(infoLogs));
+//    // 更新显示
+//    totalLabel->setText(QString("总计: %1").arg(totalLogs));
+//    errorLabel->setText(QString("错误: %1").arg(errorLogs));
+//    infoLabel->setText(QString("信息: %1").arg(infoLogs));
 }
 
 bool LogWidget::shouldDisplayLog(spdlog::level::level_enum level)
@@ -163,12 +170,12 @@ bool LogWidget::shouldDisplayLog(spdlog::level::level_enum level)
 void LogWidget::onLevelFilterChanged()
 {
     // 重新过滤现有日志
-    _logModel->filterLogs(levelFilter->currentText());
+    _logModel->filterLogList(levelFilter->currentText());
 }
 
 void LogWidget::clearLogs()
 {
-    _logModel->clearLogs();
+    _logModel->clearLogList();
     totalLogs = 0;
     errorLogs = 0;
     infoLogs = 0;

@@ -1,4 +1,4 @@
-#include "T_TreeViewModel.h"
+Ôªø#include "T_TreeViewModel.h"
 
 #include <QIcon>
 
@@ -141,15 +141,15 @@ Qt::ItemFlags T_TreeViewModel::flags(const QModelIndex& index) const
 
 QVariant T_TreeViewModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    //if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
-    //{
-    //    return QString("ElaTreeView-Example-4Level");
-    //}
-    //return QAbstractItemModel::headerData(section, orientation, role);
-    if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
-        return section == 0 ? "√˚≥∆" : "ID/¿‡–Õ";
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
+    {
+        return QString("ElaTreeView-Example-4Level");
     }
-    return QVariant();
+    return QAbstractItemModel::headerData(section, orientation, role);
+    //if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
+    //    return section == 0 ? "ÂêçÁß∞" : "ID/Á±ªÂûã";
+    //}
+    //return QVariant();
 }
 
 int T_TreeViewModel::getItemCount() const
@@ -170,8 +170,8 @@ void T_TreeViewModel::addShip(const ShipData& ship)
 {
     T_TreeItem* fleetItem = static_cast<T_TreeItem*>(_rootItem->getChildrenItems().first());
     if (!fleetItem || fleetItem->getItemType() != T_TreeItem::Fleet) {
-        // ¥¥Ω®Ω¢∂”∏˘Ω⁄µ„
-        fleetItem = new T_TreeItem("Ω¢¥¨±‡∂”", T_TreeItem::Fleet, _rootItem);
+        // ÂàõÂª∫Ëà∞ÈòüÊ†πËäÇÁÇπ
+        fleetItem = new T_TreeItem("Ëà∞ËàπÁºñÈòü", T_TreeItem::Fleet, _rootItem);
         beginInsertRows(QModelIndex(), _rootItem->getChildrenItems().count(), _rootItem->getChildrenItems().count());
         _rootItem->appendChildItem(fleetItem);
         endInsertRows();
@@ -182,7 +182,7 @@ void T_TreeViewModel::addShip(const ShipData& ship)
     beginInsertRows(createIndex(fleetItem->getRow(), 0, fleetItem), fleetItem->getChildrenItems().count(), fleetItem->getChildrenItems().count());
     fleetItem->appendChildItem(shipItem);
 
-    // ÃÌº”≈‰÷√µƒ…Ë±∏
+    // Ê∑ªÂä†ÈÖçÁΩÆÁöÑËÆæÂ§á
     for (const auto& equipment : ship.Equipments) {
         T_TreeItem* deviceItem = new T_TreeItem(equipment.equipmentID, T_TreeItem::Device, shipItem);
         shipItem->appendChildItem(deviceItem);
@@ -195,17 +195,17 @@ void T_TreeViewModel::addDevice(const EquipmentData& device)
 {
     T_TreeItem* devicesRoot = nullptr;
 
-    // ≤È’“ªÚ¥¥Ω®…Ë±∏ø‚∏˘Ω⁄µ„
+    // Êü•ÊâæÊàñÂàõÂª∫ËÆæÂ§áÂ∫ìÊ†πËäÇÁÇπ
     for (auto child : _rootItem->getChildrenItems()) {
         T_TreeItem* item = static_cast<T_TreeItem*>(child);
-        if (item->getItemType() == T_TreeItem::Device && item->getItemTitle() == "…Ë±∏ø‚") {
+        if (item->getItemType() == T_TreeItem::Device && item->getItemTitle() == "ËÆæÂ§áÂ∫ì") {
             devicesRoot = item;
             break;
         }
     }
 
     if (!devicesRoot) {
-        devicesRoot = new T_TreeItem("…Ë±∏ø‚", T_TreeItem::Fleet, _rootItem);
+        devicesRoot = new T_TreeItem("ËÆæÂ§áÂ∫ì", T_TreeItem::Fleet, _rootItem);
         beginInsertRows(QModelIndex(), _rootItem->getChildrenItems().count(), _rootItem->getChildrenItems().count());
         _rootItem->appendChildItem(devicesRoot);
         endInsertRows();
