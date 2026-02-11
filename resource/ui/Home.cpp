@@ -23,13 +23,13 @@ Home::Home(QWidget* parent)
     : BasePage(parent)
 {
     // 预览窗口标题
-    //setWindowTitle("Home");
+    setWindowTitle("Home");
 
     setTitleVisible(true);
     setContentsMargins(2, 2, 0, 0);
     //// 标题卡片区域
     //ElaText* desText = new ElaText("主界面", this);
-    setWindowTitle("主界面");
+    //setWindowTitle("主界面");
     //desText->setTextPixelSize(18);
     //ElaText* titleText = new ElaText("HomeView");
     //titleText->setTextPixelSize(35);
@@ -38,7 +38,7 @@ Home::Home(QWidget* parent)
     //titleLayout->setContentsMargins(30, 10, 0, 0);
     //titleLayout->addWidget(desText);
     //titleLayout->addWidget(titleText);
-    createCustomWidget("树型视图被放置于此，可在此界面观察目前数据模型");
+    //createCustomWidget("树型视图被放置于此，可在此界面观察目前数据模型");
 
     //ElaImageCard* backgroundCard = new ElaImageCard(this);
     //backgroundCard->setBorderRadius(10);

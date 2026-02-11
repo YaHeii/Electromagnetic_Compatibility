@@ -67,9 +67,10 @@ TreeView::TreeView(QWidget* parent)
         _treeView->collapseAll();
     });
     expandCollapseLayout->addLayout(itemHeightLayout);
+    expandCollapseLayout->addStretch();
     expandCollapseLayout->addWidget(collapseButton);
     expandCollapseLayout->addWidget(expandButton);
-    expandCollapseLayout->addStretch();
+
 
     treeSettingWidgetLayout->addWidget(dataText);
     treeSettingWidgetLayout->addLayout(expandCollapseLayout);

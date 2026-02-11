@@ -8,21 +8,20 @@
 #include "ModelView/T_LogModel.h"
 #include "ElaMessageBar.h"
 LogWidget::LogWidget(QWidget* parent)
-    : BasePage{parent}
+    : QWidget{parent}
 {
-    setTitleVisible(true);
+    //setTitleVisible(true);
     setContentsMargins(2, 2, 0, 0);
     setWindowTitle("日志监控");
     // createCustomWidget("")
 
-    // 创建工具栏
+
+   // 创建工具栏
     toolbarWidget = new QWidget(this);
-    toolbarWidget->setFixedHeight(40);
-    
-    QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbarWidget);
+    //toolbarWidget->setFixedHeight(40);
+    QHBoxLayout* toolbarLayout = new QHBoxLayout(toolbarWidget);
     toolbarLayout->setContentsMargins(0, 0, 0, 0);
     toolbarLayout->setSpacing(8);
-    
     // 日志级别过滤
     ElaText *levelLabel = new ElaText("级别:", this);
     levelLabel->setTextPixelSize(12);
@@ -75,7 +74,7 @@ LogWidget::LogWidget(QWidget* parent)
 
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->addLayout(toolbarLayout);
+    mainLayout->addWidget(toolbarWidget);
     mainLayout->addWidget(logView);
     mainLayout->setContentsMargins(0, 5, 5, 0);
 
