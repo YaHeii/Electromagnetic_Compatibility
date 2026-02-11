@@ -1,4 +1,4 @@
-#include "T_Setting.h"
+#include "Setting.h"
 
 #include <QDebug>
 #include <QHBoxLayout>

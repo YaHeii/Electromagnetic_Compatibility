@@ -28,13 +28,11 @@
 #include "TreeView.h"
 #include "ExamplePage/T_BaseComponents.h"
 #include "ExamplePage/T_Card.h"
-#include "ExamplePage/T_Graphics.h"
 #include "ExamplePage/T_ListView.h"
 
 #include "ExamplePage/T_TableView.h"
 
 
-#include "ExamplePage/T_ElaScreen.h"
 #include "ExamplePage/T_Icon.h"
 #include "ExamplePage/T_LogWidget.h"
 #include "ExamplePage/T_Navigation.h"
@@ -245,12 +243,9 @@ void MainWindow::initEdgeLayout()
 void MainWindow::initContent()
 {
     _homePage = new Home(this);
-#ifdef Q_OS_WIN
-    _elaScreenPage = new T_ElaScreen(this);
-#endif
+
     _iconPage = new T_Icon(this);
     _baseComponentsPage = new T_BaseComponents(this);
-    _graphicsPage = new T_Graphics(this);
     _navigationPage = new T_Navigation(this);
     _popupPage = new T_Popup(this);
     _cardPage = new T_Card(this);
@@ -269,10 +264,10 @@ void MainWindow::initContent()
     addPageNode("仿真", SimulationWidget, ElaIconType::ChartSimple);
 
     addPageNode("HOME", _homePage, ElaIconType::House);
-#ifdef Q_OS_WIN
-    addExpanderNode("ElaDxgi", _elaDxgiKey, ElaIconType::TvMusic);
-    addPageNode("ElaScreen", _elaScreenPage, _elaDxgiKey, 3, ElaIconType::ObjectGroup);
-#endif
+// #ifdef Q_OS_WIN
+//     addExpanderNode("ElaDxgi", _elaDxgiKey, ElaIconType::TvMusic);
+//     addPageNode("ElaScreen", _elaScreenPage, _elaDxgiKey, 3, ElaIconType::ObjectGroup);
+// #endif
     // navigation(elaScreenWidget->property("ElaPageKey").toString());
     addPageNode("ElaBaseComponents", _baseComponentsPage, ElaIconType::CabinetFiling);
 
@@ -282,7 +277,6 @@ void MainWindow::initContent()
     addPageNode("ElaTreeView", _treeViewPage, _viewKey, ElaIconType::ListTree);
     expandNavigationNode(_viewKey);
 
-    addPageNode("ElaGraphics", _graphicsPage, 9, ElaIconType::Paintbrush);
     addPageNode("ElaCard", _cardPage, ElaIconType::Cards);
     addPageNode("ElaNavigation", _navigationPage, ElaIconType::LocationArrow);
     addPageNode("ElaPopup", _popupPage, ElaIconType::Envelope);

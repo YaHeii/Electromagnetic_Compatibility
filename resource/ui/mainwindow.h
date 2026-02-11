@@ -19,9 +19,7 @@ class ElaContentDialog;
 
 class Home;
 class T_Icon;
-class T_ElaScreen;
 class T_BaseComponents;
-class T_Graphics;
 class T_Navigation;
 class T_Popup;
 class T_Card;
@@ -54,14 +52,9 @@ private:
     ElaSuggestBox* _windowSuggestBox{ nullptr };
     QString _settingKey{ "" };
 
-// REVIEW：参考页面
-#ifdef Q_OS_WIN
-    T_ElaScreen* _elaScreenPage{ nullptr };
-#endif
     Home* _homePage{ nullptr };
     T_Icon* _iconPage{nullptr};
     T_BaseComponents* _baseComponentsPage{nullptr};
-    T_Graphics* _graphicsPage{nullptr};
     T_Navigation* _navigationPage{nullptr};
     T_Popup* _popupPage{nullptr};
     T_Card* _cardPage{nullptr};
