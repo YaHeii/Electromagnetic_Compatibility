@@ -29,7 +29,7 @@ class T_ListView;
 class T_TableView;
 class TreeView;
 class About;
-class T_Setting;
+class Setting;
 
 class MainWindow : public ElaWindow {
     Q_OBJECT
@@ -69,7 +69,7 @@ private:
     T_TableView* _tableViewPage{nullptr};
     TreeView* _treeViewPage{nullptr};
     About* _aboutPage{nullptr};
-    T_Setting* _settingPage{nullptr};
+    Setting* _settingPage{nullptr};
     QString _elaDxgiKey{""};
     QString _viewKey{""};
     QString _aboutKey{""};

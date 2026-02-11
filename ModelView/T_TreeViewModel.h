@@ -22,7 +22,7 @@ public:
 
     int getItemCount() const;
 
-    // 自定义方法
+    //custom method
     void clear();
     void addShip(const ShipData& ship);
     void addDevice(const EquipmentData& device);

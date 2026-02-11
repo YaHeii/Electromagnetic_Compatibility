@@ -113,8 +113,8 @@ QVariant T_TreeViewModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
-// 处理复选框状态变化
-// TODO: 修改函数为删除选中逻辑
+// process check box status changed
+// TODO: change the function to selete specific index
 bool T_TreeViewModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
     Q_UNUSED(index)

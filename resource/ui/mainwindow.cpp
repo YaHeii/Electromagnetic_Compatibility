@@ -24,12 +24,13 @@
 
 #include "Home.h"
 #include "About.h"
+#include "Setting.h"
 #include "TreeView.h"
 #include "ExamplePage/T_BaseComponents.h"
 #include "ExamplePage/T_Card.h"
 #include "ExamplePage/T_Graphics.h"
 #include "ExamplePage/T_ListView.h"
-#include "ExamplePage/T_Setting.h"
+
 #include "ExamplePage/T_TableView.h"
 
 
@@ -256,7 +257,7 @@ void MainWindow::initContent()
     _listViewPage = new T_ListView(this);
     _tableViewPage = new T_TableView(this);
     _treeViewPage = new TreeView(this);
-    _settingPage = new T_Setting(this);
+    _settingPage = new Setting(this);
     FleetInput* FleetWidget = new FleetInput(this);
     Simulation* SimulationWidget = new Simulation(this);
 

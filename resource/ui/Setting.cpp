@@ -14,7 +14,7 @@
 #include "ElaToggleSwitch.h"
 #include "ElaWindow.h"
 #include <QButtonGroup>
-T_Setting::T_Setting(QWidget* parent)
+Setting::Setting(QWidget* parent)
     : BasePage(parent)
 {
     // 预览窗口标题
@@ -62,10 +62,10 @@ T_Setting::T_Setting(QWidget* parent)
     windowPaintText->setWordWrap(false);
     windowPaintText->setTextPixelSize(15);
 
-    _windowNormalButton = new ElaRadioButton("Normal", this);
+    _windowNormalButton = new ElaRadioButton("常规", this);
     _windowNormalButton->setChecked(true);
-    _windowPixmapButton = new ElaRadioButton("Pixmap", this);
-    _windowMovieButton = new ElaRadioButton("Movie", this);
+    _windowPixmapButton = new ElaRadioButton("像素风", this);
+    _windowMovieButton = new ElaRadioButton("电影风", this);
 
     QButtonGroup* windowPaintButtonGroup = new QButtonGroup(this);
     windowPaintButtonGroup->addButton(_windowNormalButton, 0);
@@ -269,6 +269,6 @@ T_Setting::T_Setting(QWidget* parent)
     addCentralWidget(centralWidget, true, true, 0);
 }
 
-T_Setting::~T_Setting()
+Setting::~Setting()
 {
 }

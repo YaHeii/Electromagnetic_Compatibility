@@ -1,16 +1,15 @@
-#ifndef T_SETTING_H
-#define T_SETTING_H
+#pragma once
 
 #include "Resource/ui/BasePage.h"
 class ElaRadioButton;
 class ElaToggleSwitch;
 class ElaComboBox;
-class T_Setting : public BasePage
+class Setting : public BasePage
 {
     Q_OBJECT
 public:
-    Q_INVOKABLE explicit T_Setting(QWidget* parent = nullptr);
-    ~T_Setting() override;
+    Q_INVOKABLE explicit Setting(QWidget* parent = nullptr);
+    ~Setting() override;
 
 private:
     ElaComboBox* _themeComboBox{nullptr};
@@ -40,5 +39,3 @@ private:
     ElaRadioButton* _flipButton{nullptr};
     ElaRadioButton* _blurButton{nullptr};
 };
-
-#endif // T_SETTING_H
