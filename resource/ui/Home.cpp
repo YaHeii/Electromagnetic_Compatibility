@@ -25,7 +25,7 @@ Home::Home(QWidget* parent)
     // 预览窗口标题
     //setWindowTitle("Home");
 
-    setTitleVisible(false);
+    setTitleVisible(true);
     setContentsMargins(2, 2, 0, 0);
     //// 标题卡片区域
     //ElaText* desText = new ElaText("主界面", this);

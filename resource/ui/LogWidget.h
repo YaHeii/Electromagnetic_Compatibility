@@ -23,8 +23,7 @@ public:
     explicit LogWidget(QWidget* parent = nullptr);
     ~LogWidget();
     
-    // 创建并返回一个指向UI日志接收器的指针
-    std::shared_ptr<spdlog::sinks::sink> createGuiLogSink();
+
 
 private slots:
     void onLogReceived(const QString& message, int level);

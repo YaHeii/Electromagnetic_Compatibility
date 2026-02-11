@@ -1,6 +1,4 @@
-#ifndef T_LOGMODEL_H
-#define T_LOGMODEL_H
-
+#pragma once
 #include <QAbstractListModel>
 
 class T_LogModel : public QAbstractListModel
@@ -16,9 +14,11 @@ public:
 protected:
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role) const override;
-
+    // cuetom method
+    void appendLog(const QString &message, spdlog::level::level_enum level);
+    void clearLogs();
+    void filterLogs(const QString &level);
 private:
     QStringList _logList;
 };
 
-#endif // T_LOGMODEL_H

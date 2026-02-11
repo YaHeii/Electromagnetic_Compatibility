@@ -88,10 +88,10 @@ void MainWindow::initWindow() {
     centralStack->setAlignment(Qt::AlignCenter);
     addCentralWidget(centralStack);
 
-    setWindowPixmap(ElaThemeType::Light, QPixmap(":/Image/WindowBase/Miku.png"));
-    setWindowPixmap(ElaThemeType::Dark, QPixmap(":/Image/WindowBase/WorldTree.jpg"));
-    setWindowMoviePath(ElaThemeType::Light, ":/Image/WindowBase/Miku.gif");
-    setWindowMoviePath(ElaThemeType::Dark, ":/Image/WindowBase/WorldTree.gif");
+    setWindowPixmap(ElaThemeType::Light, QPixmap(":/WindowBase/Miku.png"));
+    setWindowPixmap(ElaThemeType::Dark, QPixmap(":/WindowBase/WorldTree.jpg"));
+    setWindowMoviePath(ElaThemeType::Light, ":/WindowBase/Miku.gif");
+    setWindowMoviePath(ElaThemeType::Dark, ":/WindowBase/WorldTree.gif");
 
 
 
