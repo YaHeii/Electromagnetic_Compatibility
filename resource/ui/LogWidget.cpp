@@ -73,11 +73,15 @@ LogWidget::LogWidget(QWidget* parent)
     logView->setModel(_logModel);
 
 
-    QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->addWidget(toolbarWidget);
-    mainLayout->addWidget(logView);
-    mainLayout->setContentsMargins(0, 5, 5, 0);
-
+    
+    QWidget* centralWidget = new QWidget(this);
+    centralWidget->setWindowTitle("日志");
+    QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
+    centerHLayout->setContentsMargins(0, 0, 0, 0);
+    centerHLayout->addWidget(toolbarWidget);
+    centerHLayout->addWidget(logView);
+    centerHLayout->addStretch();
+    addCentralWidget(centralWidget);
 	//TODO:处理spdlog输出到UI
     _logEmitter = new LogEmitter(this);
     connect(_logEmitter, &LogEmitter::newLog,

@@ -36,9 +36,12 @@ DeviceonShip::DeviceonShip(QWidget *parent) : QWidget(parent) {
     deviceonShipLayout->addStrech();
 
     QWidget* centralWidget = new QWidget(this);
+    // centralWidget->setWindowTitle("");
     QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
     centerVLayout->setContentsMargins(0, 0, 0, 0);
-    addCentralWidget(centralWidget)
+    centerVLayout->addLayout(deviceonShipLayout);
+    centerVLayout->addStretch();
+    addCentralWidget(centralWidget);
 }
 
 DeviceonShip::~DeviceonShip() {

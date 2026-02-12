@@ -6,8 +6,28 @@
 #include <future>
 #include "Utils/JsonLoader.hpp"
 Simulation::Simulation(QWidget* parent)
-	: QWidget(parent), _emcEngine(nullptr) {
-    setupUI();
+	: BasePage(parent) _emcEngine(nullptr) {
+
+    // 2D Power Distribution
+    simulateFig = new QWidget();
+    PEmodel2Dplot = new QCustomPlot(simulateFig);
+    StartSimulate = new ElaPushButton("仿真", simulateTab);
+
+    simulateFigLayout = new QVBoxLayout(simulateFig);
+    simulateFigLayout->addWidget(PEmodel2Dplot);
+    simulateFigLayout->addSpacing(10);
+    simulateFigLayout->addWidget(StartSimulate);
+
+    QWidget* centralWidget = new QWidget(this);
+    centralWidget->setWindowTitle("仿真");
+    QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
+    centerVLayout->setContentsMargins(0, 0, 0, 0);
+    centerVLayout->addLayout(simulateFigLayout);
+    centerVLayout->addStretch();
+    addCentralWidget(centralWidget);
+
+    // Connect signals
+    connect(StartSimulate, &ElaPushButton::clicked, this, &Simulation::on_StartSimulate_clicked);
 
 }
 
@@ -23,36 +43,6 @@ Simulation::~Simulation() {
         delete _emcEngine;
         _emcEngine = nullptr;
     }
-}
-void Simulation::setupUI()
-{
-    // Main layout
-    mainLayout = new QVBoxLayout(this);
-    
-    // Tab widget
-    tabWidget = new QTabWidget(this);
-    tabWidget->setCurrentIndex(0);
-    
-    // 2D Power Distribution Tab
-    simulateTab = new QWidget();
-    simulateTabLayout = new QVBoxLayout(simulateTab);
-    
-    PEmodel2Dplot = new QCustomPlot(simulateTab);
-    simulateTabLayout->addWidget(PEmodel2Dplot);
-    
-    StartSimulate = new ElaPushButton("仿真", simulateTab);
-    simulateTabLayout->addWidget(StartSimulate);
-    
-    tabWidget->addTab(simulateTab, "二维功率损耗分布");
-    
-    // Tab 2 (placeholder)
-    tab2 = new QWidget();
-    tabWidget->addTab(tab2, "Tab 2");
-    
-    mainLayout->addWidget(tabWidget);
-    
-    // Connect signals
-    connect(StartSimulate, &ElaPushButton::clicked, this, &Simulation::on_StartSimulate_clicked);
 }
 
 void Simulation::on_StartSimulate_clicked() {

@@ -96,11 +96,15 @@ DeviceWidget::DeviceWidget(QWidget *parent)
         this, &DeviceWidget::on_equipmentReduction_clicked);
 
     // 添加到主布局
-    QHBoxLayout* mainLayout = new QHBoxLayout();
-    mainLayout->addLayout(Input);
-    mainLayout->addWidget(_equipmentReduction);
-    mainLayout->addWidget(TransmitterWidget);
-    
+    QWidget* centralWidget = new QWidget(this);
+    centralWidget->setWindowTitle("添加设备");
+    QHBoxLayout* centerHLayout = new QHBoxLayout(centralWidget);
+    centerHLayout->setContentsMargins(0, 0, 0, 0);
+    centerHLayout->addLayout(Input);
+    centerHLayout->addWidget(_equipmentReduction);
+    centerHLayout->addWidget(TransmitterWidget);
+    centerHLayout->addStretch();
+    addCentralWidget(centralWidget);
     // 连接删除按钮信号
     resetTransmitterUI();
     resetReceiverUI();

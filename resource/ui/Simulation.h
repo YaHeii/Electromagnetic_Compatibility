@@ -9,7 +9,7 @@
 #include <ElaPushButton.h>
 #include <future>
 
-class Simulation : public QWidget {
+class Simulation : public BasePage {
 	Q_OBJECT
 
 public:
@@ -21,22 +21,13 @@ signals:
 	void simulationDone(const GridMap& result);
 
 private:
-	void setupUI();
 	EMC_Engine* _emcEngine;
 	std::thread _workerThread;
-	// UI Components
-	QVBoxLayout* mainLayout;
-	QTabWidget* tabWidget;
 
 	// 2D Power Distribution Tab
-	QWidget* simulateTab;
-	QVBoxLayout* simulateTabLayout;
+	QWidget* simulateFig;
 	QCustomPlot* PEmodel2Dplot;
 	ElaPushButton* StartSimulate;
-
-	// Tab 2 (placeholder)
-	QWidget* tab2;
-
 public slots:
 	void on_StartSimulate_clicked();
 	// 槽函数现在接收GridMap作为参数
