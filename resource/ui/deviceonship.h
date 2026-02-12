@@ -1,19 +1,13 @@
 #pragma once
 #include <QWidget>
 
-
-QT_BEGIN_NAMESPACE
-namespace Ui { class DeviceonShip; }
-QT_END_NAMESPACE
-
+// XXX:考虑从elawidgettool中继承
 class DeviceonShip : public QWidget {
 Q_OBJECT
 
 public:
     explicit DeviceonShip(QWidget *parent = nullptr);
     ~DeviceonShip() override;
-
-// Ui::DeviceonShip *getUI();
 signals:
     void removalRequested();
 private:

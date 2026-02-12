@@ -24,39 +24,31 @@ Home::Home(QWidget* parent)
 {
     // 预览窗口标题
     setWindowTitle("Home");
-
-    setTitleVisible(true);
-    setContentsMargins(2, 2, 0, 0);
-    //// 标题卡片区域
-    //ElaText* desText = new ElaText("主界面", this);
-    //setWindowTitle("主界面");
-    //desText->setTextPixelSize(18);
-    //ElaText* titleText = new ElaText("HomeView");
-    //titleText->setTextPixelSize(35);
-
-    //QVBoxLayout* titleLayout = new QVBoxLayout();
-    //titleLayout->setContentsMargins(30, 10, 0, 0);
-    //titleLayout->addWidget(desText);
-    //titleLayout->addWidget(titleText);
-    //createCustomWidget("树型视图被放置于此，可在此界面观察目前数据模型");
+    createCustomWidget("展示软件数据");
 
     //ElaImageCard* backgroundCard = new ElaImageCard(this);
     //backgroundCard->setBorderRadius(10);
     //backgroundCard->setFixedHeight(340);
     //backgroundCard->setCardImage(QImage(":/Home_Background.png"));
-
+   
+    ElaText* treeViewrText = new ElaText("树视图", this);
+    treeViewText->setTextPixelSize(18);
     TreeView* MainTreeView = new TreeView(this);
-    //MainTreeView->set
+    
+    QVBoxLayout* treeViewLayout = new QVBoxLout;
+    treeViewLayout->addWidget(treeViewrText)
+    treeViewLayout->addSpacing(10);
+    treeViewLayout->addWidget(MainTreeView);
 
     QWidget* centralWidget = new QWidget(this);
-    //centralWidget->setWindowTitle("主界面");
+    centralWidget->setWindowTitle("主界面");
     QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
-    centerVLayout->setSpacing(0);
     centerVLayout->setContentsMargins(0, 0, 0, 0);
     //centerVLayout->addWidget(backgroundCard);
-    centerVLayout->addWidget(MainTreeView);
+    centerVLayout->addLayout(treeViewLayout);
+    // centerVLayout->addSpacing(10);
     centerVLayout->addStretch();
-    addCentralWidget(centralWidget);
+    addCentralWidget(centralWidget, true, false, 0);
 
     // 初始化提示
     ElaMessageBar::success(ElaMessageBarType::BottomRight, "Success", "初始化成功!", 2000);

@@ -5,7 +5,7 @@
 #include <QGridLayout>
 #include <QComboBox>
 #include <QLineEdit>
-#include "../../Interface/DataModel.h"
+#include "Interface/DataModel.h"
 
 // 前向声明自定义控件
 class ElaPushButton;

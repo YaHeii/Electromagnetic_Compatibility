@@ -79,7 +79,7 @@ T_Navigation::T_Navigation(QWidget* parent)
     ElaText* page1 = new ElaText("新标签页", this);
     page1->setTextPixelSize(32);
     page1->setAlignment(Qt::AlignCenter);
-    _tabWidget->addTab(page1, QIcon(":/Resource/Image/Cirno.jpg"), "新标签页");
+    _tabWidget->addTab(page1, QIcon(":/Cirno.jpg"), "新标签页");
     for (int i = 0; i < 5; i++)
     {
         ElaText* page = new ElaText(QString("新标签页%1").arg(i), this);

@@ -8,52 +8,42 @@
 DeviceonShip::DeviceonShip(QWidget *parent) : QWidget(parent) {
     // 设置窗口标题
     setWindowTitle("DeviceonShip");
-    // 设置窗口大小
-    setGeometry(0, 0, 343, 120);
-
-    // 创建主水平布局
-    QHBoxLayout *horizontalLayout_4 = new QHBoxLayout(this);
-
-    // 创建垂直布局
-    QVBoxLayout *verticalLayout = new QVBoxLayout();
-
-    // 创建水平布局，设置stretch比例
-    QHBoxLayout *horizontalLayout_2 = new QHBoxLayout();
-    horizontalLayout_2->setStretch(0, 1);
-    horizontalLayout_2->setStretch(1, 2);
-    horizontalLayout_2->setStretch(2, 2);
 
     // 创建设备名称标签
-    ElaText *label = new ElaText(this);
-    QFont font = label->font();
-    font.setPointSize(9);
-    label->setFont(font);
-    label->setText("设备名称");
+    ElaText* EquipmentNameText = new ElaText("设备名称", this);
+    breadcrumbBarText->setTextPixelSize(15);
 
     // 创建设备ID下拉框
-    ElaComboBox *EquipmentID = new ElaComboBox(this);
-
+    ElaComboBox *EquipmentIDCombo = new ElaComboBox(this);
+    //     QStringList comboList{
+    //     "我愿投身前途未卜的群星",
+    //     "潜行 步伐小心翼翼",
+    //     "不留游走痕迹",
+    //     "如同一簇幽灵",
+    //     "所谓 道德加上伦理",
+    //     "抱歉只能律己"};
+    // _comboBox->addItems(comboList);
     // 创建删除按钮
-    ElaPushButton *deleteDeviceonShip = new ElaPushButton(this);
-    deleteDeviceonShip->setText("-");
+    ElaPushButton* deleteDeviceonShip = new ElaPushButton("删除", this);
+    resetButton->setFixedSize(60, 32);
 
-    // 将控件添加到水平布局
-    horizontalLayout_2->addWidget(label);
-    horizontalLayout_2->addWidget(EquipmentID);
-    horizontalLayout_2->addWidget(deleteDeviceonShip);
+    QHBoxLayout* deviceonShipLayout = new QHBoxLayout();
+    deviceonShipLayout->addWidget(EquipmentNameText);
+    deviceonShipLayout->addSpacing(10);
+    deviceonShipLayout->addWidget(EquipmentIDCombo);
+    deviceonShipLayout->addSpacing(10);
+    deviceonShipLayout->addWidget(deleteDeviceonShip);
+    deviceonShipLayout->addStrech();
 
-    // 将水平布局添加到垂直布局
-    verticalLayout->addLayout(horizontalLayout_2);
-
-    // 将垂直布局添加到主水平布局
-    horizontalLayout_4->addLayout(verticalLayout);
-
-    // 设置主布局
-    setLayout(horizontalLayout_4);
+    QWidget* centralWidget = new QWidget(this);
+    QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
+    centerVLayout->setContentsMargins(0, 0, 0, 0);
+    addCentralWidget(centralWidget)
 }
 
 DeviceonShip::~DeviceonShip() {
-    delete ui;
+    // delete ui;
+    qDeleteAll(_pChildrenItems);
 }
 
 void DeviceonShip::on_deleteDeviceonShip_clicked() {
