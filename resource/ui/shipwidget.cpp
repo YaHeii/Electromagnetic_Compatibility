@@ -325,3 +325,57 @@ void ShipWidget::onDeviceOnShipRemovalRequested()
         }
     }
 }
+
+void ShipWidget::on_addShipButton_clicked()
+{
+    updateShipModelFromView();
+
+    ShipData newShip;
+    newShip.shipID = DataModel::instance()->allShips.size() + 1;
+    DataModel::instance()->allShips.push_back(newShip);
+    ShipWidget* widget = new ShipWidget();
+    widget->setData(newShip); // 关联UI与数据
+    shipsLayout->addWidget(widget);
+    //_treeView->syncViewWithModel();
+}
+
+
+void ShipWidget::on_ShipSave_clicked()
+{
+    if (updateShipModelFromView()) {
+        QMessageBox::information(this, "成功", "舰船信息已保存并校验通过。");
+        spdlog::info("Ship data saved and validated.");
+    }
+}
+
+bool ShipWidget::updateShipModelFromView()
+{
+    // 1. 从 View 同步到 Model
+    for (int i = 0; i < shipsLayout->count(); ++i) {
+        QLayoutItem* item = shipsLayout->itemAt(i);
+        if (item && item->widget()) {
+             ShipWidget* widget = qobject_cast<ShipWidget*>(item->widget());
+             if (widget) {
+                widget->updateShipModelData(); // 这是一个 void 函数，只负责赋值
+             }
+        }
+    }
+
+    // 2. 执行校验逻辑
+    // 遍历 DataModel 中的所有船只进行检查
+    auto& ships = DataModel::instance()->allShips;
+    for (int i = 0; i < ships.size(); ++i) {
+        auto result = ships[i].validate_Ship(); // 调用 validate
+        if (!result.first) {
+            // 校验失败，弹出警告
+            // QString errorMsg = QString("船只数据错误 (第 %1 个):%2").arg(i + 1).arg(result.second);
+            // QMessageBox::critical(this, "校验失败", errorMsg);
+            spdlog::error("Validation failed for ship {}: {}", i, result.second.toStdString());
+            return false; // 中断
+        }
+    }
+
+    // 3. 同步 TreeView (如果校验通过)
+    //_treeView->syncViewWithModel();
+    return true;
+}

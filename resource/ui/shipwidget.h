@@ -70,6 +70,9 @@ private slots:
     void on_shipEquipmentPlus_clicked();
     void on_deleteShip_clicked();
     void onDeviceOnShipRemovalRequested();
+    void on_addShipButton_clicked();
+    void on_ShipSave_clicked();
+    void updateShipModelFromView();
 };
 
 

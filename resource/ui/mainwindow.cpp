@@ -4,7 +4,6 @@
 #include "spdlog/spdlog.h"
 #include <QMetaType> 
 #include "Simulation.h"
-#include "FleetInput.h"
 #include "LogWidget.h"
 #include "ElaContentDialog.h"
 #include "ElaDockWidget.h"
@@ -253,14 +252,14 @@ void MainWindow::initContent()
     _tableViewPage = new T_TableView(this);
     _treeViewPage = new TreeView(this);
     _settingPage = new Setting(this);
-    FleetInput* FleetWidget = new FleetInput(this);
+    // FleetInput* FleetWidget = new FleetInput(this);
     Simulation* SimulationWidget = new Simulation(this);
 
  
     QString testKey_1;
     QString testKey_2;
     navigation("HOME");
-    addPageNode("编队参数", FleetWidget, ElaIconType::House);
+    // addPageNode("编队参数", FleetWidget, ElaIconType::House);
     addPageNode("仿真", SimulationWidget, ElaIconType::ChartSimple);
 
     addPageNode("HOME", _homePage, ElaIconType::House);

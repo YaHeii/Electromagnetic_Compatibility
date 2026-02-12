@@ -273,7 +273,7 @@ void DeviceWidget::setupTransmitterWidget()
 
 void DeviceWidget::setData(const EquipmentData &data)
 {
-    m_currentId = data.equipmentID;
+    _currentId = data.equipmentID;
 
     // --- 1. 基本参数 ---
     _equipmentID->setText(data.equipmentID);
@@ -308,7 +308,7 @@ void DeviceWidget::updateModelData() {
     bool ok;
     // 遍历全局数据列表找到当前设备
     for (EquipmentData &data : DataModel::instance()->allEquipments) {
-        if(data.equipmentID == m_currentId){
+        if(data.equipmentID == _currentId){
             // --- 公共参数总是保存 ---
             data.equipmentID = equipmentID->text();
             data.equipmentType = _equipmentType->currentText();
@@ -389,7 +389,7 @@ void DeviceWidget::onEquipmentTypeChanged()
 
 void DeviceWidget::on_equipmentReduction_clicked()
 {
-    emit removalRequested(m_currentId);
+    emit removalRequested(_currentId);
 }
 
 void DeviceWidget::resetTransmitterUI() {
@@ -410,4 +410,102 @@ void DeviceWidget::resetReceiverUI() {
     _interferenceMargin->setText("0");
     _SINRMargin->setText("0");
     _NoiseFigure->setText("0");
+}
+
+
+void DeviceWidget::on_DeviceSave_clicked()
+{
+    if (updateDeviceModelFromView()) {
+        QMessageBox::information(this, "成功", "设备信息已保存并校验通过。");
+        spdlog::info("Device data saved and validated.");
+    }
+}
+
+
+bool DeviceWidget::updateDeviceModelFromView()
+{
+    // 1. 从 View 同步到 Model
+    for (int i = 0; i < deviceLayout->count(); ++i) {
+        QLayoutItem* item = deviceLayout->itemAt(i);
+        if (item && item->widget()) {
+            DeviceWidget* widget = qobject_cast<DeviceWidget*>(item->widget());
+            if (widget) {
+                // 让每个Widget用自己UI上的当前值去更新数据模型
+                widget->updateModelData();
+            }
+        }
+    }
+
+    // 2. 执行校验逻辑
+    auto& equipments = DataModel::instance()->allEquipments;
+    for (int i = 0; i < equipments.size(); ++i) {
+        auto result = equipments[i].validate();
+        if (!result.first) {
+            QString errorMsg = QString("设备数据错误 (ID: %1):%2")
+                .arg(equipments[i].equipmentID)
+                .arg(result.second);
+            QMessageBox::critical(this, "校验失败", errorMsg);
+            spdlog::error("Validation failed for equipment {}: {}",
+                equipments[i].equipmentID.toStdString(), result.second.toStdString());
+            return false;
+        }
+    }
+
+    //_treeView->syncViewWithModel();
+    return true;
+}
+
+
+
+void DeviceWidget::onDeviceWidgetRemovalRequested(const QString& id)
+{
+    // 1. 从DataModel中移除对应的数据
+    auto& equipments = DataModel::instance()->allEquipments;
+    auto it = std::remove_if(equipments.begin(), equipments.end(),
+        [&](const EquipmentData& ed) { return ed.equipmentID == id; });
+
+    if (it != equipments.end()) {
+        equipments.erase(it, equipments.end());
+        spdlog::info("设备 {} 的数据已从模型中删除。", id.toStdString());
+
+        // 2. 遍历布局，找到并删除对应的UI控件
+        for (int i = 0; i < deviceLayout->count(); ++i) {
+            QLayoutItem* item = deviceLayout->itemAt(i);
+            if (item && item->widget()) {
+                DeviceWidget* widget = qobject_cast<DeviceWidget*>(item->widget());
+                // 假设DeviceWidget有方法可以获取其ID
+                if (widget && widget->getID() == id) {
+                    deviceLayout->removeWidget(widget);
+                    widget->deleteLater();
+                    spdlog::info("设备 {} 的UI控件已删除。", id.toStdString());
+                    break; // 找到并删除后即可退出循环
+                }
+            }
+        }
+
+        // 3. 更新TreeView
+        //_treeView->syncViewWithModel();
+    }
+    else {
+        spdlog::warn("请求删除设备 {}，但在数据模型中未找到。", id.toStdString());
+    }
+}
+
+void DeviceWidget::on_addDeviceButton_clicked()
+{
+    //在添加新控件前，先将UI上所有未保存的修改更新到数据模型中
+    updateDeviceModelFromView();
+
+    EquipmentData newDevice;
+    newDevice.equipmentID = QString("NewDevice%1").arg(DataModel::instance()->allEquipments.size() + 1);
+    // 首先在DataModel中占位
+    DataModel::instance()->allEquipments.push_back(newDevice);
+    // 然后创建新的DeviceWidget并添加到UI
+    DeviceWidget* widget = new DeviceWidget();
+    widget->setData(newDevice); // 关联UI与数据
+    deviceLayout->addWidget(widget);
+    connect(widget, &DeviceWidget::removalRequested, this, &FleetInput::onDeviceWidgetRemovalRequested);
+    
+    //同步treeView
+    //_treeView->syncViewWithModel();
 }

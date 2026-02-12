@@ -25,7 +25,7 @@ public:
     
     // 将UI界面的数据保存回模型
     void updateModelData();
-    QString getID() const { return m_currentId; }
+    QString getID() const { return _currentId; }
 private:
     // UI控件成员
     ElaScrollPageArea* _baseWidget;
@@ -60,7 +60,7 @@ private:
     // 操作控件
     ElaPushButton *_equipmentReduction;
     
-    QString m_currentId;
+    QString _currentId;
 
     // UI设置方法
     void setupReceiverWidget();
@@ -72,5 +72,10 @@ private:
 private slots:
     void on_equipmentReduction_clicked();
     void onEquipmentTypeChanged();
+    void on_DeviceSave_clicked();
+
+    void updateDeviceModelFromView();
+    void onDeviceWidgetRemovalRequested(const QString& id);
+    void on_addDeviceButton_clicked();
 };
 
