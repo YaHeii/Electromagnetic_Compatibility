@@ -6,133 +6,111 @@
 ShipWidget::ShipWidget(QWidget *parent) :
     QWidget(parent)
 {
-    setupUI();
+    // X coordinate
+    ElaText* xText = new ElaText("X坐标", this);
+    xText->setTextPixelSize(15);
+    _X_offset = new ElaLineEdit(this);
+    
+    // Y coordinate
+    ElaText* yText = new ElaText("Y坐标", this);
+    yText->setTextPixelSize(15);
+    _Y_offset = new ElaLineEdit(this);
+
+    // Z coordinate
+    ElaText* zText = new ElaText("Z坐标", this);
+    zText->setTextPixelSize(15);
+    _Z_offset = new ElaLineEdit(this);
+
+    QHBoxLayout* firstLine = new QHBoxLayout();
+    firstLine->addWidget(xText);
+    firstLine->addSpacing(15);
+    firstLine->addWidget(_X_offset);
+    firstLine->addSpacing(15);
+    firstLine->addWidget(yText);
+    firstLine->addSpacing(15);
+    firstLine->addWidget(_Y_offset);
+    firstLine->addSpacing(15);
+    firstLine->addWidget(zText);
+    firstLine->addSpacing(15);
+    firstLine->addWidget(_Z_offset);
+    firstLine->addSpacing(15);
+
+    //ShipID
+    ElaText* IDText = new ElaText("名称", this);
+    IDText->setTextPixelSize(15);
+    _ship_ID = new ElaLineEdit(this);
+
+    // Speed
+    ElaText* speedText = new ElaText("船速", this);
+    speedText->setTextPixelSize(53);
+    _ship_Speed = new ElaLineEdit(this);
+    
+    // Orientation
+    ElaText* orientationText = new ElaText("朝向", this);
+    orientationText->setTextPixelSize(15);
+    _ship_Orienteation = new ElaLineEdit(this);
+
+    QHBoxLayout* secondLine = new QHBoxLayout();
+    secondLine->addWidget(IDText);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(_ship_ID);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(speedText);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(_ship_Speed);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(orientationText);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(_ship_Orienteation);
+    secondLine->addSpacing(15);
+
+    // Delete button
+    ElaPushButton* deleteShip = new ElaPushButton("删除该船", this);
+    deleteShip->setFixedSize(60, 32);
+    connect(_deleteShip, &ElaPushButton::clicked, 
+        this, &ShipWidget::on_deleteShip_clicked);
+
+    QVBoxLayout* leftPannel = new QVBoxLayout();
+    leftPannel->addLayout(firstLine);
+    leftPannel->addLayout(secondLine);
+    leftPannel->addWidget(deleteShip);
+
+    ElaPushButton* shipEquipmentPlus = new ElaPushButton("添加设备", this);
+    shipEquipmentPlus->setFixedSize(60, 32);
+    connect(shipEquipmentPlus, &ElaPushButton::clicked, 
+        this, &ShipWidget::on_shipEquipmentPlus_clicked);
+
+    DeviceonShip* deviceList;
+    QVBoxLayout* rightPannel = new QVBoxLayout();
+    rightPannel->addWidget(deviceList);
+    rightPannel->addLayout(shipEquipmentPlus);
+
+    QWidget* centralWidget = new QWidget(this);
+    centralWidget->setWindowTitle("船");
+    QHBoxLayout* centerHLayout = new QHBoxLayout(centralWidget);
+    centerHLayout->setContentsMargins(0, 0, 0, 0);
+    centerHLayout->addLayout(leftPannel);
+    centerHLayout->addLayout(rightPannel);
+    centerHLayout->addStretch();
+    addCentralWidget(centralWidget);
 }
 
 ShipWidget::~ShipWidget()
 {
 }
 
-void ShipWidget::setupUI()
-{
-    // Main layout
-    mainLayout = new QVBoxLayout(this);
-    
-    // Coordinates widget with minimum height
-    coordinatesWidget = new QWidget(this);
-    coordinatesWidget->setMinimumHeight(200);
-    coordinatesLayout = new QHBoxLayout(coordinatesWidget);
-    
-    // Left side - Coordinate fields
-    leftCoordinatesLayout = new QHBoxLayout();
-    coordinateFieldsLayout = new QVBoxLayout();
-    
-    // X coordinate
-    xLayout = new QHBoxLayout();
-    xLabel = new ElaText("X坐标", this);
-    xLabel->setTextPixelSize(13);
-    X_offset = new ElaLineEdit(this);
-    xLayout->addWidget(xLabel);
-    xLayout->addWidget(X_offset);
-    coordinateFieldsLayout->addLayout(xLayout);
-    
-    // Y coordinate
-    yLayout = new QHBoxLayout();
-    yLabel = new ElaText("Y坐标", this);
-    yLabel->setTextPixelSize(13);
-    Y_offset = new ElaLineEdit(this);
-    yLayout->addWidget(yLabel);
-    yLayout->addWidget(Y_offset);
-    coordinateFieldsLayout->addLayout(yLayout);
-    
-    // Z coordinate
-    zLayout = new QHBoxLayout();
-    zLabel = new ElaText("Z坐标", this);
-    zLabel->setTextPixelSize(13);
-    Z_offset = new ElaLineEdit(this);
-    zLayout->addWidget(zLabel);
-    zLayout->addWidget(Z_offset);
-    coordinateFieldsLayout->addLayout(zLayout);
-    
-    leftCoordinatesLayout->addLayout(coordinateFieldsLayout);
-    
-    // Right side - Ship properties
-    shipPropertiesLayout = new QVBoxLayout();
-    
-    //ShipID
-    IDLayout = new QHBoxLayout();
-    IDLabel = new ElaText("名称", this);
-    IDLabel->setTextPixelSize(13);
-    ship_ID = new ElaLineEdit(this);
-    IDLayout->addWidget(IDLabel);
-    IDLayout->addWidget(ship_ID);
-    shipPropertiesLayout->addLayout(IDLayout);
-
-    // Speed
-    speedLayout = new QHBoxLayout();
-    speedLabel = new ElaText("船速", this);
-    speedLabel->setTextPixelSize(13);
-    ship_Speed = new ElaLineEdit(this);
-    speedLayout->addWidget(speedLabel);
-    speedLayout->addWidget(ship_Speed);
-    shipPropertiesLayout->addLayout(speedLayout);
-    
-    // Orientation
-    orientationLayout = new QHBoxLayout();
-    orientationLabel = new ElaText("朝向", this);
-    orientationLabel->setTextPixelSize(13);
-    ship_Orienteation = new ElaLineEdit(this);
-    orientationLayout->addWidget(orientationLabel);
-    orientationLayout->addWidget(ship_Orienteation);
-    shipPropertiesLayout->addLayout(orientationLayout);
-    
-    leftCoordinatesLayout->addLayout(shipPropertiesLayout);
-    coordinatesLayout->addLayout(leftCoordinatesLayout);
-    
-    // Device management section
-    deviceManagementLayout = new QVBoxLayout();
-    
-    scrollArea = new QScrollArea(this);
-    scrollArea->setWidgetResizable(true);
-    
-    scrollAreaWidgetContents = new QWidget();
-    scrollAreaWidgetContents->setGeometry(0, 0, 77, 200);
-    
-    scrollAreaContentsLayout = new QVBoxLayout(scrollAreaWidgetContents);
-    DeviceonShipLayout = new QVBoxLayout();
-    scrollAreaContentsLayout->addLayout(DeviceonShipLayout);
-    
-    scrollArea->setWidget(scrollAreaWidgetContents);
-    deviceManagementLayout->addWidget(scrollArea);
-    
-    shipEquipmentPlus = new ElaPushButton("添加设备", this);
-    deviceManagementLayout->addWidget(shipEquipmentPlus);
-    
-    // Add both sections to coordinates layout
-    coordinatesLayout->addLayout(deviceManagementLayout);
-    
-    mainLayout->addWidget(coordinatesWidget);
-    
-    // Delete button
-    deleteShip = new ElaPushButton("-", this);
-    mainLayout->addWidget(deleteShip);
-    
-    // Connect signals
-    connect(shipEquipmentPlus, &ElaPushButton::clicked, this, &ShipWidget::on_shipEquipmentPlus_clicked);
-    connect(deleteShip, &ElaPushButton::clicked, this, &ShipWidget::on_deleteShip_clicked);
-}
 
 void ShipWidget::setData(const ShipData& data)
 {
     _currentShipId = data.shipID;
 
     // 填充舰船的基本信息
-    ship_ID->setText(QString(QString::fromStdString(data.shipID)));
-    X_offset->setText(QString::number(data.X_offset));
-    Y_offset->setText(QString::number(data.Y_offset));
-    Z_offset->setText(QString::number(data.Z_offset));
-    ship_Orienteation->setText(QString::number(data.ship_Orienteation));
-    ship_Speed->setText(QString::number(data.ship_Speed));
+    _ship_ID->setText(QString(QString::fromStdString(data.shipID)));
+    _X_offset->setText(QString::number(data.X_offset));
+    _Y_offset->setText(QString::number(data.Y_offset));
+    _Z_offset->setText(QString::number(data.Z_offset));
+    _ship_Orienteation->setText(QString::number(data._ship_Orienteation));
+    _ship_Speed->setText(QString::number(data._ship_Speed));
 
     // 根据数据刷新舰船上的设备列表
     syncDeviceListWithModel();
@@ -144,20 +122,20 @@ void ShipWidget::updateShipModelData()
     for (ShipData &ship : DataModel::instance()->allShips) {
         if (ship.shipID == _currentShipId) {
             // 用UI的值更新模型数据
-             ship.shipID = ship_ID->text().toStdString();
+             ship.shipID = _ship_ID->text().toStdString();
             
             // 使用toDouble函数的bool*参数检查转换是否成功
             bool ok = false;
             double value = 0.0;
             
             // 更新ship_X
-            value = X_offset->text().toDouble(&ok);
+            value = _X_offset->text().toDouble(&ok);
             if (ok) {
                 ship.X_offset = value;
             }
            
             // 更新ship_Y
-            value = Y_offset->text().toDouble(&ok);
+            value = _Y_offset->text().toDouble(&ok);
             if (ok) {
                 ship.Y_offset = value;
             }
@@ -168,15 +146,15 @@ void ShipWidget::updateShipModelData()
             }
 
             // 更新ship_Orienteation
-            value = ship_Orienteation->text().toDouble(&ok);
+            value = _ship_Orienteation->text().toDouble(&ok);
             if (ok) {
-                ship.ship_Orienteation = value;
+                ship._ship_Orienteation = value;
             }
            
             // 更新ship_Speed，确保速度非负
-            value = ship_Speed->text().toDouble(&ok);
+            value = _ship_Speed->text().toDouble(&ok);
             if (ok && value >= 0) {
-                ship.ship_Speed = value;
+                ship._ship_Speed = value;
             }
 
             // 注意：舰船上配置的设备列表是通过"+"按钮直接修改模型的，
@@ -196,13 +174,13 @@ void ShipWidget::updateShipModelData()
             double value = 0.0;
             
             // 更新ship_X
-            value = X_offset->text().toDouble(&ok);
+            value = _X_offset->text().toDouble(&ok);
             if (ok) {
                 ship.X_offset = value;
             }
             
             // 更新ship_Y
-            value = Y_offset->text().toDouble(&ok);
+            value = _Y_offset->text().toDouble(&ok);
             if (ok) {
                 ship.Y_offset = value;
             }
@@ -213,15 +191,15 @@ void ShipWidget::updateShipModelData()
             }
 
             // 更新ship_Orienteation
-            value = ship_Orienteation->text().toDouble(&ok);
+            value = _ship_Orienteation->text().toDouble(&ok);
             if (ok) {
-                ship.ship_Orienteation = value;
+                ship._ship_Orienteation = value;
             }
             
             // 更新ship_Speed，确保速度非负
-            value = ship_Speed->text().toDouble(&ok);
+            value = _ship_Speed->text().toDouble(&ok);
             if (ok && value >= 0) {
-                ship.ship_Speed = value;
+                ship._ship_Speed = value;
             }
 
             // 注意：舰船上配置的设备列表是通过“+”按钮直接修改模型的，

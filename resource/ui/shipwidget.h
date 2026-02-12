@@ -27,44 +27,14 @@ private:
     void syncDeviceListWithModel();
     std::string _currentShipId;
     
-    // UI Components
-    QVBoxLayout* mainLayout;
-    QWidget* coordinatesWidget;
-    QHBoxLayout* coordinatesLayout;
+    ElaLineEdit* _X_offset;
+    ElaLineEdit* _Y_offset;
+    ElaLineEdit* _Z_offset;
+
+    ElaLineEdit* _ship_ID;
+    ElaLineEdit* _ship_Speed;
+    ElaLineEdit* _ship_Orienteation;
     
-    // Left side - Coordinates
-    QHBoxLayout* leftCoordinatesLayout;
-    QVBoxLayout* coordinateFieldsLayout;
-    QHBoxLayout* xLayout;
-    ElaText* xLabel;
-    ElaLineEdit* X_offset;
-    QHBoxLayout* yLayout;
-    ElaText* yLabel;
-    ElaLineEdit* Y_offset;
-    QHBoxLayout* zLayout;
-    ElaText* zLabel;
-    ElaLineEdit* Z_offset;
-    
-    // Right side - Ship properties
-    QVBoxLayout* shipPropertiesLayout;
-    QHBoxLayout* IDLayout;
-    ElaText* IDLabel;
-    ElaLineEdit* ship_ID;
-    QHBoxLayout* speedLayout;
-    ElaText* speedLabel;
-    ElaLineEdit* ship_Speed;
-    QHBoxLayout* orientationLayout;
-    ElaText* orientationLabel;
-    ElaLineEdit* ship_Orienteation;
-    
-    // Device management
-    QVBoxLayout* deviceManagementLayout;
-    QScrollArea* scrollArea;
-    QWidget* scrollAreaWidgetContents;
-    QVBoxLayout* scrollAreaContentsLayout;
-    QVBoxLayout* DeviceonShipLayout;
-    ElaPushButton* shipEquipmentPlus;
-    ElaPushButton* deleteShip;
 
 private slots:
     void on_shipEquipmentPlus_clicked();
