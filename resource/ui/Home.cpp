@@ -23,7 +23,7 @@ Home::Home(QWidget* parent)
     : BasePage(parent)
 {
     // 预览窗口标题
-    setWindowTitle("Home");
+    //setWindowTitle("Home");
     createCustomWidget("展示软件数据");
 
     //ElaImageCard* backgroundCard = new ElaImageCard(this);
@@ -31,13 +31,10 @@ Home::Home(QWidget* parent)
     //backgroundCard->setFixedHeight(340);
     //backgroundCard->setCardImage(QImage(":/Home_Background.png"));
    
-    ElaText* treeViewrText = new ElaText("树视图", this);
-    treeViewText->setTextPixelSize(18);
+
     TreeView* MainTreeView = new TreeView(this);
     
-    QVBoxLayout* treeViewLayout = new QVBoxLout;
-    treeViewLayout->addWidget(treeViewrText)
-    treeViewLayout->addSpacing(10);
+    QVBoxLayout* treeViewLayout = new QVBoxLayout;
     treeViewLayout->addWidget(MainTreeView);
 
     QWidget* centralWidget = new QWidget(this);

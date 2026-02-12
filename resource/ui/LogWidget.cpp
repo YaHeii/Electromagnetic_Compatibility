@@ -8,7 +8,7 @@
 #include "ModelView/T_LogModel.h"
 #include "ElaMessageBar.h"
 LogWidget::LogWidget(QWidget* parent)
-    : QWidget{parent}
+    : BasePage{parent}
 {
     //setTitleVisible(true);
     setContentsMargins(2, 2, 0, 0);
@@ -77,10 +77,10 @@ LogWidget::LogWidget(QWidget* parent)
     QWidget* centralWidget = new QWidget(this);
     centralWidget->setWindowTitle("日志");
     QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
-    centerHLayout->setContentsMargins(0, 0, 0, 0);
-    centerHLayout->addWidget(toolbarWidget);
-    centerHLayout->addWidget(logView);
-    centerHLayout->addStretch();
+    centerVLayout->setContentsMargins(0, 0, 0, 0);
+    centerVLayout->addWidget(toolbarWidget);
+    centerVLayout->addWidget(logView);
+    centerVLayout->addStretch();
     addCentralWidget(centralWidget);
 	//TODO:处理spdlog输出到UI
     _logEmitter = new LogEmitter(this);

@@ -8,6 +8,7 @@
 #include "qcustomplot.h"
 #include <ElaPushButton.h>
 #include <future>
+#include "BasePage.h"
 
 class Simulation : public BasePage {
 	Q_OBJECT
@@ -25,7 +26,6 @@ private:
 	std::thread _workerThread;
 
 	// 2D Power Distribution Tab
-	QWidget* simulateFig;
 	QCustomPlot* PEmodel2Dplot;
 	ElaPushButton* StartSimulate;
 public slots:

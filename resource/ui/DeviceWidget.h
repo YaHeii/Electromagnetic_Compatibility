@@ -6,6 +6,7 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include "Interface/DataModel.h"
+#include "BasePage.h"
 
 // 前向声明自定义控件
 class ElaPushButton;
@@ -28,9 +29,9 @@ public:
     QString getID() const { return _currentId; }
 private:
     // UI控件成员
-    ElaScrollPageArea* _baseWidget;
+    //ElaScrollPageArea* _baseWidget;
     ElaScrollPageArea* _RecieverWidget;
-    ElaScrollPageArea *TransmitterWidget;
+    ElaScrollPageArea* _TransmitterWidget;
     
     // 基础信息控件
     ElaComboBox *_equipmentType;
@@ -41,12 +42,12 @@ private:
     ElaLineEdit *_Z_offset;
     
     // 接收机控件
-    ElaLineEdit *_CentralF_Reciever;
-    ElaLineEdit *_Bandwidth_Reciever;
-    ElaLineEdit *_Sensitive_reciever;
-    ElaLineEdit *_interferenceMargin;
-    ElaLineEdit *_SINRMargin;
-    ElaLineEdit *_NoiseFigure;
+    ElaLineEdit *_CentralF_Receiver;
+    ElaLineEdit *_Bandwidth_Receiver;
+    ElaLineEdit *_Sensitive_Receiver;
+    ElaLineEdit *_InterferenceMargin_Receiver;
+    ElaLineEdit *_SINRMargin_Receiver;
+    ElaLineEdit *_NoiseFigure_Receiver;
     
     // 发射机控件
     ElaLineEdit *_CentralF_Transmitter;
@@ -63,8 +64,8 @@ private:
     QString _currentId;
 
     // UI设置方法
-    void setupReceiverWidget();
-    void setupTransmitterWidget();
+    void setupReceiverWidget(ElaScrollPageArea* container);
+    void setupTransmitterWidget(ElaScrollPageArea* container);
     
     // 重置/清空各模块的输入框
     void resetTransmitterUI();
@@ -72,10 +73,10 @@ private:
 private slots:
     void on_equipmentReduction_clicked();
     void onEquipmentTypeChanged();
-    void on_DeviceSave_clicked();
+    //void on_DeviceSave_clicked();
 
-    void updateDeviceModelFromView();
-    void onDeviceWidgetRemovalRequested(const QString& id);
-    void on_addDeviceButton_clicked();
+    //bool updateDeviceModelFromView();
+    //void onDeviceWidgetRemovalRequested(const QString& id);
+    //void on_addDeviceButton_clicked();
 };
 

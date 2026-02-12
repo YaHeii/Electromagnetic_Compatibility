@@ -11,8 +11,9 @@
 #include "ElaPushButton.h"
 #include "ElaLineEdit.h"
 #include "ElaText.h"
+#include "BasePage.h"
 
-class ShipWidget : public QWidget
+class ShipWidget : public BasePage
 {
     Q_OBJECT
 
@@ -23,7 +24,7 @@ public:
     void updateShipModelData();
 
 private:
-    void setupUI();
+   
     void syncDeviceListWithModel();
     std::string _currentShipId;
     
@@ -35,14 +36,15 @@ private:
     ElaLineEdit* _ship_Speed;
     ElaLineEdit* _ship_Orienteation;
     
-
+    QVBoxLayout* _rightPannel;
+    QVBoxLayout* _leftPannel;
 private slots:
     void on_shipEquipmentPlus_clicked();
     void on_deleteShip_clicked();
     void onDeviceOnShipRemovalRequested();
     void on_addShipButton_clicked();
     void on_ShipSave_clicked();
-    void updateShipModelFromView();
+    bool updateShipModelFromView();
 };
 
 

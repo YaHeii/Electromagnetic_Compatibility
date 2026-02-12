@@ -243,7 +243,7 @@ void MainWindow::initContent()
 {
     _homePage = new Home(this);
     _shipPage = new ShipWidget(this);
-    _devicePage = new DeviceWidget(this)
+    _devicePage = new DeviceWidget(this);
     _iconPage = new T_Icon(this);
     _baseComponentsPage = new T_BaseComponents(this);
     _navigationPage = new T_Navigation(this);

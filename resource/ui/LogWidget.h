@@ -14,7 +14,7 @@
 #include "Resource/ui/BasePage.h"
 
 class T_LogModel;
-class LogWidget : public QWidget
+class LogWidget : public BasePage
 {
     Q_OBJECT
 public:

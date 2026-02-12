@@ -11,7 +11,7 @@ DeviceonShip::DeviceonShip(QWidget *parent) : QWidget(parent) {
 
     // 创建设备名称标签
     ElaText* EquipmentNameText = new ElaText("设备名称", this);
-    breadcrumbBarText->setTextPixelSize(15);
+    EquipmentNameText->setTextPixelSize(15);
 
     // 创建设备ID下拉框
     ElaComboBox *EquipmentIDCombo = new ElaComboBox(this);
@@ -25,15 +25,15 @@ DeviceonShip::DeviceonShip(QWidget *parent) : QWidget(parent) {
     // _comboBox->addItems(comboList);
     // 创建删除按钮
     ElaPushButton* deleteDeviceonShip = new ElaPushButton("删除", this);
-    resetButton->setFixedSize(60, 32);
+    deleteDeviceonShip->setFixedSize(60, 32);
 
-    QHBoxLayout* deviceonShipLayout = new QHBoxLayout();
+    QHBoxLayout* deviceonShipLayout = new QHBoxLayout;
     deviceonShipLayout->addWidget(EquipmentNameText);
     deviceonShipLayout->addSpacing(10);
     deviceonShipLayout->addWidget(EquipmentIDCombo);
     deviceonShipLayout->addSpacing(10);
     deviceonShipLayout->addWidget(deleteDeviceonShip);
-    deviceonShipLayout->addStrech();
+    //deviceonShipLayout->addStrech();
 
     QWidget* centralWidget = new QWidget(this);
     // centralWidget->setWindowTitle("");
@@ -41,12 +41,12 @@ DeviceonShip::DeviceonShip(QWidget *parent) : QWidget(parent) {
     centerVLayout->setContentsMargins(0, 0, 0, 0);
     centerVLayout->addLayout(deviceonShipLayout);
     centerVLayout->addStretch();
-    addCentralWidget(centralWidget);
+    //addCentralWidget(centralWidget);
 }
 
 DeviceonShip::~DeviceonShip() {
     // delete ui;
-    qDeleteAll(_pChildrenItems);
+    //qDeleteAll(_pChildrenItems);
 }
 
 void DeviceonShip::on_deleteDeviceonShip_clicked() {

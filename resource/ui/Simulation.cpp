@@ -6,25 +6,20 @@
 #include <future>
 #include "Utils/JsonLoader.hpp"
 Simulation::Simulation(QWidget* parent)
-	: BasePage(parent) _emcEngine(nullptr) {
+	: BasePage(parent), _emcEngine(nullptr) {
 
     // 2D Power Distribution
-    simulateFig = new QWidget();
-    PEmodel2Dplot = new QCustomPlot(simulateFig);
-    StartSimulate = new ElaPushButton("仿真", simulateTab);
-
-    simulateFigLayout = new QVBoxLayout(simulateFig);
-    simulateFigLayout->addWidget(PEmodel2Dplot);
-    simulateFigLayout->addSpacing(10);
-    simulateFigLayout->addWidget(StartSimulate);
+    PEmodel2Dplot = new QCustomPlot();
+    StartSimulate = new ElaPushButton("开始仿真",this);
 
     QWidget* centralWidget = new QWidget(this);
     centralWidget->setWindowTitle("仿真");
     QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
     centerVLayout->setContentsMargins(0, 0, 0, 0);
-    centerVLayout->addLayout(simulateFigLayout);
-    centerVLayout->addStretch();
-    addCentralWidget(centralWidget);
+    centerVLayout->addWidget(PEmodel2Dplot);
+    centerVLayout->addWidget(StartSimulate);
+    //centerVLayout->addStretch();
+    addCentralWidget(centralWidget, true, false, 0);
 
     // Connect signals
     connect(StartSimulate, &ElaPushButton::clicked, this, &Simulation::on_StartSimulate_clicked);
@@ -105,4 +100,3 @@ void Simulation::onSimulationFinished(const GridMap& result) {
         QMessageBox::critical(this, "绘图错误", QString("绘图时发生异常: %1").arg(e.what()));
     }
 }
-

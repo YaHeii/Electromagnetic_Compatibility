@@ -10,8 +10,7 @@ public:
     ~DeviceonShip() override;
 signals:
     void removalRequested();
-private:
-    Ui::DeviceonShip *ui;
+
 private slots:
     void on_deleteDeviceonShip_clicked();
 };
