@@ -242,7 +242,8 @@ void MainWindow::initEdgeLayout()
 void MainWindow::initContent()
 {
     _homePage = new Home(this);
-
+    _shipPage = new ShipWidget(this);
+    _devicePage = new DeviceWidget(this)
     _iconPage = new T_Icon(this);
     _baseComponentsPage = new T_BaseComponents(this);
     _navigationPage = new T_Navigation(this);
@@ -261,8 +262,9 @@ void MainWindow::initContent()
     navigation("HOME");
     // addPageNode("编队参数", FleetWidget, ElaIconType::House);
     addPageNode("仿真", SimulationWidget, ElaIconType::ChartSimple);
-
     addPageNode("HOME", _homePage, ElaIconType::House);
+    addPageNode("设备参数", _shipPage, ElaIconType::House);
+    addPageNode("船只参数", _devicePage, ElaIconType::House);
 // #ifdef Q_OS_WIN
 //     addExpanderNode("ElaDxgi", _elaDxgiKey, ElaIconType::TvMusic);
 //     addPageNode("ElaScreen", _elaScreenPage, _elaDxgiKey, 3, ElaIconType::ObjectGroup);

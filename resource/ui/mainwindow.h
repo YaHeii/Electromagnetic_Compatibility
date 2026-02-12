@@ -9,6 +9,8 @@
 #include <thread>   
 #include "ElaWindow.h"
 #include "Utils/QtSpdlogSink.h" 
+#include "shipwidget.h"
+#include "DeviceWidget.h"
 
 namespace Ui {
     class MainWindow;
@@ -53,6 +55,8 @@ private:
     QString _settingKey{ "" };
 
     Home* _homePage{ nullptr };
+    ShipWidget* _shipPage{ nullptr };
+    DeviceWidget* _devicePage { nullptr };
     T_Icon* _iconPage{nullptr};
     T_BaseComponents* _baseComponentsPage{nullptr};
     T_Navigation* _navigationPage{nullptr};
@@ -63,6 +67,7 @@ private:
     TreeView* _treeViewPage{nullptr};
     About* _aboutPage{nullptr};
     Setting* _settingPage{nullptr};
+    
     QString _elaDxgiKey{""};
     QString _viewKey{""};
     QString _aboutKey{""};
