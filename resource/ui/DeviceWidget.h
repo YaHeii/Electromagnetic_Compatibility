@@ -14,14 +14,13 @@ class ElaLineEdit;
 class ElaScrollPageArea;
 class ElaText;
 
-class DeviceWidget: public QWidget {
+class DeviceWidget: public BasePage {
     Q_OBJECT
 signals:
     void removalRequested(const QString &id);
 public:
     explicit DeviceWidget(QWidget *parent =  nullptr);
     ~DeviceWidget();
-    // 将数据从模型加载到UI界面
     void setData(const EquipmentData &data);
     
     // 将UI界面的数据保存回模型
@@ -29,43 +28,41 @@ public:
     QString getID() const { return m_currentId; }
 private:
     // UI控件成员
-    ElaScrollPageArea *BaseWidget;
-    ElaScrollPageArea *RecieverWidget;
+    ElaScrollPageArea* _baseWidget;
+    ElaScrollPageArea* _RecieverWidget;
     ElaScrollPageArea *TransmitterWidget;
     
     // 基础信息控件
-    ElaComboBox *equipmentType;
-    ElaLineEdit *Gain;
-    ElaLineEdit *equipmentID;
-    ElaLineEdit *X_offset;
-    ElaLineEdit *Y_offset;
-    ElaLineEdit *Z_offset;
+    ElaComboBox *_equipmentType;
+    ElaLineEdit *_gain;
+    ElaLineEdit *_equipmentID;
+    ElaLineEdit *_X_offset;
+    ElaLineEdit *_Y_offset;
+    ElaLineEdit *_Z_offset;
     
     // 接收机控件
-    ElaLineEdit *CentralF_Reciever;
-    ElaLineEdit *Bandwidth_Reciever;
-    ElaLineEdit *Sensitive_reciever;
-    ElaLineEdit *interferenceMargin;
-    ElaLineEdit *SINRMargin;
-    ElaLineEdit *noiseFigure;
+    ElaLineEdit *_CentralF_Reciever;
+    ElaLineEdit *_Bandwidth_Reciever;
+    ElaLineEdit *_Sensitive_reciever;
+    ElaLineEdit *_interferenceMargin;
+    ElaLineEdit *_SINRMargin;
+    ElaLineEdit *_NoiseFigure;
     
     // 发射机控件
-    ElaLineEdit *CentralF_Transmitter;
-    ElaLineEdit *Bandwidth_Transmitter;
-    ElaLineEdit *Power_Transmitter;
-    ElaLineEdit *antennaPhi_Transmitter;
-    ElaLineEdit *Beamwidth_Transmitter;
-    ElaComboBox *PolarizationMethod_Transmitter;
-    ElaComboBox *antennaType_Transmitter;
+    ElaLineEdit *_CentralF_Transmitter;
+    ElaLineEdit *_Bandwidth_Transmitter;
+    ElaLineEdit *_Power_Transmitter;
+    ElaLineEdit *_antennaPhi_Transmitter;
+    ElaLineEdit *_Beamwidth_Transmitter;
+    ElaComboBox *_PolarizationMethod_Transmitter;
+    ElaComboBox *_antennaType_Transmitter;
     
     // 操作控件
-    ElaPushButton *equipmentReduction;
+    ElaPushButton *_equipmentReduction;
     
     QString m_currentId;
 
     // UI设置方法
-    void setupUI();
-    void setupBaseWidget();
     void setupReceiverWidget();
     void setupTransmitterWidget();
     
