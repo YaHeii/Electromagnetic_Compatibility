@@ -9,17 +9,100 @@
 #include "ElaPushButton.h"
 #include "ElaComboBox.h"
 #include "ElaLineEdit.h"
-#include "ElaScrollPageArea.h"
+#include "ElaScrollArea.h"
 #include "ElaTheme.h"
+#include "ElaScrollPageArea.h"
+#include "spdlog/spdlog.h"
 
 DeviceWidget::DeviceWidget(QWidget *parent)
     : BasePage(parent)
 {
-    setWindowTitle("设备属性");
-    createCustomWidget("此页面添加所有可用设备");
+    setWindowTitle("设备属性管理");
+    createCustomWidget("此页面可动态添加和管理多个可用设备");
 
-    // 设备类型选择
-    ElaText *typeText = new ElaText("设备类型", this);
+    _deviceListLayout = new QVBoxLayout();
+
+    AddDeviceBtn = new ElaPushButton("添加新设备", this);
+    AddDeviceBtn->setFixedSize(120, 36);
+    SaveEquipmentBtn = new ElaPushButton("保存所有设备", this);
+    SaveEquipmentBtn->setFixedSize(120, 36);
+
+    QHBoxLayout* btnLayout = new QHBoxLayout();
+    btnLayout->addStretch();
+    btnLayout->addWidget(AddDeviceBtn);
+    btnLayout->addSpacing(20);
+    btnLayout->addWidget(SaveEquipmentBtn);
+
+    QWidget* centralWidget = new QWidget(this);
+    QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
+    centralWidget->setWindowTitle("设备属性管理");
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    //_deviceListLayout->setSpacing(20); // 卡片之间的间距
+    mainLayout->addLayout(_deviceListLayout);
+    mainLayout->addLayout(btnLayout);
+
+    addCentralWidget(centralWidget);
+    connect(AddDeviceBtn, &ElaPushButton::clicked, this, &DeviceWidget::on_AddDeviceBtn_clicked);
+    connect(SaveEquipmentBtn, &ElaPushButton::clicked, this, &DeviceWidget::on_SaveEquipmentBtn_clicked);
+    // 连接删除按钮信号
+    on_AddDeviceBtn_clicked();    
+}
+
+DeviceWidget::~DeviceWidget()
+{
+}
+
+
+
+void DeviceWidget::on_AddDeviceBtn_clicked() {
+    DeviceItemWidget* newItem = new DeviceItemWidget(this);    
+    // 2. 将其插入到滚动布局中 (假设 _scrollLayout 是你放置设备的布局)
+    // 建议在布局最后保留一个 addStretch()，这样新条目会往上排
+    _deviceListLayout->insertWidget(_deviceListLayout->count() - 1, newItem);
+    
+    // 3. 处理删除信号
+    connect(newItem, &DeviceItemWidget::deleteMe, this, &DeviceWidget::on_RemoveItemRequested);
+    spdlog::info("已添加新的设备 UI 条目");
+}
+
+void DeviceWidget::on_RemoveItemRequested(DeviceItemWidget* item)
+{
+    if (!item) return;
+    
+    // 从布局中移除并销毁
+    _deviceListLayout->removeWidget(item);
+    item->deleteLater();
+    
+    spdlog::info("已移除设备 UI 条目");
+}
+
+void DeviceWidget::on_SaveEquipmentBtn_clicked() {
+    auto* model = DataModel::instance();
+    // 1. 清空当前模型中的设备列表，以 UI 上的实际条目为准
+    model->allEquipments.clear();
+
+    // 2. 遍历布局，收集每个条目中的数据
+    for (int i = 0; i < _deviceListLayout->count(); ++i) {
+        QLayoutItem* layoutItem = _deviceListLayout->itemAt(i);
+        if (auto* widget = qobject_cast<DeviceItemWidget*>(layoutItem->widget())) {
+            // 获取 UI 当前的数据并验证
+            EquipmentData data = widget->getData();
+            
+            // 基础校验（示例：ID不能为空）
+            if (data.equipmentID.isEmpty()) {
+                spdlog::warn("发现 ID 为空的设备，跳过保存");
+                continue;
+            }
+            
+            model->allEquipments.push_back(data);
+        }
+    }
+
+    spdlog::info("设备保存成功，当前 DataModel 中共有 {} 个设备", model->allEquipments.size());
+}
+
+DeviceItemWidget::DeviceItemWidget(QWidget* parent) : ElaScrollPageArea(parent) {
+ ElaText *typeText = new ElaText("设备类型", this);
     typeText->setTextPixelSize(15);
     _equipmentType = new ElaComboBox(this);
     QStringList comboList{
@@ -27,14 +110,9 @@ DeviceWidget::DeviceWidget(QWidget *parent)
     "接收机",
     "收发一体机"};
     _equipmentType->addItems(comboList);
-    connect(_equipmentType, QOverload<int>::of(&QComboBox::currentIndexChanged),
-        this, &DeviceWidget::onEquipmentTypeChanged);
 
-    QHBoxLayout *firstLine = new QHBoxLayout();
-    firstLine->addWidget(typeText);
-    firstLine->addSpacing(10);
-    firstLine->addWidget(_equipmentType);
-    
+    connect(_equipmentType, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this, &DeviceItemWidget::onEquipmentTypeChanged);
     // 增益和设备ID
     ElaText *gainText = new ElaText("发射/接收增益", this);
     gainText->setTextPixelSize(15);
@@ -45,14 +123,17 @@ DeviceWidget::DeviceWidget(QWidget *parent)
     _equipmentID = new ElaLineEdit(this);
     _equipmentID->setPlaceholderText("建议设为纯数字或纯字母");
 
-    QHBoxLayout* secondLine = new QHBoxLayout();
-    secondLine->addWidget(gainText);
-    secondLine->addSpacing(10);
-    secondLine->addWidget(_gain);
-    secondLine->addSpacing(10);
-    secondLine->addWidget(idText);
-    secondLine->addSpacing(10);
-    secondLine->addWidget(_equipmentID);
+    QHBoxLayout *firstLine = new QHBoxLayout();
+    firstLine->addWidget(typeText);
+    firstLine->addSpacing(10);
+    firstLine->addWidget(_equipmentType);
+    firstLine->addWidget(gainText);
+    firstLine->addSpacing(10);
+    firstLine->addWidget(_gain);
+    firstLine->addSpacing(10);
+    firstLine->addWidget(idText);
+    firstLine->addSpacing(10);
+    firstLine->addWidget(_equipmentID);
     
     // 坐标输入
     ElaText *xText = new ElaText("X坐标", this);
@@ -68,69 +149,145 @@ DeviceWidget::DeviceWidget(QWidget *parent)
     _Z_offset = new ElaLineEdit(this);
     _Z_offset->setPlaceholderText("Z坐标");
 
-    QHBoxLayout* thirdLine = new QHBoxLayout();
-    thirdLine->addWidget(xText);
-    thirdLine->addSpacing(15);      
-    thirdLine->addWidget(_X_offset);
-    thirdLine->addSpacing(15);
-    thirdLine->addWidget(yText);
-    thirdLine->addSpacing(15);
-    thirdLine->addWidget(_Y_offset);
-    thirdLine->addSpacing(15);
-    thirdLine->addWidget(zText);
-    thirdLine->addSpacing(15);
-    thirdLine->addWidget(_Z_offset);
-
-    QVBoxLayout* Input = new QVBoxLayout();
-    Input->addLayout(firstLine);
-    Input->addSpacing(10);
-    Input->addLayout(secondLine);
-    Input->addSpacing(10);
-    Input->addLayout(thirdLine);
-    Input->addSpacing(10);
-
-	_RecieverWidget = new ElaScrollPageArea(this);
-	_TransmitterWidget = new ElaScrollPageArea(this);
-    _RecieverWidget->setFixedHeight(220); // 估算一个合适的高度
-    _TransmitterWidget->setFixedHeight(220);
-    setupReceiverWidget(_RecieverWidget);    // 接收机专有参数
-    setupTransmitterWidget(_TransmitterWidget); // 发射机专有参数
-
-    // 创建删除按钮
-    _equipmentReduction = new ElaPushButton("删除设备", this);
-    _equipmentReduction->setFixedSize(60, 32);
-    connect(_equipmentReduction, &ElaPushButton::clicked,
-        this, &DeviceWidget::on_equipmentReduction_clicked);
-
-    // 添加到主布局
-    QWidget* centralWidget = new QWidget(this);
-    centralWidget->setWindowTitle("添加设备");
-    QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
-    centerVLayout->setContentsMargins(0, 0, 0, 0);
-    centerVLayout->addLayout(Input);           
-    centerVLayout->addWidget(_TransmitterWidget); 
-    centerVLayout->addWidget(_RecieverWidget);
-
-    // 按钮布局
-    QHBoxLayout* btnLayout = new QHBoxLayout();
-    btnLayout->addStretch();
-    btnLayout->addWidget(_equipmentReduction);
-    centerVLayout->addLayout(btnLayout);      
-    centerVLayout->addStretch();
-
-    addCentralWidget(centralWidget);
-    // 连接删除按钮信号
-    onEquipmentTypeChanged();
-    resetTransmitterUI();
-    resetReceiverUI();
+    QHBoxLayout* secondLine = new QHBoxLayout();
+    secondLine->addWidget(xText);
+    secondLine->addSpacing(15);      
+    secondLine->addWidget(_X_offset);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(yText);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(_Y_offset);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(zText);
+    secondLine->addSpacing(15);
+    secondLine->addWidget(_Z_offset);
     
+    _RecieverWidget = new ElaScrollPageArea(this);
+    _TransmitterWidget = new ElaScrollPageArea(this);
+    _RecieverWidget->setFixedHeight(360);
+    _TransmitterWidget->setFixedHeight(360);
+    setupReceiverUI(_RecieverWidget);
+    setupTransmitterUI(_TransmitterWidget);
+
+    ReductionEquipmentBtn = new ElaPushButton("删除此设备", this);
+    connect(ReductionEquipmentBtn, &ElaPushButton::clicked, this, &DeviceItemWidget::on_ReductionBtn_clicked);
+   
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+
+    // 组合主布局
+    mainLayout->addLayout(firstLine);
+    mainLayout->addLayout(secondLine);
+    mainLayout->addWidget(_TransmitterWidget);
+    mainLayout->addWidget(_RecieverWidget);
+    mainLayout->addWidget(ReductionEquipmentBtn);
+  
+    // 初始化显示状态
+    onEquipmentTypeChanged(); 
 }
 
-DeviceWidget::~DeviceWidget()
+// view->datamodel
+EquipmentData DeviceItemWidget::getData() const {
+    EquipmentData data;
+    bool ok;
+    data.equipmentID = _equipmentID->text();
+    data.equipmentType = _equipmentType->currentText();
+    data.Gain = _gain->text().toDouble(&ok);
+    data.X_offset = _X_offset->text().toDouble(&ok);
+    data.Y_offset = _Y_offset->text().toDouble(&ok);
+    data.Z_offset = _Z_offset->text().toDouble(&ok);
+
+    if (_TransmitterWidget->isVisible()) {
+        data.CentralF_Transmitter = _CentralF_Transmitter->text().toDouble(&ok);
+        data.Bandwidth_Transmitter = _Bandwidth_Transmitter->text().toDouble(&ok);
+        data.Power_Transmitter = _Power_Transmitter->text().toDouble(&ok);
+        data.antennaPhi_Transmitter = _antennaPhi_Transmitter->text().toDouble(&ok);
+        data.Beamwidth_Transmitter = _Beamwidth_Transmitter->text().toDouble(&ok);
+        data.PolarizationMethod_Transmitter = _PolarizationMethod_Transmitter->currentText();
+        data.antennaType_Transmitter = _antennaType_Transmitter->currentText();
+    }
+
+    if (_RecieverWidget->isVisible()) {
+        data.CentralF_Reciever = _CentralF_Receiver->text().toDouble(&ok);
+        data.Bandwidth_Reciever = _Bandwidth_Receiver->text().toDouble(&ok);
+        data.Sensitive_reciever = _Sensitive_Receiver->text().toDouble(&ok);
+        data.interferenceMargin = _InterferenceMargin_Receiver->text().toDouble(&ok);
+        data.SINRMargin = _SINRMargin_Receiver->text().toDouble(&ok);
+        data.noiseFigure = _NoiseFigure_Receiver->text().toDouble(&ok);
+    }
+    spdlog::info("设备 {} 参数已经保存", data.equipmentID.toStdString());
+    return data;
+}
+
+// datamodel->view
+void DeviceItemWidget::setData(const EquipmentData &data)
 {
+    _currentId = data.equipmentID;
+
+    // --- 1. 基本参数 ---
+    _equipmentID->setText(data.equipmentID);
+    _equipmentType->setCurrentText(data.equipmentType);
+    _gain->setText(QString::number(data.Gain));
+    
+    _X_offset->setText(QString::number(data.X_offset));
+    _Y_offset->setText(QString::number(data.Y_offset));
+    _Z_offset->setText(QString::number(data.Z_offset));
+
+    // --- 2. 接收机参数 ---
+    if(_RecieverWidget->isVisible() ){
+    _CentralF_Receiver->setText(QString::number(data.CentralF_Reciever));
+    _Bandwidth_Receiver->setText(QString::number(data.Bandwidth_Reciever));
+    _Sensitive_Receiver->setText(QString::number(data.Sensitive_reciever));
+    _InterferenceMargin_Receiver->setText(QString::number(data.interferenceMargin));
+    _SINRMargin_Receiver->setText(QString::number(data.SINRMargin));
+    _NoiseFigure_Receiver->setText(QString::number(data.noiseFigure));
+    } else if(_TransmitterWidget->isVisible()){
+    // --- 3. 发射机参数 ---
+    _CentralF_Transmitter->setText(QString::number(data.CentralF_Transmitter));
+    _Bandwidth_Transmitter->setText(QString::number(data.Bandwidth_Transmitter));
+    _Power_Transmitter->setText(QString::number(data.Power_Transmitter));
+    _antennaPhi_Transmitter->setText(QString::number(data.antennaPhi_Transmitter));
+    _Beamwidth_Transmitter->setText(QString::number(data.Beamwidth_Transmitter));
+    _PolarizationMethod_Transmitter->setCurrentText(data.PolarizationMethod_Transmitter);
+    _antennaType_Transmitter->setCurrentText(data.antennaType_Transmitter);
+    }
 }
 
-void DeviceWidget::setupReceiverWidget(ElaScrollPageArea* container)
+void DeviceItemWidget::onEquipmentTypeChanged() {
+    QString type = _equipmentType->currentText();
+    bool isTrans = (type == "发射机" || type == "收发一体机");
+    bool isRecv = (type == "接收机" || type == "收发一体机");
+    
+    _TransmitterWidget->setVisible(isTrans);
+    _RecieverWidget->setVisible(isRecv);
+}
+
+void DeviceItemWidget::on_ReductionBtn_clicked() {
+    emit deleteMe(this); // 发送删除信号给父窗口
+}
+
+
+void DeviceItemWidget::resetTransmitterUI() {
+    _CentralF_Transmitter->setText("0");
+    _Bandwidth_Transmitter->setText("0");
+    _Power_Transmitter->setText("0");
+    _antennaPhi_Transmitter->setText("0");
+    _Beamwidth_Transmitter->setText("0");
+    // 下拉框可以重置到默认索引0
+    _PolarizationMethod_Transmitter->setCurrentIndex(0);
+    _antennaType_Transmitter->setCurrentIndex(0);
+}
+
+void DeviceItemWidget::resetReceiverUI() {
+    _CentralF_Receiver->setText("0");
+    _Bandwidth_Receiver->setText("0");
+    _Sensitive_Receiver->setText("0");
+    _InterferenceMargin_Receiver->setText("0");
+    _SINRMargin_Receiver->setText("0");
+    _NoiseFigure_Receiver->setText("0");
+}
+
+void DeviceItemWidget::setupReceiverUI(ElaScrollPageArea* container)
 {
     // 接收机参数区域
     // 中心频率、接收带宽
@@ -213,7 +370,7 @@ void DeviceWidget::setupReceiverWidget(ElaScrollPageArea* container)
     container->layout()->addWidget(centralWidget);
 }
 
-void DeviceWidget::setupTransmitterWidget(ElaScrollPageArea* container)
+void DeviceItemWidget::setupTransmitterUI(ElaScrollPageArea* container)
 {
         // 发射机参数区域
     // 第一行：中心频率、发射带宽、发射功率
@@ -292,12 +449,6 @@ void DeviceWidget::setupTransmitterWidget(ElaScrollPageArea* container)
     thirdLine->addSpacing(15);
     thirdLine->addWidget(_antennaType_Transmitter);
 
-    QVBoxLayout* mainLayout = new QVBoxLayout();
-    mainLayout->addLayout(firstLine);
-    mainLayout->addLayout(secondLine);
-    mainLayout->addLayout(thirdLine);
-
-
     QWidget* centralWidget = new QWidget(this);
     centralWidget->setWindowTitle("设备参数");
     QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
@@ -315,242 +466,3 @@ void DeviceWidget::setupTransmitterWidget(ElaScrollPageArea* container)
     }
     container->layout()->addWidget(centralWidget);
 }
-
-void DeviceWidget::setData(const EquipmentData &data)
-{
-    _currentId = data.equipmentID;
-
-    // --- 1. 基本参数 ---
-    _equipmentID->setText(data.equipmentID);
-    _equipmentType->setCurrentText(data.equipmentType);
-    _gain->setText(QString::number(data.Gain));
-    
-    _X_offset->setText(QString::number(data.X_offset));
-    _Y_offset->setText(QString::number(data.Y_offset));
-    _Z_offset->setText(QString::number(data.Z_offset));
-
-    // --- 2. 接收机参数 ---
-    if(data.equipmentType == "接收机" ){
-    _CentralF_Receiver->setText(QString::number(data.CentralF_Reciever));
-    _Bandwidth_Receiver->setText(QString::number(data.Bandwidth_Reciever));
-    _Sensitive_Receiver->setText(QString::number(data.Sensitive_reciever));
-    _InterferenceMargin_Receiver->setText(QString::number(data.interferenceMargin));
-    _SINRMargin_Receiver->setText(QString::number(data.SINRMargin));
-    _NoiseFigure_Receiver->setText(QString::number(data.noiseFigure));
-    } else if(data.equipmentType == "发射机"){
-    // --- 3. 发射机参数 ---
-    _CentralF_Transmitter->setText(QString::number(data.CentralF_Transmitter));
-    _Bandwidth_Transmitter->setText(QString::number(data.Bandwidth_Transmitter));
-    _Power_Transmitter->setText(QString::number(data.Power_Transmitter));
-    _antennaPhi_Transmitter->setText(QString::number(data.antennaPhi_Transmitter));
-    _Beamwidth_Transmitter->setText(QString::number(data.Beamwidth_Transmitter));
-    _PolarizationMethod_Transmitter->setCurrentText(data.PolarizationMethod_Transmitter);
-    _antennaType_Transmitter->setCurrentText(data.antennaType_Transmitter);
-    }
-}
-
-void DeviceWidget::updateModelData() {
-    bool ok;
-    // 遍历全局数据列表找到当前设备
-    for (EquipmentData &data : DataModel::instance()->allEquipments) {
-        if(data.equipmentID == _currentId){
-            // --- 公共参数总是保存 ---
-            data.equipmentID = _equipmentID->text();
-            data.equipmentType = _equipmentType->currentText();
-            data.Gain = _gain->text().toDouble(&ok);
-            data.X_offset = _X_offset->text().toDouble(&ok);
-            data.Y_offset = _Y_offset->text().toDouble(&ok);
-            data.Z_offset = _Z_offset->text().toDouble(&ok);
-
-            // --- 发射机参数处理 ---
-            // 判断发射机容器是否可见
-            if (_TransmitterWidget->isVisible()) {
-                data.CentralF_Transmitter = _CentralF_Transmitter->text().toDouble(&ok);
-                data.Bandwidth_Transmitter = _Bandwidth_Transmitter->text().toDouble(&ok);
-                data.Power_Transmitter = _Power_Transmitter->text().toDouble(&ok);
-                data.antennaPhi_Transmitter = _antennaPhi_Transmitter->text().toDouble(&ok);
-                data.Beamwidth_Transmitter = _Beamwidth_Transmitter->text().toDouble(&ok);
-                data.PolarizationMethod_Transmitter = _PolarizationMethod_Transmitter->currentText();
-                data.antennaType_Transmitter = _antennaType_Transmitter->currentText();
-            } else {
-                // 不可见，强制写入无效值（0）
-                data.CentralF_Transmitter = 0;
-                data.Bandwidth_Transmitter = 0;
-                data.Power_Transmitter = 0;
-                data.antennaPhi_Transmitter = 0;
-                data.Beamwidth_Transmitter = 0;
-                data.PolarizationMethod_Transmitter = "";
-                data.antennaType_Transmitter = "";
-            }
-
-            // --- 接收机参数处理 ---
-            if (_RecieverWidget->isVisible()) {
-                data.CentralF_Reciever = _CentralF_Receiver->text().toDouble(&ok);
-                data.Bandwidth_Reciever = _Bandwidth_Receiver->text().toDouble(&ok);
-                data.Sensitive_reciever = _Sensitive_Receiver->text().toDouble(&ok);
-                data.interferenceMargin = _InterferenceMargin_Receiver->text().toDouble(&ok);
-                data.SINRMargin = _SINRMargin_Receiver->text().toDouble(&ok);
-                data.noiseFigure = _NoiseFigure_Receiver->text().toDouble(&ok);
-            } else {
-                data.CentralF_Reciever = 0;
-                data.Bandwidth_Reciever = 0;
-                data.Sensitive_reciever = 0;
-                data.interferenceMargin = 0;
-                data.SINRMargin = 0;
-                data.noiseFigure = 0;
-            }
-            spdlog::info("设备 {} 参数已经保存", data.equipmentID.toStdString());
-            break;
-        }
-    }
-}
-
-void DeviceWidget::onEquipmentTypeChanged()
-{
-    QString type = _equipmentType->currentText();
-    if (type == "发射机") {
-        _TransmitterWidget->setVisible(true);
-        _RecieverWidget->setVisible(false);
-        // 清空其他参数
-        resetReceiverUI();
-        spdlog::debug("正在设定{}参数", type.toStdString());
-    }
-    else if (type == "接收机") {
-        _TransmitterWidget->setVisible(false);
-        _RecieverWidget->setVisible(true);
-        // 清空其他参数
-        resetTransmitterUI();
-        spdlog::debug("正在设定{}参数", type.toStdString());
-    }
-    else if (type == "收发一体机") {
-        _TransmitterWidget->setVisible(true);
-        _RecieverWidget->setVisible(true);
-        spdlog::debug("正在设定{}参数", type.toStdString());
-    }
-    
-}
-
-
-
-void DeviceWidget::on_equipmentReduction_clicked()
-{
-    emit removalRequested(_currentId);
-}
-
-void DeviceWidget::resetTransmitterUI() {
-    _CentralF_Transmitter->setText("0");
-    _Bandwidth_Transmitter->setText("0");
-    _Power_Transmitter->setText("0");
-    _antennaPhi_Transmitter->setText("0");
-    _Beamwidth_Transmitter->setText("0");
-    // 下拉框可以重置到默认索引0
-    _PolarizationMethod_Transmitter->setCurrentIndex(0);
-    _antennaType_Transmitter->setCurrentIndex(0);
-}
-
-void DeviceWidget::resetReceiverUI() {
-    _CentralF_Receiver->setText("0");
-    _Bandwidth_Receiver->setText("0");
-    _Sensitive_Receiver->setText("0");
-    _InterferenceMargin_Receiver->setText("0");
-    _SINRMargin_Receiver->setText("0");
-    _NoiseFigure_Receiver->setText("0");
-}
-
-
-//void DeviceWidget::on_DeviceSave_clicked()
-//{
-//    if (updateDeviceModelFromView()) {
-//        //QMessageBox::information(this, "成功", "设备信息已保存并校验通过。");
-//        spdlog::info("Device data saved and validated.");
-//    }
-//}
-
-
-//bool DeviceWidget::updateDeviceModelFromView()
-//{
-//    // 1. 从 View 同步到 Model
-//    for (int i = 0; i < deviceLayout->count(); ++i) {
-//        QLayoutItem* item = deviceLayout->itemAt(i);
-//        if (item && item->widget()) {
-//            DeviceWidget* widget = qobject_cast<DeviceWidget*>(item->widget());
-//            if (widget) {
-//                // 让每个Widget用自己UI上的当前值去更新数据模型
-//                widget->updateModelData();
-//            }
-//        }
-//    }
-//
-//    // 2. 执行校验逻辑
-//    auto& equipments = DataModel::instance()->allEquipments;
-//    for (int i = 0; i < equipments.size(); ++i) {
-//        auto result = equipments[i].validate();
-//        if (!result.first) {
-//            QString errorMsg = QString("设备数据错误 (ID: %1):%2")
-//                .arg(equipments[i].equipmentID)
-//                .arg(result.second);
-//            //QMessageBox::critical(this, "校验失败", errorMsg);
-//            spdlog::error("Validation failed for equipment {}: {}",
-//                equipments[i].equipmentID.toStdString(), result.second.toStdString());
-//            return false;
-//        }
-//    }
-//
-//    //_treeView->syncViewWithModel();
-//    return true;
-//}
-//
-//
-//
-//void DeviceWidget::onDeviceWidgetRemovalRequested(const QString& id)
-//{
-//    // 1. 从DataModel中移除对应的数据
-//    auto& equipments = DataModel::instance()->allEquipments;
-//    auto it = std::remove_if(equipments.begin(), equipments.end(),
-//        [&](const EquipmentData& ed) { return ed.equipmentID == id; });
-//
-//    if (it != equipments.end()) {
-//        equipments.erase(it, equipments.end());
-//        spdlog::info("设备 {} 的数据已从模型中删除。", id.toStdString());
-//
-//        // 2. 遍历布局，找到并删除对应的UI控件
-//        for (int i = 0; i < deviceLayout->count(); ++i) {
-//            QLayoutItem* item = deviceLayout->itemAt(i);
-//            if (item && item->widget()) {
-//                DeviceWidget* widget = qobject_cast<DeviceWidget*>(item->widget());
-//                // 假设DeviceWidget有方法可以获取其ID
-//                if (widget && widget->getID() == id) {
-//                    deviceLayout->removeWidget(widget);
-//                    widget->deleteLater();
-//                    spdlog::info("设备 {} 的UI控件已删除。", id.toStdString());
-//                    break; // 找到并删除后即可退出循环
-//                }
-//            }
-//        }
-//
-//        // 3. 更新TreeView
-//        //_treeView->syncViewWithModel();
-//    }
-//    else {
-//        spdlog::warn("请求删除设备 {}，但在数据模型中未找到。", id.toStdString());
-//    }
-//}
-//
-//void DeviceWidget::on_addDeviceButton_clicked()
-//{
-//    //在添加新控件前，先将UI上所有未保存的修改更新到数据模型中
-//    updateDeviceModelFromView();
-//
-//    EquipmentData newDevice;
-//    newDevice.equipmentID = QString("NewDevice%1").arg(DataModel::instance()->allEquipments.size() + 1);
-//    // 首先在DataModel中占位
-//    DataModel::instance()->allEquipments.push_back(newDevice);
-//    // 然后创建新的DeviceWidget并添加到UI
-//    DeviceWidget* widget = new DeviceWidget();
-//    widget->setData(newDevice); // 关联UI与数据
-//    deviceLayout->addWidget(widget);
-//    connect(widget, &DeviceWidget::removalRequested, this, &FleetInput::onDeviceWidgetRemovalRequested);
-//    
-//    //同步treeView
-//    //_treeView->syncViewWithModel();
-//}
