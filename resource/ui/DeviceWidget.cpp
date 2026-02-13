@@ -37,10 +37,11 @@ DeviceWidget::DeviceWidget(QWidget *parent)
     QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
     centralWidget->setWindowTitle("设备属性管理");
     mainLayout->setContentsMargins(0, 0, 0, 0);
-    //_deviceListLayout->setSpacing(20); // 卡片之间的间距
+    _deviceListLayout->setSpacing(20); // 卡片之间的间距
     mainLayout->addLayout(_deviceListLayout);
+	mainLayout->addStretch(); 
     mainLayout->addLayout(btnLayout);
-
+	mainLayout->setStretch(0, 1); // 设备列表占满剩余空间
     addCentralWidget(centralWidget);
     connect(AddDeviceBtn, &ElaPushButton::clicked, this, &DeviceWidget::on_AddDeviceBtn_clicked);
     connect(SaveEquipmentBtn, &ElaPushButton::clicked, this, &DeviceWidget::on_SaveEquipmentBtn_clicked);
@@ -55,7 +56,8 @@ DeviceWidget::~DeviceWidget()
 
 
 void DeviceWidget::on_AddDeviceBtn_clicked() {
-    DeviceItemWidget* newItem = new DeviceItemWidget(this);    
+    DeviceItemWidget* newItem = new DeviceItemWidget(this);   
+    newItem->setMinimumHeight(300);
     // 2. 将其插入到滚动布局中 (假设 _scrollLayout 是你放置设备的布局)
     // 建议在布局最后保留一个 addStretch()，这样新条目会往上排
     _deviceListLayout->insertWidget(_deviceListLayout->count() - 1, newItem);
