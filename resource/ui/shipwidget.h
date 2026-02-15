@@ -1,5 +1,4 @@
-#ifndef SHIPWIDGET_H
-#define SHIPWIDGET_H
+#pragma once
 #include "spdlog/spdlog.h"
 #include <QWidget>
 #include <QVBoxLayout>
@@ -8,10 +7,12 @@
 #include "DeviceWidget.h"
 #include "deviceonship.h"
 #include "Interface/DataModel.h"
-#include "ElaPushButton.h"
-#include "ElaLineEdit.h"
-#include "ElaText.h"
-#include "BasePage.h"
+class BasePage;
+class ElaLineEdit;
+class ElaText;
+class ElaPushButton;
+class ElaListView;
+class ShipItemWidget;
 
 class ShipWidget : public BasePage
 {
@@ -20,14 +21,37 @@ class ShipWidget : public BasePage
 public:
     explicit ShipWidget(QWidget *parent = nullptr);
     ~ShipWidget();
-    void setData(const ShipData &data);
-    void updateShipModelData();
 
 private:
-   
-    void syncDeviceListWithModel();
+    QVBoxLayout* _ShipListLayout;
+
+    ShipItemWidget* _shipItemWidget;
     std::string _currentShipId;
     
+    ElaPushButton* _AddShipBtn;
+    ElaPushButton* _SaveShipBtn;
+private slots:
+    void on_AddShipBtn_clicked();
+    void on_SaveShipBtn_clicked();
+    // bool updateShipModelFromView();
+    void on_RemoveShipItemRequested(ShipItemWidget* item);
+};
+
+class ShipItemWidget : public ElaScrollPageArea {
+    Q_OBJECT
+public:
+    explicit ShipItemWidget(QWidget *parent = nullptr);
+    void setData(const ShipData &data);
+    ShipData getData() const;
+    QString getID() const { return _currentId; }
+signals:
+    void deleteMe(ShipItemWidget* widget); // 告知父容器删除本条目
+private slots:
+    void on_SelfReductionBtn_clicked();
+    void on_AddDeviceOnShipBtn_clicked();
+private:    
+    QString _currentId;
+    QVBoxLayout* _deviceListLayout;
     ElaLineEdit* _X_offset;
     ElaLineEdit* _Y_offset;
     ElaLineEdit* _Z_offset;
@@ -35,17 +59,11 @@ private:
     ElaLineEdit* _ship_ID;
     ElaLineEdit* _ship_Speed;
     ElaLineEdit* _ship_Orienteation;
-    
+
+    ElaListView* _deviceOnShipListView;
+    ElaPushButton* _AddDeviceOnShipBtn;
+
     QVBoxLayout* _rightPannel;
     QVBoxLayout* _leftPannel;
-private slots:
-    void on_shipEquipmentPlus_clicked();
-    void on_deleteShip_clicked();
-    void onDeviceOnShipRemovalRequested();
-    void on_addShipButton_clicked();
-    void on_ShipSave_clicked();
-    bool updateShipModelFromView();
+    ElaPushButton* _ReductionShipBtn;
 };
-
-
-#endif // SHIPWIDGET_H

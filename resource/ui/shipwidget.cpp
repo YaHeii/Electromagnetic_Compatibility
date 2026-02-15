@@ -1,12 +1,109 @@
 #include "shipwidget.h"
 #include <QLayout>
 #include "deviceonship.h"
+
+#include "ElaText.h"
+#include "ElaPushButton.h"
+#include "ElaComboBox.h"
+#include "ElaLineEdit.h"
+#include "ElaListView.h"
+#include "ElaScrollArea.h"
+#include "ElaTheme.h"
+#include "ElaScrollPageArea.h"
 #include "spdlog/spdlog.h"
 
 ShipWidget::ShipWidget(QWidget *parent) 
     : BasePage(parent)
 {
-    // X coordinate
+    
+    _ShipListLayout = new QVBoxLayout();
+    //_shipItemWidget = new ShipItemWidget(this);
+    //_shipItemWidget->setMinimumHeight(300);
+
+    _AddShipBtn = new ElaPushButton("添加设备", this);
+    _AddShipBtn->setFixedSize(60, 32);
+    connect(_AddShipBtn, &ElaPushButton::clicked, 
+        this, &ShipWidget::on_AddShipBtn_clicked);
+    _SaveShipBtn = new ElaPushButton("保存", this);
+    _SaveShipBtn->setFixedSize(60, 32);
+    connect(_SaveShipBtn, &ElaPushButton::clicked, 
+        this, &ShipWidget::on_SaveShipBtn_clicked);
+    
+    QHBoxLayout* btnLayout = new QHBoxLayout();
+    btnLayout->addStretch();
+    btnLayout->addWidget(_AddShipBtn);
+    btnLayout->addSpacing(20);
+    btnLayout->addWidget(_SaveShipBtn);
+
+    QWidget* centralWidget = new QWidget(this);
+    QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
+    centralWidget->setWindowTitle("舰船属性管理");
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    _ShipListLayout->setSpacing(20); // 卡片之间的间距
+    mainLayout->addLayout(_ShipListLayout);
+	mainLayout->addStretch(); 
+    mainLayout->addLayout(btnLayout);
+	mainLayout->setStretch(0, 1); // 舰船列表占满剩余空间
+    addCentralWidget(centralWidget);
+    on_AddShipBtn_clicked();
+}
+
+ShipWidget::~ShipWidget()
+{
+}
+
+void ShipWidget::on_AddShipBtn_clicked() {
+    ShipItemWidget* newItem = new ShipItemWidget(this);   
+    newItem->setMinimumHeight(300);
+    // 2. 将其插入到滚动布局中 (假设 _scrollLayout 是你放置设备的布局)
+    // 建议在布局最后保留一个 addStretch()，这样新条目会往上排
+    _ShipListLayout->insertWidget(_ShipListLayout->count() - 1, newItem);
+    
+    // 3. 处理删除信号
+    connect(newItem, &ShipItemWidget::deleteMe, this, &ShipWidget::on_RemoveShipItemRequested);
+    spdlog::info("已添加新的舰船 UI 条目");
+}
+
+void ShipWidget::on_RemoveShipItemRequested(ShipItemWidget* item)
+{
+    if (!item) return;
+    
+    // 从布局中移除并销毁
+    _ShipListLayout->removeWidget(item);
+    item->deleteLater();
+    
+    spdlog::info("已移除舰船 UI 条目");
+}
+
+
+void ShipWidget::on_SaveShipBtn_clicked()
+{
+     auto* model = DataModel::instance();
+    // 1. 清空当前模型中的舰船列表，以 UI 上的实际条目为准
+    model->allShips.clear();
+
+    // 2. 遍历布局，收集每个条目中的数据
+    for (int i = 0; i < _ShipListLayout->count(); ++i) {
+        QLayoutItem* layoutItem = _ShipListLayout->itemAt(i);
+        if (auto* widget = qobject_cast<ShipItemWidget*>(layoutItem->widget())) {
+            // 获取 UI 当前的数据并验证
+            ShipData data = widget->getData();
+
+            if(data.validate_Ship().first == false) {
+                spdlog::error("舰船 {} 的数据校验未通过，{}", data.shipID, data.validate_Ship().second.toStdString());
+                continue;
+            }   
+            
+            model->allShips.push_back(data);
+        }
+    }
+
+    spdlog::info("舰船保存成功，当前 DataModel 中共有 {} 个舰船", model->allShips.size());
+}
+ 
+ShipItemWidget::ShipItemWidget(QWidget *parent) : ElaScrollPageArea(parent)
+{
+     // X coordinate
     ElaText* xText = new ElaText("X坐标", this);
     xText->setTextPixelSize(15);
     _X_offset = new ElaLineEdit(this);
@@ -42,7 +139,7 @@ ShipWidget::ShipWidget(QWidget *parent)
 
     // Speed
     ElaText* speedText = new ElaText("船速", this);
-    speedText->setTextPixelSize(53);
+    speedText->setTextPixelSize(15);
     _ship_Speed = new ElaLineEdit(this);
     
     // Orientation
@@ -64,296 +161,89 @@ ShipWidget::ShipWidget(QWidget *parent)
     secondLine->addWidget(_ship_Orienteation);
     secondLine->addSpacing(15);
 
-    // Delete button
-    ElaPushButton* deleteShip = new ElaPushButton("删除该船", this);
-    deleteShip->setFixedSize(60, 32);
-    connect(deleteShip, &ElaPushButton::clicked,
-        this, &ShipWidget::on_deleteShip_clicked);
-
     _leftPannel = new QVBoxLayout();
     _leftPannel->addLayout(firstLine);
     _leftPannel->addLayout(secondLine);
-    _leftPannel->addWidget(deleteShip);
 
-    ElaPushButton* shipEquipmentPlus = new ElaPushButton("添加设备", this);
-    shipEquipmentPlus->setFixedSize(60, 32);
-    connect(shipEquipmentPlus, &ElaPushButton::clicked, 
-        this, &ShipWidget::on_shipEquipmentPlus_clicked);
-
-    DeviceonShip* deviceList = new DeviceonShip;
+    _deviceOnShipListView = new ElaListView(this);
+    _AddDeviceOnShipBtn = new ElaPushButton("添加设备", this);
+    _AddDeviceOnShipBtn->setFixedSize(60, 32);
+    connect(_AddDeviceOnShipBtn, &ElaPushButton::clicked, this, 
+        &ShipItemWidget::on_AddDeviceOnShipBtn_clicked);
     _rightPannel = new QVBoxLayout();
-    _rightPannel->addWidget(deviceList);
-    _rightPannel->addWidget(shipEquipmentPlus);
+    _rightPannel->addWidget(_deviceOnShipListView);
+    _rightPannel->addStretch();
+    _rightPannel->addWidget(_AddDeviceOnShipBtn);
 
-    QWidget* centralWidget = new QWidget(this);
-    centralWidget->setWindowTitle("船");
-    QHBoxLayout* centerHLayout = new QHBoxLayout(centralWidget);
-    centerHLayout->setContentsMargins(0, 0, 0, 0);
-    centerHLayout->addLayout(_leftPannel);
-    centerHLayout->addLayout(_rightPannel);
-    centerHLayout->addStretch();
+    QWidget* mainWidget = new QWidget(this);
+    // mainWidget->setWindowTitle("船");
+    QHBoxLayout* mainHLayout = new QHBoxLayout(mainWidget);
+    mainHLayout->setContentsMargins(0, 0, 0, 0);
+    mainHLayout->addLayout(_leftPannel);
+    mainHLayout->addLayout(_rightPannel);
 
-    //addCentralWidget(centralWidget);
+    // Delete button
+    _ReductionShipBtn = new ElaPushButton("删除该船", this);
+    _ReductionShipBtn->setFixedSize(60, 32);
+    connect(_ReductionShipBtn, &ElaPushButton::clicked,
+        this, &ShipItemWidget::on_SelfReductionBtn_clicked);
+    QVBoxLayout* centerVLayout = new QVBoxLayout(this);
+    centerVLayout->addWidget(mainWidget);
+    centerVLayout->addStretch();
+    centerVLayout->addWidget(_ReductionShipBtn);
+    
 }
 
-ShipWidget::~ShipWidget()
+void ShipItemWidget::setData(const ShipData &data)
 {
-}
-
-
-void ShipWidget::setData(const ShipData& data)
-{
-    _currentShipId = data.shipID;
-
-    // 填充舰船的基本信息
-    _ship_ID->setText(QString(QString::fromStdString(data.shipID)));
+    _ship_ID->setText(QString::fromStdString(data.shipID));
     _X_offset->setText(QString::number(data.X_offset));
     _Y_offset->setText(QString::number(data.Y_offset));
     _Z_offset->setText(QString::number(data.Z_offset));
-    _ship_Orienteation->setText(QString::number(data.ship_Orienteation));
     _ship_Speed->setText(QString::number(data.ship_Speed));
+    _ship_Orienteation->setText(QString::number(data.ship_Orienteation));
 
-    // 根据数据刷新舰船上的设备列表
-    syncDeviceListWithModel();
-}
+    // 这里添加代码来填充设备列表
+}   
 
-void ShipWidget::updateShipModelData()
+ShipData ShipItemWidget::getData() const
 {
-    // 遍历数据模型，找到与自己ID匹配的ShipData
-    for (ShipData &ship : DataModel::instance()->allShips) {
-        if (ship.shipID == _currentShipId) {
-            // 用UI的值更新模型数据
-             ship.shipID = _ship_ID->text().toStdString();
-            
-            // 使用toDouble函数的bool*参数检查转换是否成功
-            bool ok = false;
-            double value = 0.0;
-            
-            // 更新ship_X
-            value = _X_offset->text().toDouble(&ok);
-            if (ok) {
-                ship.X_offset = value;
-            }
-           
-            // 更新ship_Y
-            value = _Y_offset->text().toDouble(&ok);
-            if (ok) {
-                ship.Y_offset = value;
-            }
-           
-            value = _Z_offset->text().toDouble(&ok);
-            if (ok) {
-                ship.Z_offset = value;
-            }
+    ShipData data;
+    data.shipID = _ship_ID->text().toStdString();
+    data.X_offset = _X_offset->text().toDouble();
+    data.Y_offset = _Y_offset->text().toDouble();
+    data.Z_offset = _Z_offset->text().toDouble();
+    data.ship_Speed = _ship_Speed->text().toDouble();
+    data.ship_Orienteation = _ship_Orienteation->text().toDouble();
 
-            // 更新ship_Orienteation
-            value = _ship_Orienteation->text().toDouble(&ok);
-            if (ok) {
-                ship.ship_Orienteation = value;
-            }
-           
-            // 更新ship_Speed，确保速度非负
-            value = _ship_Speed->text().toDouble(&ok);
-            if (ok && value >= 0) {
-                ship.ship_Speed = value;
-            }
-
-            // 注意：舰船上配置的设备列表是通过"+"按钮直接修改模型的，
-            // 这里通常不需要再单独更新，除非有删除或修改设备的操作。
-
-            return; // 找到并更新后即可退出
+    // 这里添加代码来从设备列表中提取设备配置
+    QLayoutItem* child;
+    while ((child = _deviceListLayout->takeAt(0)) != nullptr) {
+        if (child->widget()) {
+            child->widget()->deleteLater();
         }
+        delete child;
     }
-    // 遍历数据模型，找到与自己ID匹配的ShipData
-    for (ShipData &ship : DataModel::instance()->allShips) {
-        if (ship.shipID == _currentShipId) {
-            // 用UI的值更新模型数据
-            // ship.shipName = ui->ship_Name->text();
-            
-            // 使用toDouble函数的bool*参数检查转换是否成功
-            bool ok = false;
-            double value = 0.0;
-            
-            // 更新ship_X
-            value = _X_offset->text().toDouble(&ok);
-            if (ok) {
-                ship.X_offset = value;
-            }
-            
-            // 更新ship_Y
-            value = _Y_offset->text().toDouble(&ok);
-            if (ok) {
-                ship.Y_offset = value;
-            }
-            
-            value = _Z_offset->text().toDouble(&ok);
-            if (ok) {
-                ship.Z_offset = value;
-            }
+    // 重新添加弹簧
+    _deviceListLayout->addStretch();
 
-            // 更新ship_Orienteation
-            value = _ship_Orienteation->text().toDouble(&ok);
-            if (ok) {
-                ship.ship_Orienteation = value;
-            }
-            
-            // 更新ship_Speed，确保速度非负
-            value = _ship_Speed->text().toDouble(&ok);
-            if (ok && value >= 0) {
-                ship.ship_Speed = value;
-            }
+    // 3. 根据数据模型恢复设备列表
+    // 假设 ShipData 中有一个 std::vector<DeviceData> devices
+    for (const auto& deviceData : data.Equipments) {
+        DeviceonShip* deviceWidget = new DeviceonShip();
+         deviceWidget->setData(deviceData); 
 
-            // 注意：舰船上配置的设备列表是通过“+”按钮直接修改模型的，
-            // 这里通常不需要再单独更新，除非有删除或修改设备的操作。
-
-            return; // 找到并更新后即可退出
-        }
+        _deviceListLayout->insertWidget(_deviceListLayout->count() - 1, deviceWidget);
     }
+    return data;
 }
 
-void ShipWidget::on_deleteShip_clicked() {
-    delete this;
-	spdlog::debug("无人船 {} 已删除", this->_currentShipId);
-}
-
-
-void ShipWidget::on_shipEquipmentPlus_clicked()
+void ShipItemWidget::on_AddDeviceOnShipBtn_clicked()
 {
-    // 在数据模型中为当前舰船添加一个空的设备配置
-    for (ShipData &ship : DataModel::instance()->allShips) {
-        if (ship.shipID == _currentShipId) {
-            EquipmentOnShip newConfig;
-            // 默认可以不选择任何设备，或者选择第一个可用设备
-            if (!DataModel::instance()->allEquipments.empty()) {
-                newConfig.equipmentID = DataModel::instance()->allEquipments.front().equipmentID;
-            }
-            ship.Equipments.push_back(newConfig);
-            break; // 修改后退出循环
-        }
-    }
-
-    // 刷新UI来显示这个新的设备配置条目
-    syncDeviceListWithModel();
+    _deviceOnShipListView->addScrollBarWidget(new DeviceonShip(this),Qt::AlignTop | Qt::AlignLeft );
 }
 
-void ShipWidget::syncDeviceListWithModel()
+void ShipItemWidget::on_SelfReductionBtn_clicked()
 {
-    // 清空当前的设备列表UI
-    while (QLayoutItem* item = _rightPannel->takeAt(0)) {
-        delete item->widget();
-        delete item;
-    }
-
-    // 找到当前舰船的数据
-    for (const ShipData &ship : DataModel::instance()->allShips) {
-        if (ship.shipID == _currentShipId) {
-            // 获取所有已定义设备的ID列表，用于下拉框
-            QStringList availableDeviceIDs;
-            for(const EquipmentData &device : DataModel::instance()->allEquipments) {
-                availableDeviceIDs.append(device.equipmentID);
-            }
-
-            // 遍历这艘船上配置的每一个设备
-            for (const EquipmentOnShip &config : ship.Equipments) {
-                DeviceonShip *deviceEntryUi = new DeviceonShip();
-
-                // 填充下拉框，并设置当前选中的项
-                if (!availableDeviceIDs.isEmpty()) {
-                    QComboBox* equipmentComboBox = deviceEntryUi->findChild<QComboBox*>("EquipmentID");
-                    if (equipmentComboBox) {
-                        equipmentComboBox->addItems(availableDeviceIDs);
-                        equipmentComboBox->setCurrentText(config.equipmentID);
-                    }
-                }
-
-                _rightPannel->addWidget(deviceEntryUi);
-                connect(deviceEntryUi, &DeviceonShip::removalRequested, this, &ShipWidget::onDeviceOnShipRemovalRequested);
-            }
- 
-            break; // 找到舰船后即可退出
-        }
-    }
-}
- 
-void ShipWidget::onDeviceOnShipRemovalRequested()
-{
-    // 获取发出信号的DeviceonShip小部件
-    DeviceonShip* deviceWidget = qobject_cast<DeviceonShip*>(sender());
-    if (!deviceWidget) {
-        return;
-    }
- 
-    // 在布局中找到该小部件的索引
-    int index = _rightPannel->indexOf(deviceWidget);
-    if (index == -1) {
-        return;
-    }
- 
-    // 从数据模型中移除对应的设备配置
-    for (ShipData &ship : DataModel::instance()->allShips) {
-        if (ship.shipID == _currentShipId) {
-            if (index < ship.Equipments.size()) {
-                ship.Equipments.erase(ship.Equipments.begin() + index);
-                spdlog::debug("从舰船 {} 中删除了索引为 {} 的设备", _currentShipId, index);
- 
-                // 从布局中移除并删除小部件
-                _rightPannel->removeWidget(deviceWidget);
-                deviceWidget->deleteLater();
-            }
-            break;
-        }
-    }
-}
-
-void ShipWidget::on_addShipButton_clicked()
-{
-    updateShipModelFromView();
-
-    ShipData newShip;
-    newShip.shipID = DataModel::instance()->allShips.size() + 1;
-    DataModel::instance()->allShips.push_back(newShip);
-    ShipWidget* widget = new ShipWidget();
-    widget->setData(newShip); // 关联UI与数据
-    _leftPannel->addWidget(widget);
-    //_treeView->syncViewWithModel();
-}
-
-void ShipWidget::on_ShipSave_clicked()
-{
-    if (updateShipModelFromView()) {
-        //QMessageBox::information(this, "成功", "舰船信息已保存并校验通过。");
-        spdlog::info("Ship data saved and validated.");
-    }
-}
-
-bool ShipWidget::updateShipModelFromView()
-{
-    // 1. 从 View 同步到 Model
-    for (int i = 0; i < _rightPannel->count(); ++i) {
-        QLayoutItem* item = _rightPannel->itemAt(i);
-        if (item && item->widget()) {
-             ShipWidget* widget = qobject_cast<ShipWidget*>(item->widget());
-             if (widget) {
-                widget->updateShipModelData(); // 这是一个 void 函数，只负责赋值
-             }
-        }
-    }
-
-    // 2. 执行校验逻辑
-    // 遍历 DataModel 中的所有船只进行检查
-    auto& ships = DataModel::instance()->allShips;
-    for (int i = 0; i < ships.size(); ++i) {
-        auto result = ships[i].validate_Ship(); // 调用 validate
-        if (!result.first) {
-            // 校验失败，弹出警告
-            // QString errorMsg = QString("船只数据错误 (第 %1 个):%2").arg(i + 1).arg(result.second);
-            // QMessageBox::critical(this, "校验失败", errorMsg);
-            spdlog::error("Validation failed for ship {}: {}", i, result.second.toStdString());
-            return false; // 中断
-        }
-    }
-
-    // 3. 同步 TreeView (如果校验通过)
-    //_treeView->syncViewWithModel();
-    return true;
+    emit deleteMe(this);
 }

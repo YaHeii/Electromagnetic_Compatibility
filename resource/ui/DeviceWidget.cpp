@@ -89,10 +89,9 @@ void DeviceWidget::on_SaveEquipmentBtn_clicked() {
         if (auto* widget = qobject_cast<DeviceItemWidget*>(layoutItem->widget())) {
             // 获取 UI 当前的数据并验证
             EquipmentData data = widget->getData();
-            
-            // 基础校验（示例：ID不能为空）
-            if (data.equipmentID.isEmpty()) {
-                spdlog::warn("发现 ID 为空的设备，跳过保存");
+
+            if(!data.validate().first) {
+                spdlog::error("设备 {} 的数据校验未通过，{}", data.equipmentID.toStdString(), data.validate().second.toStdString());
                 continue;
             }
             
@@ -224,7 +223,7 @@ EquipmentData DeviceItemWidget::getData() const {
 // datamodel->view
 void DeviceItemWidget::setData(const EquipmentData &data)
 {
-    _currentId = data.equipmentID;
+    // _currentId = data.equipmentID;
 
     // --- 1. 基本参数 ---
     _equipmentID->setText(data.equipmentID);

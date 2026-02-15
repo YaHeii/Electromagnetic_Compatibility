@@ -40,8 +40,6 @@ class DeviceItemWidget : public ElaScrollPageArea {
     Q_OBJECT
 public:
     explicit DeviceItemWidget(QWidget *parent = nullptr);
-    
-    // 数据同步接口
     void setData(const EquipmentData &data);
     EquipmentData getData() const;
     QString getID() const { return _currentId; }
