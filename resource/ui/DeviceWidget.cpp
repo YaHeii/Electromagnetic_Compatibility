@@ -19,33 +19,32 @@ DeviceWidget::DeviceWidget(QWidget *parent)
 {
     setWindowTitle("设备属性管理");
     createCustomWidget("此页面可动态添加和管理多个可用设备");
-
-    _deviceListLayout = new QVBoxLayout();
-
     AddDeviceBtn = new ElaPushButton("添加新设备", this);
     AddDeviceBtn->setFixedSize(120, 36);
     SaveEquipmentBtn = new ElaPushButton("保存所有设备", this);
     SaveEquipmentBtn->setFixedSize(120, 36);
 
-    QHBoxLayout* btnLayout = new QHBoxLayout();
-    btnLayout->addStretch();
-    btnLayout->addWidget(AddDeviceBtn);
-    btnLayout->addSpacing(20);
-    btnLayout->addWidget(SaveEquipmentBtn);
+    _btnLayout = new QHBoxLayout();
+    _btnLayout->addStretch();
+    _btnLayout->addWidget(AddDeviceBtn);
+    _btnLayout->addSpacing(20);
+    _btnLayout->addWidget(SaveEquipmentBtn);
+
+    _deviceListLayout = new QVBoxLayout();
+    _deviceListLayout->setContentsMargins(10, 10, 10, 10);
+    _deviceListLayout->setSpacing(20); 
 
     QWidget* centralWidget = new QWidget(this);
     QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
     centralWidget->setWindowTitle("设备属性管理");
     mainLayout->setContentsMargins(0, 0, 0, 0);
-    _deviceListLayout->setSpacing(20); // 卡片之间的间距
-    mainLayout->addLayout(_deviceListLayout);
-	mainLayout->addStretch(); 
-    mainLayout->addLayout(btnLayout);
-	mainLayout->setStretch(0, 1); // 设备列表占满剩余空间
+    mainLayout->addLayout(_deviceListLayout,10); // 设备列表占满剩余空间
+    mainLayout->addStretch(); // 在设备列表下添加一个弹簧，确保设备列表上方对齐
+    mainLayout->addLayout(_btnLayout,1);
     addCentralWidget(centralWidget);
     connect(AddDeviceBtn, &ElaPushButton::clicked, this, &DeviceWidget::on_AddDeviceBtn_clicked);
     connect(SaveEquipmentBtn, &ElaPushButton::clicked, this, &DeviceWidget::on_SaveEquipmentBtn_clicked);
-    // 连接删除按钮信号
+    
     on_AddDeviceBtn_clicked();    
 }
 
@@ -57,12 +56,11 @@ DeviceWidget::~DeviceWidget()
 
 void DeviceWidget::on_AddDeviceBtn_clicked() {
     DeviceItemWidget* newItem = new DeviceItemWidget(this);   
-    newItem->setMinimumHeight(300);
-    // 2. 将其插入到滚动布局中 (假设 _scrollLayout 是你放置设备的布局)
-    // 建议在布局最后保留一个 addStretch()，这样新条目会往上排
+    newItem->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
+    // 插入到弹簧上方
     _deviceListLayout->insertWidget(_deviceListLayout->count() - 1, newItem);
     
-    // 3. 处理删除信号
     connect(newItem, &DeviceItemWidget::deleteMe, this, &DeviceWidget::on_RemoveItemRequested);
     spdlog::info("已添加新的设备 UI 条目");
 }
@@ -80,10 +78,10 @@ void DeviceWidget::on_RemoveItemRequested(DeviceItemWidget* item)
 
 void DeviceWidget::on_SaveEquipmentBtn_clicked() {
     auto* model = DataModel::instance();
-    // 1. 清空当前模型中的设备列表，以 UI 上的实际条目为准
+    // 清空当前模型中的设备列表，以 UI 上的实际条目为准
     model->allEquipments.clear();
 
-    // 2. 遍历布局，收集每个条目中的数据
+    // 遍历布局，收集每个条目中的数据
     for (int i = 0; i < _deviceListLayout->count(); ++i) {
         QLayoutItem* layoutItem = _deviceListLayout->itemAt(i);
         if (auto* widget = qobject_cast<DeviceItemWidget*>(layoutItem->widget())) {
@@ -102,8 +100,8 @@ void DeviceWidget::on_SaveEquipmentBtn_clicked() {
     spdlog::info("设备保存成功，当前 DataModel 中共有 {} 个设备", model->allEquipments.size());
 }
 
-DeviceItemWidget::DeviceItemWidget(QWidget* parent) : ElaScrollPageArea(parent) {
- ElaText *typeText = new ElaText("设备类型", this);
+DeviceItemWidget::DeviceItemWidget(QWidget* parent) : QWidget(parent) {
+    ElaText *typeText = new ElaText("设备类型", this);
     typeText->setTextPixelSize(15);
     _equipmentType = new ElaComboBox(this);
     QStringList comboList{
@@ -113,12 +111,13 @@ DeviceItemWidget::DeviceItemWidget(QWidget* parent) : ElaScrollPageArea(parent) 
     _equipmentType->addItems(comboList);
 
     connect(_equipmentType, QOverload<int>::of(&QComboBox::currentIndexChanged),
-        this, &DeviceItemWidget::onEquipmentTypeChanged);
+            this, &DeviceItemWidget::onEquipmentTypeChanged);
     // 增益和设备ID
     ElaText *gainText = new ElaText("发射/接收增益", this);
     gainText->setTextPixelSize(15);
     _gain = new ElaLineEdit(this);
     _gain->setPlaceholderText("dBm");
+
     ElaText *idText = new ElaText("设备ID", this);
     idText->setTextPixelSize(15);
     _equipmentID = new ElaLineEdit(this);
@@ -135,16 +134,18 @@ DeviceItemWidget::DeviceItemWidget(QWidget* parent) : ElaScrollPageArea(parent) 
     firstLine->addWidget(idText);
     firstLine->addSpacing(10);
     firstLine->addWidget(_equipmentID);
-    
+
     // 坐标输入
     ElaText *xText = new ElaText("X坐标", this);
     xText->setTextPixelSize(15);
     _X_offset = new ElaLineEdit(this);
     _X_offset->setPlaceholderText("X坐标");
+    
     ElaText *yText = new ElaText("Y坐标",this);
     yText->setTextPixelSize(15);
     _Y_offset = new ElaLineEdit(this);
     _Y_offset->setPlaceholderText("Y坐标");
+    
     ElaText *zText = new ElaText("Z坐标",this);
     zText->setTextPixelSize(15);
     _Z_offset = new ElaLineEdit(this);
@@ -163,16 +164,15 @@ DeviceItemWidget::DeviceItemWidget(QWidget* parent) : ElaScrollPageArea(parent) 
     secondLine->addSpacing(15);
     secondLine->addWidget(_Z_offset);
     
-    _RecieverWidget = new ElaScrollPageArea(this);
-    _TransmitterWidget = new ElaScrollPageArea(this);
-    _RecieverWidget->setFixedHeight(360);
-    _TransmitterWidget->setFixedHeight(360);
+    _RecieverWidget = new QWidget(this);
+    _TransmitterWidget = new QWidget(this);
     setupReceiverUI(_RecieverWidget);
     setupTransmitterUI(_TransmitterWidget);
 
     ReductionEquipmentBtn = new ElaPushButton("删除此设备", this);
     connect(ReductionEquipmentBtn, &ElaPushButton::clicked, this, &DeviceItemWidget::on_ReductionBtn_clicked);
    
+    // 组合主布局
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(10, 10, 10, 10);
 
@@ -184,7 +184,7 @@ DeviceItemWidget::DeviceItemWidget(QWidget* parent) : ElaScrollPageArea(parent) 
     mainLayout->addWidget(ReductionEquipmentBtn);
   
     // 初始化显示状态
-    onEquipmentTypeChanged(); 
+    onEquipmentTypeChanged();
 }
 
 // view->datamodel
@@ -261,6 +261,7 @@ void DeviceItemWidget::onEquipmentTypeChanged() {
     
     _TransmitterWidget->setVisible(isTrans);
     _RecieverWidget->setVisible(isRecv);
+    // adjustSize();
 }
 
 void DeviceItemWidget::on_ReductionBtn_clicked() {
@@ -288,7 +289,7 @@ void DeviceItemWidget::resetReceiverUI() {
     _NoiseFigure_Receiver->setText("0");
 }
 
-void DeviceItemWidget::setupReceiverUI(ElaScrollPageArea* container)
+void DeviceItemWidget::setupReceiverUI(QWidget* container)
 {
     // 接收机参数区域
     // 中心频率、接收带宽
@@ -371,7 +372,7 @@ void DeviceItemWidget::setupReceiverUI(ElaScrollPageArea* container)
     container->layout()->addWidget(centralWidget);
 }
 
-void DeviceItemWidget::setupTransmitterUI(ElaScrollPageArea* container)
+void DeviceItemWidget::setupTransmitterUI(QWidget* container)
 {
         // 发射机参数区域
     // 第一行：中心频率、发射带宽、发射功率

@@ -26,7 +26,7 @@ public:
     ~DeviceWidget();
 private:
     QVBoxLayout* _deviceListLayout;      
-    //ElaScrollArea* _mainScrollArea;
+    QHBoxLayout* _btnLayout;
 
     ElaPushButton* AddDeviceBtn;
     ElaPushButton* SaveEquipmentBtn;
@@ -36,7 +36,7 @@ private slots:
     void on_RemoveItemRequested(DeviceItemWidget* item);
 };
 
-class DeviceItemWidget : public ElaScrollPageArea {
+class DeviceItemWidget : public QWidget {
     Q_OBJECT
 public:
     explicit DeviceItemWidget(QWidget *parent = nullptr);
@@ -52,8 +52,8 @@ private slots:
     void on_ReductionBtn_clicked();
 
 private:
-    void setupReceiverUI(ElaScrollPageArea* container);
-    void setupTransmitterUI(ElaScrollPageArea* container);
+    void setupReceiverUI(QWidget* container);
+    void setupTransmitterUI(QWidget* container);
     void resetTransmitterUI();
     void resetReceiverUI();
 
@@ -64,8 +64,8 @@ private:
     ElaLineEdit *_gain, *_equipmentID;
     ElaLineEdit *_X_offset, *_Y_offset, *_Z_offset;
     
-    ElaScrollPageArea* _RecieverWidget;
-    ElaScrollPageArea* _TransmitterWidget;
+    QWidget* _RecieverWidget;
+    QWidget* _TransmitterWidget;
     
     // 接收机特有
     ElaLineEdit *_CentralF_Receiver, *_Bandwidth_Receiver, *_Sensitive_Receiver;
