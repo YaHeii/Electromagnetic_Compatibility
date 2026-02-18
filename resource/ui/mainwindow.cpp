@@ -230,7 +230,7 @@ void MainWindow::initEdgeLayout()
     this->addToolBar(Qt::TopToolBarArea, toolBar);
 
 
-    //状态栏
+    // 底部状态栏
     ElaStatusBar* statusBar = new ElaStatusBar(this);
     ElaText* statusText = new ElaText("初始化成功！", this);
     statusText->setTextPixelSize(14);
@@ -246,52 +246,19 @@ void MainWindow::initContent()
     _devicePage = new DeviceWidget(this);
     _iconPage = new T_Icon(this);
     _baseComponentsPage = new T_BaseComponents(this);
-    _navigationPage = new T_Navigation(this);
-    _popupPage = new T_Popup(this);
-    _cardPage = new T_Card(this);
-    _listViewPage = new T_ListView(this);
-    _tableViewPage = new T_TableView(this);
-    _treeViewPage = new TreeView(this);
     _settingPage = new Setting(this);
-    // FleetInput* FleetWidget = new FleetInput(this);
     Simulation* SimulationWidget = new Simulation(this);
 
  
     QString testKey_1;
     QString testKey_2;
     navigation("HOME");
-    // addPageNode("编队参数", FleetWidget, ElaIconType::House);
-    addPageNode("仿真", SimulationWidget, ElaIconType::ChartSimple);
     addPageNode("HOME", _homePage, ElaIconType::House);
-    addPageNode("设备参数", _shipPage, ElaIconType::House);
-    addPageNode("船只参数", _devicePage, ElaIconType::House);
-// #ifdef Q_OS_WIN
-//     addExpanderNode("ElaDxgi", _elaDxgiKey, ElaIconType::TvMusic);
-//     addPageNode("ElaScreen", _elaScreenPage, _elaDxgiKey, 3, ElaIconType::ObjectGroup);
-// #endif
-    // navigation(elaScreenWidget->property("ElaPageKey").toString());
+    addPageNode("设备参数", _devicePage, ElaIconType::House);
+    addPageNode("船只参数", _shipPage, ElaIconType::House);
+    addPageNode("仿真", SimulationWidget, ElaIconType::ChartSimple);
     addPageNode("ElaBaseComponents", _baseComponentsPage, ElaIconType::CabinetFiling);
-
-    addExpanderNode("ElaView", _viewKey, ElaIconType::CameraViewfinder);
-    addPageNode("ElaListView", _listViewPage, _viewKey, 9, ElaIconType::List);
-    addPageNode("ElaTableView", _tableViewPage, _viewKey, ElaIconType::Table);
-    addPageNode("ElaTreeView", _treeViewPage, _viewKey, ElaIconType::ListTree);
-    expandNavigationNode(_viewKey);
-
-    addPageNode("ElaCard", _cardPage, ElaIconType::Cards);
-    addPageNode("ElaNavigation", _navigationPage, ElaIconType::LocationArrow);
-    addPageNode("ElaPopup", _popupPage, ElaIconType::Envelope);
     addPageNode("ElaIcon", _iconPage, 99, ElaIconType::FontCase);
-    addExpanderNode("TEST_EXPAND_NODE1", testKey_1, ElaIconType::Acorn);
-    addExpanderNode("TEST_EXPAND_NODE2", testKey_2, testKey_1, ElaIconType::Acorn);
-    addPageNode("TEST_NODE3", new QWidget(this), testKey_2, ElaIconType::Acorn);
-    for (int i = 0; i < 10; i++)
-    {
-        addExpanderNode(QString("TEST_EXPAND_NODE%1").arg(i + 4), testKey_1, testKey_2, ElaIconType::Acorn);
-    }
-    addExpanderNode("TEST_EXPAND_NODE14", testKey_1, ElaIconType::Acorn);
-    addExpanderNode("TEST_EXPAND_NODE5", testKey_1, ElaIconType::Acorn);
-    addExpanderNode("TEST_EXPAND_NODE16", testKey_1, ElaIconType::Acorn);
 
     addFooterNode("About", nullptr, _aboutKey, 0, ElaIconType::User);
     _aboutPage = new About();
@@ -308,22 +275,13 @@ void MainWindow::initContent()
     connect(this, &MainWindow::userInfoCardClicked, this, [=]() {
         this->navigation(_homePage->property("ElaPageKey").toString());
     });
-//#ifdef Q_OS_WIN
-//    connect(_homePage, &Home::elaScreenNavigation, this, [=]() {
-//        this->navigation(_elaScreenPage->property("ElaPageKey").toString());
-//    });
-//#endif
+
     connect(_homePage, &Home::elaBaseComponentNavigation, this, [=]() {
         this->navigation(_baseComponentsPage->property("ElaPageKey").toString());
     });
-    //connect(_homePage, &Home::elaSceneNavigation, this, [=]() {
-    //    this->navigation(_graphicsPage->property("ElaPageKey").toString());
-    //});
+
     connect(_homePage, &Home::elaIconNavigation, this, [=]() {
         this->navigation(_iconPage->property("ElaPageKey").toString());
-    });
-    connect(_homePage, &Home::elaCardNavigation, this, [=]() {
-        this->navigation(_cardPage->property("ElaPageKey").toString());
     });
 
     //_windowSuggestBox->addSuggestion(getNavigationSuggestDataList());

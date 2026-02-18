@@ -59,12 +59,6 @@ private:
     DeviceWidget* _devicePage { nullptr };
     T_Icon* _iconPage{nullptr};
     T_BaseComponents* _baseComponentsPage{nullptr};
-    T_Navigation* _navigationPage{nullptr};
-    T_Popup* _popupPage{nullptr};
-    T_Card* _cardPage{nullptr};
-    T_ListView* _listViewPage{nullptr};
-    T_TableView* _tableViewPage{nullptr};
-    TreeView* _treeViewPage{nullptr};
     About* _aboutPage{nullptr};
     Setting* _settingPage{nullptr};
     
