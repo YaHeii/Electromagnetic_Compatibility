@@ -1,6 +1,4 @@
-﻿#ifndef QTSPDLOGSINK_H
-#define QTSPDLOGSINK_H
-
+﻿#pragma once 
 #include <QObject>
 #include <QString>
 #include <mutex>
@@ -55,5 +53,3 @@ protected:
 
 //以此方便创建线程安全的 Sink
 using QtTextEditSink_mt = QtTextEditSink<std::mutex>;
-
-#endif // QTSPDLOGSINK_H

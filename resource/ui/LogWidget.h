@@ -20,19 +20,19 @@ class LogWidget : public BasePage
 public:
     explicit LogWidget(QWidget* parent = nullptr);
     ~LogWidget();
-        // 创建并返回一个指向UI日志接收器的指针
+    // 创建并返回一个指向UI日志接收器的指针
+    T_LogModel* _logModel{nullptr};
     std::shared_ptr<spdlog::sinks::sink> createGuiLogSink();
 signals:
 
 private slots:
-    void onLogReceived(const QString& message, int level);
     void onLevelFilterChanged();
-    void clearLogs();
-    void togglePause();
-    void exportLogs();
+    void on_clearbtn_clicked();
+    void on_pauseBtn_clicked();
+    void on_openFileBtn_clicked();
 
 private:
-        // UI控件成员
+    // UI控件成员
     QWidget *titleWidget;
     QWidget *toolbarWidget;
     QWidget *logDisplayWidget;
@@ -40,28 +40,14 @@ private:
     // 工具栏控件
     ElaComboBox *levelFilter;
     ElaToolButton *pauseButton;
-    
+    ElaToolButton *clearButton;
+    ElaToolButton *openFileButton;
     // 日志显示控件
     ElaListView *logListView;
     
-    // 统计标签
-    ElaText *totalLabel;
-    ElaText *errorLabel;
-    ElaText *infoLabel;
-    
     // 日志发射器
     LogEmitter* _logEmitter;
+
     
-    // 统计数据
-    int totalLogs = 0;
-    int errorLogs = 0;
-    int infoLogs = 0;
-    bool isPaused = false;
-
-    // 辅助方法
-    void updateStatistics(spdlog::level::level_enum level);
-    bool shouldDisplayLog(spdlog::level::level_enum level);
-
-    T_LogModel* _logModel{nullptr};
 };
 

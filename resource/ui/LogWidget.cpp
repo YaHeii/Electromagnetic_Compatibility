@@ -1,7 +1,8 @@
 #include "LogWidget.h"
-
 #include <ElaListView.h>
-
+#include <QDesktopServices>
+#include <QUrl>
+#include <QCoreApplication>
 #include <QVBoxLayout>
 #include "Resource/ui/BasePage.h"
 #include "ElaLog.h"
@@ -10,15 +11,9 @@
 LogWidget::LogWidget(QWidget* parent)
     : BasePage{parent}
 {
-    //setTitleVisible(true);
     setContentsMargins(2, 2, 0, 0);
-    setWindowTitle("日志监控");
-    // createCustomWidget("")
-
-
    // 创建工具栏
     toolbarWidget = new QWidget(this);
-    //toolbarWidget->setFixedHeight(40);
     QHBoxLayout* toolbarLayout = new QHBoxLayout(toolbarWidget);
     toolbarLayout->setContentsMargins(0, 0, 0, 0);
     toolbarLayout->setSpacing(8);
@@ -39,67 +34,62 @@ LogWidget::LogWidget(QWidget* parent)
             this, &LogWidget::onLevelFilterChanged);
     
     // 清空按钮
-    ElaToolButton *clearButton = new ElaToolButton(this);
+    clearButton = new ElaToolButton(this);
     clearButton->setFixedSize(30, 30);
     clearButton->setElaIcon(ElaIconType::Trash);
     clearButton->setIsTransparent(false);
-    connect(clearButton, &ElaToolButton::clicked, this, &LogWidget::clearLogs);
+    connect(clearButton, &ElaToolButton::clicked, this, &LogWidget::on_clearbtn_clicked);
     
     // 暂停按钮
     pauseButton = new ElaToolButton(this);
     pauseButton->setFixedSize(30, 30);
     pauseButton->setElaIcon(ElaIconType::Pause);
     pauseButton->setIsTransparent(false);
-    connect(pauseButton, &ElaToolButton::clicked, this, &LogWidget::togglePause);
+    connect(pauseButton, &ElaToolButton::clicked, this, &LogWidget::on_pauseBtn_clicked);
     
     // 导出按钮
-    ElaToolButton *exportButton = new ElaToolButton(this);
-    exportButton->setFixedSize(30, 30);
-    exportButton->setElaIcon(ElaIconType::Download);
-    exportButton->setIsTransparent(false);
-    connect(exportButton, &ElaToolButton::clicked, this, &LogWidget::exportLogs);
+    openFileButton = new ElaToolButton(this);
+    openFileButton->setFixedSize(30, 30);
+    openFileButton->setElaIcon(ElaIconType::Download);
+    openFileButton->setIsTransparent(false);
+    connect(openFileButton, &ElaToolButton::clicked, this, &LogWidget::on_openFileBtn_clicked);
     
     toolbarLayout->addWidget(levelLabel);
     toolbarLayout->addWidget(levelFilter);
     toolbarLayout->addStretch();
     toolbarLayout->addWidget(clearButton);
     toolbarLayout->addWidget(pauseButton);
-    toolbarLayout->addWidget(exportButton);
+    toolbarLayout->addWidget(openFileButton);
     
     // 创建日志显示区域
-    ElaListView* logView = new ElaListView(this);
-    logView->setIsTransparent(true);
+    logListView = new ElaListView(this);
+    logListView->setIsTransparent(true);
+
     _logModel = new T_LogModel(this);
-    logView->setModel(_logModel);
-
-
-    
+    logListView->setModel(_logModel);
+    _logEmitter = new LogEmitter(this);
+    connect(_logEmitter, &LogEmitter::newLog,
+                _logModel, &T_LogModel::onNewLog, 
+                Qt::QueuedConnection);
+    connect(_logModel, &T_LogModel::statisticsChanged, this, [this](int total, int error, int info){
+    });
+    connect(_logModel, &QAbstractItemModel::rowsInserted, this, [this]() {
+        logListView->scrollToBottom();
+    });
     QWidget* centralWidget = new QWidget(this);
-    centralWidget->setWindowTitle("日志");
+    centralWidget->setWindowTitle("日志监控");
     QVBoxLayout* centerVLayout = new QVBoxLayout(centralWidget);
     centerVLayout->setContentsMargins(0, 0, 0, 0);
     centerVLayout->addWidget(toolbarWidget);
-    centerVLayout->addWidget(logView);
-    centerVLayout->addStretch();
+    centerVLayout->addWidget(logListView, 1);
+    // centerVLayout->addStretch();
     addCentralWidget(centralWidget);
-	//TODO:处理spdlog输出到UI
-    _logEmitter = new LogEmitter(this);
-    connect(_logEmitter, &LogEmitter::newLog,
-        this, &LogWidget::onLogReceived,
-        Qt::QueuedConnection);
-
-    //connect(ElaLog::getInstance(), &ElaLog::logMessage, this, [=](QString log) {
-    //    _logModel->appendLogList(log);
-    //});
-
 }
 
 LogWidget::~LogWidget()
 {
-    // get the global logger
     auto logger = spdlog::default_logger();
 
-    // find QtTextEditSink and detach
     if (logger) {
         for (auto& sink : logger->sinks()) {
             auto qt_sink = std::dynamic_pointer_cast<QtTextEditSink_mt>(sink);
@@ -113,95 +103,62 @@ LogWidget::~LogWidget()
 std::shared_ptr<spdlog::sinks::sink> LogWidget::createGuiLogSink() {
     // 创建并配置 UI Sink
     auto qt_sink = std::make_shared<QtTextEditSink_mt>(_logEmitter);
-    qt_sink->set_pattern("[%H:%M:%S.%e] %v");
+    qt_sink->set_pattern("[%H:%M:%S.%e] [%l] %v"); // 确保带有级别等前缀给Model去解析
     return qt_sink;
 }
 
-void LogWidget::onLogReceived(const QString& message, int level)
-{
-    if (isPaused) {
-        return; // 如果暂停，不处理新日志
-    }
-    
-    auto logLevel = static_cast<spdlog::level::level_enum>(level);
-    std::cout << "UI Trace: Slot onLogReceived called. Msg: " << message.toStdString() << std::endl;
-    
-    // 更新统计信息
-    updateStatistics(logLevel);
-    
-    // 根据级别过滤和显示
-    if (shouldDisplayLog(logLevel)) {
-        _logModel->appendLogList(message, logLevel);
-    }
-}
 
-void LogWidget::updateStatistics(spdlog::level::level_enum level)
-{
-    totalLogs++;
-    
-    if (level == spdlog::level::err || level == spdlog::level::critical) {
-        errorLogs++;
-    } else if (level == spdlog::level::info) {
-        infoLogs++;
-    }
-    
-//    // 更新显示
-//    totalLabel->setText(QString("总计: %1").arg(totalLogs));
-//    errorLabel->setText(QString("错误: %1").arg(errorLogs));
-//    infoLabel->setText(QString("信息: %1").arg(infoLogs));
-}
-
-bool LogWidget::shouldDisplayLog(spdlog::level::level_enum level)
-{
-    QString filter = levelFilter->currentText();
-    
-    if (filter == "全部") {
-        return true;
-    } else if (filter == "错误") {
-        return level == spdlog::level::err || level == spdlog::level::critical;
-    } else if (filter == "警告") {
-        return level == spdlog::level::warn;
-    } else if (filter == "信息") {
-        return level == spdlog::level::info;
-    } else if (filter == "调试") {
-        return level == spdlog::level::debug;
-    }
-    
-    return true;
-}
 
 void LogWidget::onLevelFilterChanged()
 {
-    // 重新过滤现有日志
-    _logModel->filterLogList(levelFilter->currentText());
+   QString text = levelFilter->currentText();
+    QString filterStr = "debug"; // 默认
+
+    // 将中文映射为 T_LogModel 能够识别的 spdlog internal level string
+    if (text == "错误") {
+        filterStr = "err";
+    } else if (text == "警告") {
+        filterStr = "warn";
+    } else if (text == "信息") {
+        filterStr = "info";
+    } else if (text == "调试") {
+        filterStr = "debug";
+    }
+    else if (text == "全部") {
+        filterStr = "All";
+    }
+
+    _logModel->filterLogList(filterStr);
 }
 
-void LogWidget::clearLogs()
+void LogWidget::on_clearbtn_clicked()
 {
     _logModel->clearLogList();
-    totalLogs = 0;
-    errorLogs = 0;
-    infoLogs = 0;
-    updateStatistics(spdlog::level::off);
-    
     ElaMessageBar::success(ElaMessageBarType::BottomRight, "成功", "日志已清空", 1500);
 }
 
-void LogWidget::togglePause()
+void LogWidget::on_pauseBtn_clicked()
 {
-    isPaused = !isPaused;
+    bool isPaused = !_logModel->isPaused();
+    _logModel->setPaused(isPaused);
     
     if (isPaused) {
         pauseButton->setElaIcon(ElaIconType::Play);
-        //ElaMessageBar::info(ElaMessageBarType::BottomRight, "暂停", "日志接收已暂停", 1500);
+        ElaMessageBar::warning(ElaMessageBarType::BottomLeft, "暂停", "日志接收已暂停", 1500);
     } else {
         pauseButton->setElaIcon(ElaIconType::Pause);
-        //ElaMessageBar::info(ElaMessageBarType::BottomRight, "恢复", "日志接收已恢复", 1500);
+        ElaMessageBar::warning(ElaMessageBarType::BottomLeft, "恢复", "日志接收已恢复", 1500);
     }
 }
 
-void LogWidget::exportLogs()
+void LogWidget::on_openFileBtn_clicked()
 {
-    // TODO: 实现日志导出功能
-    //ElaMessageBar::info(ElaMessageBarType::BottomRight, "导出", "日志导出功能待实现", 2000);
+QString logFilePath = QCoreApplication::applicationDirPath() + "/app_log.txt";
+    
+    // 使用本地桌面服务打开文件
+    if (QDesktopServices::openUrl(QUrl::fromLocalFile(logFilePath))) {
+        ElaMessageBar::success(ElaMessageBarType::BottomRight, "成功", "已调用系统程序打开日志", 1500);
+    } else {
+        ElaMessageBar::error(ElaMessageBarType::BottomRight, "失败", "无法打开日志文件，请确认文件是否存在", 2000);
+    }
 }
