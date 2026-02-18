@@ -37,7 +37,7 @@ private slots:
     void on_RemoveShipItemRequested(ShipItemWidget* item);
 };
 
-class ShipItemWidget : public ElaScrollPageArea {
+class ShipItemWidget : public QWidget {
     Q_OBJECT
 public:
     explicit ShipItemWidget(QWidget *parent = nullptr);
@@ -51,7 +51,6 @@ private slots:
     void on_AddDeviceOnShipBtn_clicked();
 private:    
     QString _currentId;
-    QVBoxLayout* _deviceListLayout;
     ElaLineEdit* _X_offset;
     ElaLineEdit* _Y_offset;
     ElaLineEdit* _Z_offset;
@@ -60,7 +59,7 @@ private:
     ElaLineEdit* _ship_Speed;
     ElaLineEdit* _ship_Orienteation;
 
-    ElaListView* _deviceOnShipListView;
+    QVBoxLayout* _deviceOnShipLayout;
     ElaPushButton* _AddDeviceOnShipBtn;
 
     QVBoxLayout* _rightPannel;

@@ -17,7 +17,7 @@
 DeviceWidget::DeviceWidget(QWidget *parent)
     : BasePage(parent)
 {
-    setWindowTitle("设备属性管理");
+    // setWindowTitle("设备属性管理");
     createCustomWidget("此页面可动态添加和管理多个可用设备");
     AddDeviceBtn = new ElaPushButton("添加新设备", this);
     AddDeviceBtn->setFixedSize(120, 36);
