@@ -23,13 +23,14 @@ LogWidget::LogWidget(QWidget* parent)
     levelLabel->setFixedWidth(40);
     
     levelFilter = new ElaComboBox(this);
-    levelFilter->addItem("全部");
-    levelFilter->addItem("错误");
-    levelFilter->addItem("警告");
     levelFilter->addItem("信息");
     levelFilter->addItem("调试");
+    levelFilter->addItem("错误");
+    levelFilter->addItem("警告");
+
     levelFilter->setFixedWidth(80);
     levelFilter->setFixedHeight(30);
+    emit(levelFilter->currentIndexChanged(0)); 
     connect(levelFilter, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LogWidget::onLevelFilterChanged);
     
@@ -112,7 +113,7 @@ std::shared_ptr<spdlog::sinks::sink> LogWidget::createGuiLogSink() {
 void LogWidget::onLevelFilterChanged()
 {
    QString text = levelFilter->currentText();
-    QString filterStr = "debug"; // 默认
+    QString filterStr = "info"; // 默认
 
     // 将中文映射为 T_LogModel 能够识别的 spdlog internal level string
     if (text == "错误") {
@@ -123,9 +124,6 @@ void LogWidget::onLevelFilterChanged()
         filterStr = "info";
     } else if (text == "调试") {
         filterStr = "debug";
-    }
-    else if (text == "全部") {
-        filterStr = "All";
     }
 
     _logModel->filterLogList(filterStr);

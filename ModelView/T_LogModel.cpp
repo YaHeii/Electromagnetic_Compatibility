@@ -99,7 +99,6 @@ void T_LogModel::appendLogList(LogEntry log)
     // 设置颜色
     switch (level) {
     case spdlog::level::err:
-    case spdlog::level::critical: entry.color = QColor(255, 0, 0); break;
     case spdlog::level::warn:     entry.color = QColor(255, 165, 0); break;
     case spdlog::level::info:     entry.color = QColor(0, 128, 0); break;
     case spdlog::level::debug:    entry.color = QColor(128, 128, 128); break;
