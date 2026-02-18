@@ -74,9 +74,9 @@ struct EquipmentData {
 
     std::pair<bool,QString> validate_EquipmentBaseInfo() const {
         if (equipmentID.isEmpty()) return { false, "设备ID不能为空" };
-        if(equipmentID.toStdString().find('_')){
-            return {false, "设备名称不应含有‘_’"};
-        }
+        //if(equipmentID.toStdString().find('_')){
+        //    return {false, "设备名称不应含有‘_’"};
+        //}
         if(Gain < 0){
             return {false, "不支持增益为负"};
         }
