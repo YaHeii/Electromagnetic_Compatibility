@@ -98,24 +98,27 @@ def run_fdtd_simulation():
     # 调整 x 坐标以匹配 Meep 的 cell 定义 (从 -Lx/2 到 Lx/2)
     x_meep = x_surf - (L_x/2 + dpml)
     
-    # 顶点列表
-    vertices = [mp.Vector3(-L_x/2 - dpml, -L_z/2 - dpml)] # 左下底
-    vertices.append(mp.Vector3(L_x/2 + dpml, -L_z/2 - dpml)) # 右下底
+    sea_geometry = []
+    base_water_level = -5.0
+    floor_z = -L_z/2 - dpml
     
-    # 添加海面上的点 (从右向左添加，闭合多边形)
-    # 注意：h_surf 通常在 0 附近波动，我们需要将其放在仿真区域的下半部分
-    base_water_level = -5.0 # 平均海平面设在 z = -5m
-    
-    # 为了保证多边形闭合顺序，我们反向遍历海面点
-    for i in range(len(x_meep)-1, -1, -1):
-        # 限制海浪高度，防止溢出网格
-        z_val = base_water_level + h_surf[i]
-        if z_val > L_z/2 - dpml: z_val = L_z/2 - dpml - 0.5 # 简单的削顶保护
-        vertices.append(mp.Vector3(x_meep[i], z_val))
+    print("正在构建海面几何体 (拆分多边形)...")
+    for i in range(len(x_meep) - 1):
+        z_val1 = base_water_level + h_surf[i]
+        z_val2 = base_water_level + h_surf[i+1]
         
-    # 定义材质：PEC (完美电导体)
-    sea_geometry = [mp.Prism(vertices, height=mp.inf, material=mp.metal)]
-    
+        # 削顶保护，防止溢出网格
+        z_val1 = min(z_val1, L_z/2 - dpml - 0.5)
+        z_val2 = min(z_val2, L_z/2 - dpml - 0.5)
+        
+        # 构造每一个分段的 4 顶点梯形 (逆时针或顺时针顺序)
+        v1 = mp.Vector3(x_meep[i], floor_z)
+        v2 = mp.Vector3(x_meep[i+1], floor_z)
+        v3 = mp.Vector3(x_meep[i+1], z_val2)
+        v4 = mp.Vector3(x_meep[i], z_val1)
+        
+        trap = mp.Prism([v1, v2, v3, v4], height=mp.inf, material=mp.metal)
+        sea_geometry.append(trap)
     # --- C. 设置源与边界 ---
     # 仿真区域大小
     cell_size = mp.Vector3(L_x + 2*dpml, L_z + 2*dpml)
@@ -159,22 +162,21 @@ def run_fdtd_simulation():
     
     # 获取介电常数数据 (用于画海面轮廓)
     eps_data = sim.get_array(center=mp.Vector3(), size=cell_size, component=mp.Dielectric)
-    
     plt.figure(figsize=(12, 6))
     
-    # 绘制电场 (伪彩图)
-    # 使用 RdBu 颜色映射，中心为白色表示0
-    plt.imshow(np.real(ez_data).T, interpolation='spline36', cmap='RdBu', 
+    # 绘制电场 (伪彩图)，并赋值给变量 im
+    im = plt.imshow(np.real(ez_data).T, interpolation='spline36', cmap='RdBu', 
                extent=[-L_x/2 - dpml, L_x/2 + dpml, -L_z/2 - dpml, L_z/2 + dpml],
                origin='lower', vmin=-0.1, vmax=0.1)
     
     # 叠加海面轮廓 (通过介电常数掩膜)
-    # Meep中 metal 的 epsilon 是无穷大，get_array 会返回很大的数
     plt.contour(np.real(eps_data).T, levels=[10], colors='black', linewidths=2,
                 extent=[-L_x/2 - dpml, L_x/2 + dpml, -L_z/2 - dpml, L_z/2 + dpml],
                 origin='lower')
     
-    plt.colorbar(label='Electric Field (Ez)')
+    # 显式绑定 colorbar 到电场图 im
+    plt.colorbar(im, label='Electric Field (Ez)')
+    
     plt.title(f'FDTD Simulation over JONSWAP Sea Surface\nWind={wind_speed}m/s, Freq=300MHz')
     plt.xlabel('Distance x (m)')
     plt.ylabel('Height z (m)')
@@ -184,7 +186,17 @@ def run_fdtd_simulation():
     plt.legend()
     
     plt.tight_layout()
-    plt.show()
+    
+    # 针对 WSL 环境：强制保存为文件
+    save_path = "FDTD_Result_JONSWAP.png"
+    plt.savefig(save_path, dpi=300)
+    print(f"\n✅ 绘图成功！图片已保存至当前目录: {save_path}")
+    
+    # 尝试弹窗显示 (如果 WSL GUI 配置正常则会弹出)
+    try:
+        plt.show()
+    except Exception as e:
+        print(f"WSL 弹窗显示中止，请直接在 Windows 下打开图片查看。")
 
 if __name__ == '__main__':
     run_fdtd_simulation()

@@ -4,6 +4,7 @@
 logs/
 PE_validation/.vscode/
 PE_validation/.conda/
+PE_validation/*.png
 # Cache and language server files
 .cache/
 .clangd/
