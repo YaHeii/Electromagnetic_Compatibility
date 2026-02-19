@@ -2,6 +2,8 @@
 .idea/
 .vscode/
 logs/
+PE_validation/.vscode/
+PE_validation/.conda/
 # Cache and language server files
 .cache/
 .clangd/
