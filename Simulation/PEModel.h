@@ -202,7 +202,7 @@ public:
     // 阵列因子
     // $$u(0, z) = \sum_{n=0}^{N-1} A_n \cdot \exp\left(-\frac{(z - z_n)^2}{w^2}\right) \cdot e^{i \phi_n}$$
     void initializeGaussian(double antenna_phys_height, double h_start, double beamWidth_deg, double tilt_deg);
-    
+    void initializePointSource(double antenna_phys_height, double h_start);
 
 
     double getPathLoss(int z_idx, double range) {

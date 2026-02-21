@@ -476,3 +476,34 @@ void PEModel::initializeGaussian(double antenna_phys_height, double h_start, dou
 }
 
 
+void PEModel::initializePointSource(double antenna_phys_height, double h_start) {
+    using Eigen::VectorXcd;
+    using Eigen::Map;
+    Map<VectorXcd> u_space(reinterpret_cast<Complex*>(_in_ptr), _fft_size);
+    Map<VectorXcd> u_kspace(reinterpret_cast<Complex*>(_out_ptr), _fft_size);
+
+    // 1. 空间域初始化为 0
+    u_space.setZero();
+
+    // 2. 赋予理想点源初值
+    double zeta_a = antenna_phys_height - h_start;
+    int idx = static_cast<int>(zeta_a / _dz);
+    if (idx >= 0 && idx < _nz) {
+        u_space[idx] = Complex(1.0, 0.0);
+    }
+
+    // 3. 频域低通滤波 (防止 FDTD 无法解析的高频倏逝波在 PE 中发散)
+    fftw_execute(_plan_fwd); // 变换到波数域
+
+    double dk_z = 2.0 * M_PI / (_fft_size * _dz);
+    #pragma omp parallel for
+    for (int i = 0; i < _fft_size; ++i) {
+        double kz = (i <= _fft_size / 2) ? i * dk_z : (i - _fft_size) * dk_z;
+        // 滤波器设计：exp(-(kz / (0.9 * k0))^10)
+        double filter_val = std::exp(-std::pow(kz / (0.9 * _k0), 10.0));
+        u_kspace[i] *= filter_val;
+    }
+
+    fftw_execute(_plan_bwd); // 变回空间域
+    u_space /= static_cast<double>(_fft_size); // IFFT 归一化
+}
