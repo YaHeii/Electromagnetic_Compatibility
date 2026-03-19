@@ -27,3 +27,7 @@ roo_docs/
 build/
 .vscode/
 logs/
+CLAUDE.md
+PE_validation/.vscode/
+PE_validation/.conda/
+PE_validation/**/*.png
