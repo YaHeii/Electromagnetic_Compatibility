@@ -1,0 +1,4 @@
+[submodule "PE_validation"]
+	path = PE_validation
+	url = https://github.com/YaHeii/PE_validation.git
+	branch = main
