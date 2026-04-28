@@ -1,29 +1,51 @@
-# USV 输入 Schema 说明
+# USV 输入 schema 说明
 
 ## 1. 目的
 
-本目录用于定义项目后续统一采用的标准输入格式，覆盖：
+本目录用于定义主程序当前采用的标准输入格式，覆盖两类数据：
 
-- `USV` 编队与设备输入
-- `EnvironmentData` 环境输入
+- 无人艇与设备配置
+- `EnvironmentData` 环境参数
 
-本标准的目标是为后续的配置校验、解析器改造、阵型模板扩展、EMC 指标计算和报告生成提供稳定输入边界。
+当前主程序 `JsonLoader` 只支持这一套新 schema，不再保留旧格式兼容。
 
-## 2. 文件说明
+## 2. 标准来源
 
-- `usv-environment.schema.json`
-  - 正式的 JSON Schema 文件
-  - 用于描述字段结构、类型、必填项、范围和枚举
-- `usv-environment.template.jsonc`
-  - 面向人类阅读和填写的模板文件
-  - 保留中文注释、单位说明和初始化示例
+这套输入标准由以下三处共同维护：
 
-## 3. 标准格式原则
+| 文件 | 作用 |
+| --- | --- |
+| `Interface/SchemaConstants.h` | 字段名、固定字符串、枚举值来源 |
+| `Utils/JsonLoader.hpp` | 当前运行时真实生效的解析与校验规则 |
+| `docs/schema/usv-environment.schema.json` | 供工具校验与文档引用的显式 schema |
 
-本标准采用以下约定：
+其中：
 
-1. 所有物理量统一使用 JSON number，不再使用字符串数字。
-2. 顶层结构统一为：
+- 字段名和枚举值以 `SchemaConstants.h` 为准
+- 运行时行为以 `JsonLoader.hpp` 为准
+- `schema.json` 与模板文件必须保持同步
+
+## 3. 目录内文件说明
+
+| 文件 | 说明 |
+| --- | --- |
+| `usv-environment.schema.json` | 正式 JSON Schema 文档 |
+| `usv-environment.template.jsonc` | 人类可读、带中文注释的模板样例 |
+| `README.md` | 本说明文件 |
+
+主程序当前的活动样例文件为：
+
+- `Tests/Test.jsonc`
+
+以下文件只作为历史或业务参考，不再视为主程序标准输入：
+
+- `Tests/Test_A.jsonc`
+- `Tests/Test_B.jsonc`
+- `PE_validation/` 子模块内的相关实验资产
+
+## 4. 顶层结构
+
+顶层结构固定为：
 
 ```json
 {
@@ -33,24 +55,57 @@
 }
 ```
 
-3. `usvs` 使用数组，而不是旧版 `USV1` / `USV2` 作为根节点对象映射。
+基本原则如下：
+
+1. 所有物理量统一使用 JSON `number`。
+2. 船只集合使用 `usvs` 数组，不再使用 `USV1`、`USV2` 这类动态键名。
+3. 发射机和接收机分别使用 `transmitters`、`receivers` 数组。
 4. `location.type` 固定为 `Point3D`。
-5. 正式字段名统一采用 camelCase。
-6. `ID` 字段保留。
+5. 顶层、环境、船只、设备的未知字段会被主程序拒绝。
 
-## 4. 与旧格式的关系
+## 5. 关键语义约定
 
-当前仓库中的 `Tests/Test.jsonc`、`Tests/Test_A.jsonc`、`Tests/Test_B.jsonc` 仍属于旧输入格式样例，它们可以继续作为：
+### 5.1 坐标与角度
 
-- 旧解析器的兼容测试样例
-- 业务场景样例
-- A/B 编队设计样例
+- 世界坐标原点位于场景左下角。
+- `x` 轴向右，`y` 轴向上，`z` 轴向上。
+- 船只 `location.coordinates` 为世界坐标。
+- 设备 `locationOffset` 为相对船体中心的偏移。
+- `shipOrientationDeg` 为船在二维平面的朝向角，范围 `0~360`。
+- `antennaPhiDeg` 为相对正 `z` 轴向下倾斜的角度，范围 `0~180`。
 
-但它们不再作为标准输入格式原型。
+### 5.2 单位与类型
 
-## 5. 旧字段到新字段映射
+- `gainDbi` 使用 `dBi`
+- `centerFrequencyGHz` 使用 `GHz`
+- `bandwidthMHz` 使用 `MHz`
+- `powerDbm`、`sensitivityDbm` 使用 `dBm`
+- `interferenceMarginDb`、`sinrMarginDb`、`noiseFigureDb` 使用 `dB`
+- `sensitivityDbm` 当前标准固定为负值
 
-| 旧字段 | 新字段 |
+### 5.3 ID 规则
+
+- 船只 `ID` 当前要求唯一
+- 设备 `ID` 当前也按全局唯一处理
+- 推荐使用 `USV1_TX1`、`USV3_RX1` 这类可追踪命名
+
+## 6. 解析器当前行为
+
+`JsonLoader` 当前行为需要特别注意：
+
+- 只支持新 schema
+- 允许 JSONC 单行 `//` 注释
+- 不支持旧格式字段自动兼容
+- 对未知字段直接报错
+- 对 `schemaVersion`、`type`、枚举值做严格检查
+
+这意味着文档、模板和真实输入文件必须与 `SchemaConstants.h` 同步，否则主程序不会“自动帮你兜底”。
+
+## 7. 历史字段映射参考
+
+以下映射仅用于理解历史样例，不表示主程序仍兼容旧字段：
+
+| 历史字段 | 当前字段 |
 | --- | --- |
 | `Location` | `location` |
 | `Location_Offset` | `locationOffset` |
@@ -65,28 +120,16 @@
 | `Orientation` | `shipOrientationDeg` |
 | `angle` | `antennaPhiDeg` |
 
-## 6. 坐标与角度约定
+## 8. 维护要求
 
-- 船只 `location.coordinates`
-  - 表示世界坐标
-  - 原点位于左下角
-  - `X` 轴向右
-  - `Y` 轴向上
-  - `Z` 轴向上
-- 设备 `locationOffset`
-  - 表示相对船体中心的偏移
-- `shipOrientationDeg`
-  - 表示船只在二维平面的朝向角
-  - 取值范围 `0~360`
-- `antennaPhiDeg`
-  - 表示相对正 `z` 轴向下倾斜的角度
-  - 取值范围 `0~180`
+只要修改这套 schema，必须同步检查以下位置：
 
-## 7. 后续建议
+1. `Interface/SchemaConstants.h`
+2. `Utils/JsonLoader.hpp`
+3. `Tests/Test.jsonc`
+4. `docs/schema/usv-environment.schema.json`
+5. `docs/schema/usv-environment.template.jsonc`
+6. `docs/项目架构与API规范.md`
+7. `docs/风险与改进建议.md`
 
-本标准落地后，建议按如下顺序推进：
-
-1. 修改 `JsonLoader`，兼容读取新格式
-2. 增加标准输入校验逻辑
-3. 逐步把旧格式样例迁移为新格式样例
-4. 将主程序仿真链路与新 schema 对齐
+如果将来需要恢复旧格式兼容，应作为单独需求处理，而不是继续把历史字段混入当前标准文档。

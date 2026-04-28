@@ -83,17 +83,17 @@
         "ductHeight": {
           "type": "number",
           "minimum": 0,
-          "description": "蒸发波导高度 H0，单位 m"
+          "description": "蒸发波导高度，单位 m"
         },
         "windSpeed": {
           "type": "number",
           "minimum": 0,
-          "description": "风速，单位 m/s"
+          "description": "海面风速，单位 m/s"
         },
         "dx": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "description": "距离步进，单位 m"
+          "description": "水平方向步进，单位 m"
         },
         "dz": {
           "type": "number",
@@ -109,7 +109,7 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 360,
-          "description": "二维仿真的角度步进，单位度"
+          "description": "二维仿真的角度步进，单位 deg"
         }
       }
     },
@@ -163,13 +163,13 @@
           "type": "number",
           "minimum": 0,
           "maximum": 180,
-          "description": "相对正 z 轴向下倾斜的角度，单位度"
+          "description": "相对正 z 轴向下倾斜的角度，单位 deg"
         },
         "beamWidthDeg": {
           "type": "number",
           "minimum": 0,
           "maximum": 360,
-          "description": "波束宽度，单位度"
+          "description": "波束宽度，单位 deg"
         },
         "polarization": {
           "type": "string",
@@ -233,8 +233,8 @@
         },
         "sensitivityDbm": {
           "type": "number",
-          "maximum": 0,
-          "description": "接收机灵敏度，单位 dBm，必须为非正值"
+          "exclusiveMaximum": 0,
+          "description": "接收机灵敏度，单位 dBm，必须为负值"
         },
         "interferenceMarginDb": {
           "type": "number",
@@ -279,7 +279,7 @@
           "type": "number",
           "minimum": 0,
           "maximum": 360,
-          "description": "船只在二维平面的朝向角，单位度"
+          "description": "船在二维平面的朝向角，单位 deg"
         },
         "transmitters": {
           "type": "array",

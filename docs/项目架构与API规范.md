@@ -2,485 +2,264 @@
 
 ## 1. 架构总览
 
-当前项目可以抽象为五层：
+当前仓库可以拆成六层，其中前五层属于主程序链路，第六层属于验证侧子模块：
+
+| 层级 | 主要目录 | 作用 | 当前状态 |
+| --- | --- | --- | --- |
+| 输入层 | `Tests/`、`Resource/ui/` | 提供 JSONC 配置与界面输入 | 主程序已接入新 schema |
+| 数据建模层 | `Interface/` | 保存 `DataModel`、快照、schema 常量 | 已实现 |
+| 领域对象层 | `Models/` | 表达船只、设备、天线、编队对象 | 已实现 |
+| 仿真调度层 | `Simulation/` | 负责环境建模、PE 求解、EMC 调度 | 已实现 |
+| 结果展示层 | `Resource/ui/`、导出逻辑 | 展示二维结果与日志 | 已实现基础能力 |
+| 验证侧资产层 | `PE_validation/` 子模块 | notebook、实验设计、图表、论文式结论 | 验证侧已有，主程序未直接依赖 |
+
+主程序真正的运行主链路是：
 
 ```text
-输入配置层
-  ├─ UI 页面输入
-  └─ JSONC 场景文件
-
-数据建模层
-  ├─ DataModel
-  ├─ EquipmentData / ShipData / EnvironmentData
-  └─ DataSnapshot
-
-领域对象层
-  ├─ Fleet
-  ├─ ship
-  ├─ Equipment / Transmitter / Receiver / Transceiver
-  └─ Antenna
-
-传播与仿真层
-  ├─ TransferToEngine / TransferToPEdata
-  ├─ EMC_Engine
-  ├─ Propagation_Engine
-  └─ PEModel / AtmosphereModel / JONSWAPSurfaceGenerator
-
-展示与验证层
-  ├─ QCustomPlot / UI 页面
-  ├─ CSV 输出
-  └─ PE_validation notebook / 图表 / 报告
+JSONC / UI
+  -> DataModel
+  -> TransferToEngine / TransferToPEdata
+  -> EMC_Engine / Propagation_Engine / PEModel
+  -> GridMap / UI 展示
 ```
 
-这五层中，主项目真正的主链路是“输入配置层 -> 数据建模层 -> 领域对象层 -> 传播与仿真层 -> 展示层”，而 `PE_validation/` 更多承担验证和论文资产角色。
+`PE_validation` 不参与主程序构建，也不参与当前运行时接口解析。它的价值在于定义验证口径与后续功能迁移目标。
 
-## 2. 模块分层说明
+## 2. 主程序运行链路
 
-### 2.1 UI 与展示层
+当前一次典型仿真流程如下：
 
-主要目录：`Resource/ui/`、`ModelView/`、`ExamplePage/`
+1. `Resource/ui/Simulation.cpp` 在 `Simulation::on_StartSimulate_clicked()` 中触发一次仿真。
+2. 该入口当前直接调用 `JsonLoader::LoadFile()` 读取 `Tests/Test.jsonc`，但文件路径仍为硬编码绝对路径。
+3. `Utils/JsonLoader.hpp` 读取 JSONC 文本，移除单行 `//` 注释，按新 schema 严格解析。
+4. 解析结果写入 `DataModel::instance()`，包含：
+   - `allShips`
+   - `allEquipments`
+   - `environmentConfig`
+5. `DataModel::createSnapshot()` 创建一次仿真快照，供后续线程安全读取。
+6. `TransferToEngine::convertDataModelToFleet()` 将 DTO 转换为 `Fleet` 及其内部 `ship / Equipment / Antenna` 对象。
+7. `EMC_Engine::do_PE_computing()` 调度所有发射机，调用 `Propagation_Engine::PEmodel_computing2D()` 计算二维传播结果。
+8. 结果以 `GridMap` 形式回传 UI，并由 `QCustomPlot` 绘制。
 
-职责：
+这条链路当前已经打通，但配置入口仍偏实验性质，不适合作为最终用户接口。
 
-- 提供主窗口和页面容器。
-- 录入船只、设备和仿真参数。
-- 启动仿真线程。
-- 将二维结果绘制为图表。
-- 输出日志和用户提示。
+## 3. 标准输入 schema
 
-当前核心页面：
+### 3.1 标准来源
 
-- `MainWindow`：应用主窗口与页面容器。
-- `ShipWidget`：船只信息录入与船载设备绑定。
-- `DeviceWidget`：设备参数录入。
-- `Simulation`：启动仿真并展示二维场分布。
+主程序输入标准当前由三处共同约束：
 
-### 2.2 数据建模层
+- `Interface/SchemaConstants.h`
+  - 字段名、固定字符串、枚举值的单一来源
+- `Utils/JsonLoader.hpp`
+  - 当前运行时真实生效的解析与校验规则
+- `docs/schema/usv-environment.schema.json`
+  - 面向文档和自动校验工具的显式 schema
 
-主要目录：`Interface/`
+如果三者冲突，应优先修正为一致，不能让文档长期偏离运行时代码。
 
-职责：
+### 3.2 顶层结构
 
-- 承接 UI 与 JSON 解析后的原始业务数据。
-- 提供统一的数据快照。
-- 将界面层数据转换为算法层对象。
-
-当前核心类型：
-
-- `EquipmentData`
-- `EquipmentOnShip`
-- `ShipData`
-- `EnvironmentData`
-- `DataModel`
-
-### 2.3 领域对象层
-
-主要目录：`Models/`
-
-职责：
-
-- 表达“船只、设备、天线、编队”这些领域概念。
-- 将参数从 DTO 形式转为可计算对象。
-
-当前核心类型：
-
-- `Fleet`
-- `ship`
-- `Equipment`
-- `Transmitter`
-- `Receiver`
-- `Transceiver`
-- `Antenna` 及其派生类
-
-### 2.4 传播与仿真层
-
-主要目录：`Simulation/`
-
-职责：
-
-- 建立大气、海面与传播环境模型。
-- 组织一维/二维传播计算。
-- 聚合多发射源结果。
-- 输出可供展示的网格结果。
-
-当前核心类型：
-
-- `AtmosphereModel`
-- `MillerBrownModel`
-- `JONSWAPSurfaceGenerator`
-- `PEModel`
-- `Propagation_Engine`
-- `EMC_Engine`
-
-### 2.5 验证与论文层
-
-主要目录：`PE_validation/`
-
-职责：
-
-- 实验设计与研究叙事。
-- `Two-Ray` / `FDTD` / `PE-PLST` 对比验证。
-- A/B 编队设计与四指标结果展示。
-
-这一层当前不是主程序运行时依赖，但它定义了项目的研究口径和后续产品化方向。
-
-## 3. 运行时主流程
-
-当前主程序的一次典型运行链路如下：
-
-1. 用户在 `ShipWidget`、`DeviceWidget` 中录入数据，或通过 `JsonLoader` 读取 JSONC 文件。
-2. 数据进入 `DataModel` 单例。
-3. `Simulation` 页面创建 `DataSnapshot`。
-4. `TransferToEngine::convertDataModelToFleet()` 将快照转为 `Fleet`。
-5. `EMC_Engine` 调用 `EquipmentConvertToMatrix()` 提取发射机传播输入。
-6. `Propagation_Engine::PEmodel_computing2D()` 对每个发射机计算二维传播损耗。
-7. `EMC_Engine::do_PE_computing()` 将多个发射源在线性功率域聚合后再转回 dBm 网格。
-8. 结果通过 `peComputationFinished` 回传 UI，并由 `QCustomPlot` 绘图。
-
-## 4. 核心数据结构规范
-
-### 4.1 EquipmentData
-
-`EquipmentData` 是界面层和配置层使用的设备 DTO，包含三类字段：
-
-#### 基础字段
-
-- `equipmentID`
-- `equipmentType`
-- `Gain`
-- `X_offset`
-- `Y_offset`
-- `Z_offset`
-
-#### 接收机字段
-
-- `CentralF_Reciever`
-- `Bandwidth_Reciever`
-- `Sensitive_reciever`
-- `interferenceMargin`
-- `SINRMargin`
-- `noiseFigure`
-
-#### 发射机字段
-
-- `CentralF_Transmitter`
-- `Bandwidth_Transmitter`
-- `Power_Transmitter`
-- `antennaPhi_Transmitter`
-- `Beamwidth_Transmitter`
-- `PolarizationMethod_Transmitter`
-- `antennaType_Transmitter`
-
-#### 规范建议
-
-- `equipmentID` 应在全局唯一，至少应在“船只 ID + 设备 ID”组合下唯一。
-- 坐标单位统一为米。
-- 角度统一为度。
-- 功率统一为 dBm。
-- 灵敏度建议统一使用负 dBm。
-
-### 4.2 ShipData
-
-`ShipData` 表示单艘船只的基础信息：
-
-- `shipID`
-- `shipType`
-- `X_offset`
-- `Y_offset`
-- `Z_offset`
-- `ship_Orienteation`
-- `ship_Speed`
-- `Equipments`
-
-规范建议：
-
-- 船只坐标统一为世界坐标，单位米。
-- 航向角统一使用 `[0, 360]` 度。
-- `Equipments` 表示该船挂载的设备引用关系。
-
-### 4.3 EnvironmentData
-
-`EnvironmentData` 描述传播环境：
-
-- `max_range`
-- `duct_height`
-- `wind_speed`
-- `dx`
-- `dz`
-- `nz`
-- `angle_step_deg`
-
-规范建议：
-
-- `max_range`、`duct_height`、`dx`、`dz` 单位为米。
-- `wind_speed` 单位为 m/s。
-- `angle_step_deg` 单位为度。
-- 该结构应允许从配置文件显式加载，而不仅依赖默认值。
-
-### 4.4 算法层对象
-
-#### Fleet
-
-- 表示一个编队。
-- 负责维护 `ship` 集合。
-
-#### ship
-
-- 表示单艘船只。
-- 持有绝对位置、航向、航速和设备列表。
-
-#### Equipment 及派生类
-
-- `Transmitter`：提供发射功率、频率、波束等参数。
-- `Receiver`：提供灵敏度、噪声系数、干扰阈值等参数。
-- `Transceiver`：收发一体设备。
-
-#### Antenna
-
-- `OmniAntenna`
-- `DirectionalAntenna`
-- `HornAntenna`
-- `ShapedBeamAntenna`
-- `ReflectorAntenna`
-
-不同天线类型决定垂直场初始化分布和传播初始条件。
-
-### 4.5 Transmitter_PE_data
-
-这是传播计算直接使用的扁平化输入结构，包含：
-
-- 发射机所属船只与设备名称
-- 发射机绝对位置
-- 天线类型
-- 发射功率
-- 天线高度
-- 波束宽度
-- 天线角度
-- 中心频率
-- 结果功率网格
-
-它的作用是隔离 UI/领域对象结构与数值计算结构，减少算法层对上层对象的耦合。
-
-## 5. 输入配置规范
-
-### 5.1 当前有效输入形式
-
-当前主项目实际支持的输入形式是 JSONC，对应 `Tests/` 与 `PE_validation/` 下的 `Test*.jsonc` 文件。
-
-根节点结构建议如下：
+当前主程序只支持如下顶层结构：
 
 ```json
 {
-  "USV1": {
-    "ID": "USV1",
-    "Location": {
-      "type": "Point_3D",
-      "coordinates": [720, 0, 0]
-    },
-    "Speed": 6,
-    "Orientation": 0,
-    "Transmitter1": {
-      "ID": "USV1_TX1",
-      "type": "TRANSMITTER",
-      "Gain": "20",
-      "Location_Offset": [1, 0, 2],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Power": "43",
-      "angle": "30",
-      "BeamWidth": "20",
-      "PolarizationMethod": "垂直极化",
-      "AntennaType": "喇叭天线"
-    },
-    "Receiver1": {
-      "ID": "USV1_RX1",
-      "type": "RECEIVER",
-      "Gain": "20",
-      "Location_Offset": [-1, 0, 2],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Sensitivity": "-100.0",
-      "interferenceMargin": "-20",
-      "SINRMargin": "0",
-      "noiseFigure": "3"
-    }
-  }
+  "schemaVersion": "1.0.0",
+  "environment": {},
+  "usvs": []
 }
 ```
 
-### 5.2 建议统一的字段口径
+约束如下：
 
-为避免主程序、UI 和 notebook 口径冲突，建议后续统一如下：
+- `schemaVersion` 必须为 `"1.0.0"`
+- `environment` 必须存在
+- `usvs` 必须存在且至少包含一艘船
+- 未声明字段会被 `JsonLoader` 直接判定为非法
 
-| 字段 | 建议单位 | 建议语义 |
+### 3.3 环境参数接口
+
+`environment` 节点与 `EnvironmentData` 对应关系如下：
+
+| schema 字段 | 内部字段 | 单位 | 说明 |
+| --- | --- | --- | --- |
+| `maxRange` | `max_range` | m | 最大传播距离 |
+| `ductHeight` | `duct_height` | m | 蒸发波导高度 |
+| `windSpeed` | `wind_speed` | m/s | 海面风速 |
+| `dx` | `dx` | m | 水平方向步进 |
+| `dz` | `dz` | m | 垂直分辨率 |
+| `nz` | `nz` | 无量纲 | 垂直网格数 |
+| `angleStepDeg` | `angle_step_deg` | deg | 2D 仿真角度步进 |
+
+当前要求：
+
+- `maxRange`、`dx`、`dz` 必须大于 `0`
+- `ductHeight`、`windSpeed` 不能为负
+- `nz`、`angleStepDeg` 必须为正整数
+- `angleStepDeg` 取值范围为 `1` 到 `360`
+
+### 3.4 USV 与设备接口
+
+`usvs` 为数组，每个元素代表一艘船，字段如下：
+
+| 字段 | 类型 | 单位 | 说明 |
+| --- | --- | --- | --- |
+| `ID` | string | - | 船只唯一标识 |
+| `location.type` | string | - | 固定为 `Point3D` |
+| `location.coordinates` | number[3] | m | 船只世界坐标 `[x, y, z]` |
+| `speed` | number | m/s | 船速 |
+| `shipOrientationDeg` | number | deg | 船在二维平面的朝向角，范围 `0~360` |
+| `transmitters` | array | - | 发射机列表 |
+| `receivers` | array | - | 接收机列表 |
+
+坐标与角度语义约定：
+
+- 世界坐标原点位于场景左下角
+- `x` 轴向右，`y` 轴向上，`z` 轴向上
+- 设备 `locationOffset` 表示相对于船体中心的偏移
+- `antennaPhiDeg` 表示相对于正 `z` 轴向下倾斜的角度，范围 `0~180`
+
+发射机字段如下：
+
+| 字段 | 单位 | 说明 |
 | --- | --- | --- |
-| `Central_F` | GHz | 发射机/接收机中心频率 |
-| `Bandwith` | MHz | 信号带宽 |
-| `Power` | dBm | 发射功率 |
-| `Gain` | dBi 或 dB | 天线/设备增益，需在代码中明确口径 |
-| `Sensitivity` | dBm | 接收机灵敏度，建议为负值 |
-| `interferenceMargin` | dB | 干扰容限或等效带外抑制，需明确物理定义 |
-| `Location_Offset` | m | 相对船体坐标 |
-| `coordinates` | m | 船只绝对坐标 |
-| `angle` / `BeamWidth` | degree | 方位角 / 波束宽度 |
+| `ID` | - | 设备唯一标识，当前要求全局唯一 |
+| `type` | - | 固定为 `TRANSMITTER` |
+| `gainDbi` | dBi | 增益 |
+| `locationOffset` | m | 相对船体中心的三维偏移 |
+| `centerFrequencyGHz` | GHz | 中心频率 |
+| `bandwidthMHz` | MHz | 带宽 |
+| `powerDbm` | dBm | 发射功率 |
+| `antennaPhiDeg` | deg | 下倾角 |
+| `beamWidthDeg` | deg | 波束宽度，范围 `0~360` |
+| `polarization` | - | `VERTICAL` 或 `HORIZONTAL` |
+| `antennaType` | - | `OMNI`、`DIRECTIONAL`、`HORN`、`SHAPED_BEAM`、`REFLECTOR` |
 
-## 6. 内部 API 规范
+接收机字段如下：
 
-### 6.1 配置解析接口
+| 字段 | 单位 | 说明 |
+| --- | --- | --- |
+| `ID` | - | 设备唯一标识，当前要求全局唯一 |
+| `type` | - | 固定为 `RECEIVER` |
+| `gainDbi` | dBi | 增益 |
+| `locationOffset` | m | 相对船体中心的三维偏移 |
+| `centerFrequencyGHz` | GHz | 中心频率 |
+| `bandwidthMHz` | MHz | 带宽 |
+| `sensitivityDbm` | dBm | 灵敏度，当前标准固定为负值 |
+| `interferenceMarginDb` | dB | 干扰容限或等效带外抑制 |
+| `sinrMarginDb` | dB | SINR 裕量 |
+| `noiseFigureDb` | dB | 噪声系数 |
 
-#### `JsonLoader::LoadFile(const QString& filePath)`
+### 3.5 样例文件状态
 
-职责：
+| 文件 | 用途 | 状态 |
+| --- | --- | --- |
+| `Tests/Test.jsonc` | 主程序当前标准样例 | 当前已实现 |
+| `Tests/Test_A.jsonc` | 历史场景样例 | 历史参考，不是主程序标准输入 |
+| `Tests/Test_B.jsonc` | 历史场景样例 | 历史参考，不是主程序标准输入 |
+| `PE_validation/` 内相关样例 | 验证侧实验资产 | 验证侧已有，主程序不直接解析 |
 
-- 读取 JSONC 文件。
-- 清除单行注释。
-- 解析船只与设备对象。
-- 写入 `DataModel::instance()`。
+## 4. 内部数据模型与 API 边界
 
-约束：
+### 4.1 `DataModel`
 
-- 输入路径应为仓库相对路径或用户选择路径，不应依赖固定绝对路径。
-- 解析器需要与 `EnvironmentData`、阵型模板等后续配置扩展兼容。
+`DataModel` 是主程序当前的全局数据容器，内部包含：
 
-### 6.2 快照接口
+- `std::vector<ShipData> allShips`
+- `std::vector<EquipmentData> allEquipments`
+- `EnvironmentData environmentConfig`
 
-#### `DataModel::createSnapshot()`
+注意：
 
-职责：
+- `DataModel` 内部成员命名仍保留大量历史字段名，例如 `CentralF_Reciever`、`ship_Orienteation`
+- 新 schema 字段会在 `JsonLoader` 中映射到这些旧成员
+- 这意味着“外部配置命名”与“内部 DTO 命名”目前不是同一套口径
 
-- 从全局数据模型创建一次可拷贝快照。
-- 避免仿真线程直接读写 UI 层状态。
-
-约束：
-
-- 快照应被视为仿真任务的输入边界。
-- 仿真过程中不应反向修改 `DataModel`。
-
-### 6.3 领域对象转换接口
-
-#### `TransferToEngine::convertDataModelToFleet(const DataSnapshot&)`
-
-职责：
-
-- 将 DTO 快照转换为 `Fleet`。
-
-约束：
-
-- 设备绑定关系必须准确，不能因为 ID 冲突把不同船上的设备错误映射到同一个对象。
-
-#### `EquipmentConvertToMatrix(Fleet*)`
+### 4.2 `JsonLoader::LoadFile`
 
 职责：
 
-- 从 `Fleet` 中提取所有发射机并展开为 `Transmitter_PE_data`。
+- 读取 JSONC 文本
+- 去除单行 `//` 注释
+- 校验顶层结构、环境字段、船只字段、设备字段
+- 拒绝未知字段
+- 保证船只 ID 与设备 ID 当前全局唯一
+- 写回 `DataModel::instance()`
 
-约束：
+当前边界：
 
-- 输入对象中的设备位置必须已经是可解释的物理坐标。
-- 若未来接收机也参与链路级评估，应扩展专门的接收端输入结构。
+- 只支持新 schema
+- 不保留旧格式兼容逻辑
+- 是主程序标准输入的唯一解析入口
 
-### 6.4 传播计算接口
-
-#### `Propagation_Engine::PEmodel_computing1D(...)`
-
-职责：
-
-- 计算单发射机在一维距离方向上的传播损耗曲线。
-
-#### `Propagation_Engine::PEmodel_computing2D(...)`
+### 4.3 `DataModel::createSnapshot`
 
 职责：
 
-- 计算单发射机在二维平面上的传播损耗分布。
+- 将当前全局数据复制为一次仿真快照
+- 为仿真线程提供稳定输入边界
 
-实现要点：
+约定：
 
-- 先在极坐标下按角度并行求解。
-- 再把极坐标矩阵重采样为笛卡尔网格。
-- 接收点高度会按海面高度动态修正。
+- 仿真链路不应在运行中反向修改 `DataModel`
+- 新增仿真任务接口时，应继续沿用快照边界，避免 UI 状态被后台线程直接读写
 
-#### `EMC_Engine::do_PE_computing()`
-
-职责：
-
-- 调度所有发射机的二维传播计算。
-- 在 mW 线性域完成多发射源功率叠加。
-- 将结果转换为 dBm 网格后交给 UI 展示。
-
-### 6.5 核心数值接口
-
-#### `AtmosphereModel`
-
-- 根据蒸发波导高度生成修正折射率和折射率剖面。
-
-#### `JONSWAPSurfaceGenerator`
-
-- 根据风速生成粗糙海面谱分量。
-- 提供任意 `(x, y, t)` 处的海面高度。
-
-#### `PEModel`
+### 4.4 `TransferToEngine::convertDataModelToFleet`
 
 职责：
 
-- 管理 FFTW 计划与传播状态。
-- 预计算衍射项和顶部吸收层。
-- 使用 `step_Miller_Brown` 或 `step_PLST` 进行步进。
-- 使用 `initializeGaussian` 初始化天线垂直场。
-- 使用 `getPathLoss` 提取指定高度与距离处的路径损耗。
+- 将 DTO 快照转换为 `Fleet`
+- 将 `ShipData`、`EquipmentData` 变为领域层对象
+- 为后续 `EMC_Engine` 与 `PEModel` 提供可计算输入
 
-## 7. 当前对外接口
+注意：
 
-从“工程使用者”角度看，当前项目实际存在四类对外接口：
+- 当前转换阶段仍需依赖旧 DTO 命名
+- 如果未来直接暴露主程序 API，建议新增面向 schema 的中间对象，减少转换期语义漂移
 
-### 7.1 UI 录入接口
+### 4.5 `EMC_Engine` 与 `Propagation_Engine`
 
-- 船只页面
-- 设备页面
-- 仿真页面
+职责：
 
-### 7.2 JSONC 配置接口
+- `EMC_Engine::do_PE_computing()`：调度所有发射机仿真并汇总结果
+- `Propagation_Engine::PEmodel_computing2D()`：计算单发射机二维传播结果
+- `PEModel`：负责传播步进、表面模型和路径损耗求解
 
-- `Tests/Test.jsonc`
-- `Tests/Test_A.jsonc`
-- `Tests/Test_B.jsonc`
-- `PE_validation/Test*.jsonc`
+当前输出：
 
-### 7.3 结果输出接口
+- 主程序输出核心仍是二维 `GridMap`
+- EMC 指标、报告对象、结构化评估结果尚未成为主程序稳定 API
 
-- `GridMap` 二维场强结果
-- `CSV` 导出文件
-- 图表展示页面
+## 5. 对外接口现状
 
-### 7.4 验证与报告接口
+### 当前已实现
 
-- `PE_validation/*.ipynb`
-- `PE_validation/*.md`
-- `PE_validation/*.html`
+- Qt UI 录入船只、设备和仿真启动操作
+- 新 JSONC schema 配置加载
+- 二维传播结果绘图与日志输出
 
-这说明项目当前还没有形成“稳定统一的业务 API”，更多是“GUI + 文件配置 + notebook 验证”的组合接口形态。
+### 验证侧已有
 
-## 8. 后续 API 规范建议
+- `PE_validation` 子模块中的实验 notebook
+- 实验 1 到实验 3 的图表、设计说明和结论汇总
+- A/B 编队场景与 EMC 指标验证口径
 
-为支撑 TODO 中的阵型接口、四指标计算和报告生成功能，建议后续逐步补齐以下接口边界：
+### 建议后续实现
 
-1. **统一配置接口**
-   - 把舰船、设备、环境、阵型模板整合为统一配置 schema。
-2. **统一仿真任务接口**
-   - 明确“输入配置 -> 仿真任务 -> 指标结果 -> 报告结果”的主流程对象。
-3. **统一指标接口**
-   - 在主项目中正式定义 `SCF`、`S3I`、`T_elev`、`D_desense` 的计算 API。
-4. **统一报告接口**
-   - 输出结构化评价结果，而不只是图和 CSV。
-5. **统一语义与单位接口**
-   - 消除当前频率、带宽、灵敏度、干扰阈值的命名和单位混乱。
+- 配置文件选择器或仓库相对路径入口
+- 结构化 EMC 指标 API
+- 阵型模板接口
+- 统一结果导出与报告生成接口
 
-## 9. 架构结论
+## 6. 一致性维护要求
 
-当前项目的架构本质上是：
+后续只要修改输入字段、单位或枚举，必须同步更新以下位置：
 
-- 上层：Qt 输入与展示
-- 中层：`DataModel` 与对象转换
-- 下层：`PE-PLST` 传播求解
-- 旁路：Python notebook 验证与论文资产
+1. `Interface/SchemaConstants.h`
+2. `Utils/JsonLoader.hpp`
+3. `Tests/Test.jsonc`
+4. `docs/schema/usv-environment.schema.json`
+5. `docs/schema/usv-environment.template.jsonc`
+6. 本文档与 `docs/风险与改进建议.md`
 
-下一阶段的关键不是继续堆 UI，而是把“验证侧已有的 EMC 指标体系”转化为“主项目中可复用、可调用、可报告的统一 API”。
+当前最重要的架构纪律不是继续扩展 UI，而是保持“schema、运行时代码、验证结论”三者同口径。否则即使编译通过，也会在后续指标迁移和报告生成阶段反复出现语义分叉。
