@@ -1,0 +1,246 @@
+﻿{
+  "USV1": {
+    "ID": "USV1",
+    "Location": {
+      "type": "Point_3D",
+      "coordinates": [ 720, 0, 0 ] //m
+    },
+    "Speed": 6, //around 12knots
+    "Orientation": 0,
+    "Transmitter1": {
+      "ID": "Device1",
+      "type": "TRANSMITTER",
+      "Gain": "20", //dBm
+      "Location_Offset": [ 1, 0, 2 ],
+      "Central_F": "1", //GHZ
+      "Bandwith": "100", //MHz
+      "Power": "43", //dbm, for antenna,0 is available
+      "angle": "30", //phi
+      "BeamWidth": "20", //angle
+      "PolarizationMethod": "垂直极化",
+      "AntennaType": "喇叭天线"
+    },
+    "Receiver1": {
+      "ID": "Device2",
+      "type": "RECEIVER",
+      "Gain": "20", //dBm
+      "Location_Offset": [ -1, 0, 2 ],
+      "Central_F": "1", //GHZ
+      "Bandwith": "100", //MHz
+      "Sensitivity": "100.0",
+      "interferenceMargin": "-20",
+      "SINRMargin": "0",
+      "noiseFigure": "3"
+    }
+  },
+
+  "USV2": {
+    "ID": "USV2",
+    "Location": {
+      "type": "Point_3D",
+      "coordinates": [ 480, 320, 0 ] 
+    },
+    "Speed": 6, 
+    "Orientation": 0,
+    "Transmitter1": {
+      "ID": "Device1",
+      "type": "TRANSMITTER",
+      "Gain": "20",
+      "Location_Offset": [ 1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Power": "43",
+      "angle": "30",
+      "BeamWidth": "20",
+      "PolarizationMethod": "垂直极化",
+      "AntennaType": "喇叭天线"
+    },
+    "Receiver1": {
+      "ID": "Device2",
+      "type": "RECEIVER",
+      "Gain": "20",
+      "Location_Offset": [ -1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Sensitivity": "100.0",
+      "interferenceMargin": "-20",
+      "SINRMargin": "0",
+      "noiseFigure": "3"
+    }
+  },
+
+  "USV3": {
+    "ID": "USV3",
+    "Location": {
+      "type": "Point_3D",
+      "coordinates": [ 960, 320, 0 ] 
+    },
+    "Speed": 6, 
+    "Orientation": 0,
+    "Transmitter1": {
+      "ID": "Device1",
+      "type": "TRANSMITTER",
+      "Gain": "20",
+      "Location_Offset": [ 1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Power": "43",
+      "angle": "30",
+      "BeamWidth": "20",
+      "PolarizationMethod": "垂直极化",
+      "AntennaType": "喇叭天线"
+    },
+    "Receiver1": {
+      "ID": "Device2",
+      "type": "RECEIVER",
+      "Gain": "20",
+      "Location_Offset": [ -1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Sensitivity": "100.0",
+      "interferenceMargin": "-20",
+      "SINRMargin": "0",
+      "noiseFigure": "3"
+    }
+  },
+
+  "USV4": {
+    "ID": "USV4",
+    "Location": {
+      "type": "Point_3D",
+      "coordinates": [ 240, 640, 0 ] 
+    },
+    "Speed": 6,
+    "Orientation": 0,
+    "Transmitter1": {
+      "ID": "Device1",
+      "type": "TRANSMITTER",
+      "Gain": "20",
+      "Location_Offset": [ 1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Power": "43",
+      "angle": "30",
+      "BeamWidth": "20",
+      "PolarizationMethod": "垂直极化",
+      "AntennaType": "喇叭天线"
+    },
+    "Receiver1": {
+      "ID": "Device2",
+      "type": "RECEIVER",
+      "Gain": "20",
+      "Location_Offset": [ -1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Sensitivity": "100.0",
+      "interferenceMargin": "-20",
+      "SINRMargin": "0",
+      "noiseFigure": "3"
+    }
+  },
+
+  "USV5": {
+    "ID": "USV5",
+    "Location": {
+      "type": "Point_3D",
+      "coordinates": [ 1200, 640, 0 ]
+    },
+    "Speed": 6, 
+    "Orientation": 0,
+    "Transmitter1": {
+      "ID": "Device1",
+      "type": "TRANSMITTER",
+      "Gain": "20",
+      "Location_Offset": [ 1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Power": "43",
+      "angle": "30",
+      "BeamWidth": "20",
+      "PolarizationMethod": "垂直极化",
+      "AntennaType": "喇叭天线"
+    },
+    "Receiver1": {
+      "ID": "Device2",
+      "type": "RECEIVER",
+      "Gain": "20",
+      "Location_Offset": [ -1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Sensitivity": "100.0",
+      "interferenceMargin": "-20",
+      "SINRMargin": "0",
+      "noiseFigure": "3"
+    }
+  },
+
+  "USV6": {
+    "ID": "USV6",
+    "Location": {
+      "type": "Point_3D",
+      "coordinates": [ 0, 960, 0 ]
+    },
+    "Speed": 6, 
+    "Orientation": 0,
+    "Transmitter1": {
+      "ID": "Device1",
+      "type": "TRANSMITTER",
+      "Gain": "20",
+      "Location_Offset": [ 1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Power": "43",
+      "angle": "30",
+      "BeamWidth": "20",
+      "PolarizationMethod": "垂直极化",
+      "AntennaType": "喇叭天线"
+    },
+    "Receiver1": {
+      "ID": "Device2",
+      "type": "RECEIVER",
+      "Gain": "20",
+      "Location_Offset": [ -1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Sensitivity": "100.0",
+      "interferenceMargin": "-20",
+      "SINRMargin": "0",
+      "noiseFigure": "3"
+    }
+  },
+
+  "USV7": {
+    "ID": "USV7",
+    "Location": {
+      "type": "Point_3D",
+      "coordinates": [ 1440, 960, 0 ]
+    },
+    "Speed": 6, 
+    "Orientation": 0,
+    "Transmitter1": {
+      "ID": "Device1",
+      "type": "TRANSMITTER",
+      "Gain": "20",
+      "Location_Offset": [ 1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Power": "43",
+      "angle": "30",
+      "BeamWidth": "20",
+      "PolarizationMethod": "垂直极化",
+      "AntennaType": "垂直极化"
+    },
+    "Receiver1": {
+      "ID": "Device2",
+      "type": "RECEIVER",
+      "Gain": "20",
+      "Location_Offset": [ -1, 0, 2 ],
+      "Central_F": "1",
+      "Bandwith": "100",
+      "Sensitivity": "100.0",
+      "interferenceMargin": "-20",
+      "SINRMargin": "0",
+      "noiseFigure": "3"
+    }
+  }
+}
