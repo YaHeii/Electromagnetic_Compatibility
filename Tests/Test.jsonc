@@ -1,246 +1,285 @@
-﻿{
-  "USV1": {
-    "ID": "USV1",
-    "Location": {
-      "type": "Point_3D",
-      "coordinates": [ 720, 0, 0 ] //m
-    },
-    "Speed": 6, //around 12knots
-    "Orientation": 0,
-    "Transmitter1": {
-      "ID": "Device1",
-      "type": "TRANSMITTER",
-      "Gain": "20", //dBm
-      "Location_Offset": [ 1, 0, 2 ],
-      "Central_F": "1", //GHZ
-      "Bandwith": "100", //MHz
-      "Power": "43", //dbm, for antenna,0 is available
-      "angle": "30", //phi
-      "BeamWidth": "20", //angle
-      "PolarizationMethod": "垂直极化",
-      "AntennaType": "喇叭天线"
-    },
-    "Receiver1": {
-      "ID": "Device2",
-      "type": "RECEIVER",
-      "Gain": "20", //dBm
-      "Location_Offset": [ -1, 0, 2 ],
-      "Central_F": "1", //GHZ
-      "Bandwith": "100", //MHz
-      "Sensitivity": "100.0",
-      "interferenceMargin": "-20",
-      "SINRMargin": "0",
-      "noiseFigure": "3"
-    }
+{
+  // 主程序标准输入样例
+  "schemaVersion": "1.0.0",
+
+  // EnvironmentData 配置，替代主程序默认硬编码输入
+  "environment": {
+    "maxRange": 2000.0,
+    "ductHeight": 20.0,
+    "windSpeed": 7.0,
+    "dx": 5.0,
+    "dz": 0.1,
+    "nz": 2048,
+    "angleStepDeg": 5
   },
 
-  "USV2": {
-    "ID": "USV2",
-    "Location": {
-      "type": "Point_3D",
-      "coordinates": [ 480, 320, 0 ] 
+  // USV 编队配置
+  "usvs": [
+    {
+      "ID": "USV1",
+      "location": {
+        "type": "Point3D",
+        "coordinates": [2880, 0, 0]
+      },
+      "speed": 6,
+      "shipOrientationDeg": 0,
+      "transmitters": [
+        {
+          "ID": "USV1_TX1",
+          "type": "TRANSMITTER",
+          "gainDbi": 20,
+          "locationOffset": [1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "powerDbm": 30,
+          "antennaPhiDeg": 0,
+          "beamWidthDeg": 20,
+          "polarization": "VERTICAL",
+          "antennaType": "HORN"
+        }
+      ],
+      "receivers": [
+        {
+          "ID": "USV1_RX1",
+          "type": "RECEIVER",
+          "gainDbi": 20,
+          "locationOffset": [-1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "sensitivityDbm": -75.0,
+          "interferenceMarginDb": -60,
+          "sinrMarginDb": 0,
+          "noiseFigureDb": 3
+        }
+      ]
     },
-    "Speed": 6, 
-    "Orientation": 0,
-    "Transmitter1": {
-      "ID": "Device1",
-      "type": "TRANSMITTER",
-      "Gain": "20",
-      "Location_Offset": [ 1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Power": "43",
-      "angle": "30",
-      "BeamWidth": "20",
-      "PolarizationMethod": "垂直极化",
-      "AntennaType": "喇叭天线"
+    {
+      "ID": "USV2",
+      "location": {
+        "type": "Point3D",
+        "coordinates": [1920, 1280, 0]
+      },
+      "speed": 6,
+      "shipOrientationDeg": 330,
+      "transmitters": [
+        {
+          "ID": "USV2_TX1",
+          "type": "TRANSMITTER",
+          "gainDbi": 20,
+          "locationOffset": [1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "powerDbm": 30,
+          "antennaPhiDeg": 0,
+          "beamWidthDeg": 20,
+          "polarization": "VERTICAL",
+          "antennaType": "HORN"
+        }
+      ],
+      "receivers": [
+        {
+          "ID": "USV2_RX1",
+          "type": "RECEIVER",
+          "gainDbi": 20,
+          "locationOffset": [-1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "sensitivityDbm": -75.0,
+          "interferenceMarginDb": -60,
+          "sinrMarginDb": 0,
+          "noiseFigureDb": 3
+        }
+      ]
     },
-    "Receiver1": {
-      "ID": "Device2",
-      "type": "RECEIVER",
-      "Gain": "20",
-      "Location_Offset": [ -1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Sensitivity": "100.0",
-      "interferenceMargin": "-20",
-      "SINRMargin": "0",
-      "noiseFigure": "3"
+    {
+      "ID": "USV3",
+      "location": {
+        "type": "Point3D",
+        "coordinates": [3840, 1280, 0]
+      },
+      "speed": 6,
+      "shipOrientationDeg": 30,
+      "transmitters": [
+        {
+          "ID": "USV3_TX1",
+          "type": "TRANSMITTER",
+          "gainDbi": 20,
+          "locationOffset": [1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "powerDbm": 30,
+          "antennaPhiDeg": 0,
+          "beamWidthDeg": 20,
+          "polarization": "VERTICAL",
+          "antennaType": "HORN"
+        }
+      ],
+      "receivers": [
+        {
+          "ID": "USV3_RX1",
+          "type": "RECEIVER",
+          "gainDbi": 20,
+          "locationOffset": [-1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "sensitivityDbm": -75.0,
+          "interferenceMarginDb": -60,
+          "sinrMarginDb": 0,
+          "noiseFigureDb": 3
+        }
+      ]
+    },
+    {
+      "ID": "USV4",
+      "location": {
+        "type": "Point3D",
+        "coordinates": [960, 2560, 0]
+      },
+      "speed": 6,
+      "shipOrientationDeg": 120,
+      "transmitters": [
+        {
+          "ID": "USV4_TX1",
+          "type": "TRANSMITTER",
+          "gainDbi": 20,
+          "locationOffset": [1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "powerDbm": 30,
+          "antennaPhiDeg": 0,
+          "beamWidthDeg": 20,
+          "polarization": "VERTICAL",
+          "antennaType": "HORN"
+        }
+      ],
+      "receivers": [
+        {
+          "ID": "USV4_RX1",
+          "type": "RECEIVER",
+          "gainDbi": 20,
+          "locationOffset": [-1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "sensitivityDbm": -75.0,
+          "interferenceMarginDb": -60,
+          "sinrMarginDb": 0,
+          "noiseFigureDb": 3
+        }
+      ]
+    },
+    {
+      "ID": "USV5",
+      "location": {
+        "type": "Point3D",
+        "coordinates": [4800, 2560, 0]
+      },
+      "speed": 6,
+      "shipOrientationDeg": 60,
+      "transmitters": [
+        {
+          "ID": "USV5_TX1",
+          "type": "TRANSMITTER",
+          "gainDbi": 20,
+          "locationOffset": [1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "powerDbm": 30,
+          "antennaPhiDeg": 0,
+          "beamWidthDeg": 20,
+          "polarization": "VERTICAL",
+          "antennaType": "HORN"
+        }
+      ],
+      "receivers": [
+        {
+          "ID": "USV5_RX1",
+          "type": "RECEIVER",
+          "gainDbi": 20,
+          "locationOffset": [-1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "sensitivityDbm": -75.0,
+          "interferenceMarginDb": -60,
+          "sinrMarginDb": 0,
+          "noiseFigureDb": 3
+        }
+      ]
+    },
+    {
+      "ID": "USV6",
+      "location": {
+        "type": "Point3D",
+        "coordinates": [0, 3840, 0]
+      },
+      "speed": 6,
+      "shipOrientationDeg": 0,
+      "transmitters": [
+        {
+          "ID": "USV6_TX1",
+          "type": "TRANSMITTER",
+          "gainDbi": 20,
+          "locationOffset": [1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "powerDbm": 30,
+          "antennaPhiDeg": 0,
+          "beamWidthDeg": 20,
+          "polarization": "VERTICAL",
+          "antennaType": "HORN"
+        }
+      ],
+      "receivers": [
+        {
+          "ID": "USV6_RX1",
+          "type": "RECEIVER",
+          "gainDbi": 20,
+          "locationOffset": [-1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "sensitivityDbm": -75.0,
+          "interferenceMarginDb": -60,
+          "sinrMarginDb": 0,
+          "noiseFigureDb": 3
+        }
+      ]
+    },
+    {
+      "ID": "USV7",
+      "location": {
+        "type": "Point3D",
+        "coordinates": [5760, 3840, 0]
+      },
+      "speed": 6,
+      "shipOrientationDeg": 90,
+      "transmitters": [
+        {
+          "ID": "USV7_TX1",
+          "type": "TRANSMITTER",
+          "gainDbi": 20,
+          "locationOffset": [1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "powerDbm": 30,
+          "antennaPhiDeg": 0,
+          "beamWidthDeg": 20,
+          "polarization": "VERTICAL",
+          "antennaType": "HORN"
+        }
+      ],
+      "receivers": [
+        {
+          "ID": "USV7_RX1",
+          "type": "RECEIVER",
+          "gainDbi": 20,
+          "locationOffset": [-1, 0, 2],
+          "centerFrequencyGHz": 1,
+          "bandwidthMHz": 100,
+          "sensitivityDbm": -75.0,
+          "interferenceMarginDb": -60,
+          "sinrMarginDb": 0,
+          "noiseFigureDb": 3
+        }
+      ]
     }
-  },
-
-  "USV3": {
-    "ID": "USV3",
-    "Location": {
-      "type": "Point_3D",
-      "coordinates": [ 960, 320, 0 ] 
-    },
-    "Speed": 6, 
-    "Orientation": 0,
-    "Transmitter1": {
-      "ID": "Device1",
-      "type": "TRANSMITTER",
-      "Gain": "20",
-      "Location_Offset": [ 1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Power": "43",
-      "angle": "30",
-      "BeamWidth": "20",
-      "PolarizationMethod": "垂直极化",
-      "AntennaType": "喇叭天线"
-    },
-    "Receiver1": {
-      "ID": "Device2",
-      "type": "RECEIVER",
-      "Gain": "20",
-      "Location_Offset": [ -1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Sensitivity": "100.0",
-      "interferenceMargin": "-20",
-      "SINRMargin": "0",
-      "noiseFigure": "3"
-    }
-  },
-
-  "USV4": {
-    "ID": "USV4",
-    "Location": {
-      "type": "Point_3D",
-      "coordinates": [ 240, 640, 0 ] 
-    },
-    "Speed": 6,
-    "Orientation": 0,
-    "Transmitter1": {
-      "ID": "Device1",
-      "type": "TRANSMITTER",
-      "Gain": "20",
-      "Location_Offset": [ 1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Power": "43",
-      "angle": "30",
-      "BeamWidth": "20",
-      "PolarizationMethod": "垂直极化",
-      "AntennaType": "喇叭天线"
-    },
-    "Receiver1": {
-      "ID": "Device2",
-      "type": "RECEIVER",
-      "Gain": "20",
-      "Location_Offset": [ -1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Sensitivity": "100.0",
-      "interferenceMargin": "-20",
-      "SINRMargin": "0",
-      "noiseFigure": "3"
-    }
-  },
-
-  "USV5": {
-    "ID": "USV5",
-    "Location": {
-      "type": "Point_3D",
-      "coordinates": [ 1200, 640, 0 ]
-    },
-    "Speed": 6, 
-    "Orientation": 0,
-    "Transmitter1": {
-      "ID": "Device1",
-      "type": "TRANSMITTER",
-      "Gain": "20",
-      "Location_Offset": [ 1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Power": "43",
-      "angle": "30",
-      "BeamWidth": "20",
-      "PolarizationMethod": "垂直极化",
-      "AntennaType": "喇叭天线"
-    },
-    "Receiver1": {
-      "ID": "Device2",
-      "type": "RECEIVER",
-      "Gain": "20",
-      "Location_Offset": [ -1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Sensitivity": "100.0",
-      "interferenceMargin": "-20",
-      "SINRMargin": "0",
-      "noiseFigure": "3"
-    }
-  },
-
-  "USV6": {
-    "ID": "USV6",
-    "Location": {
-      "type": "Point_3D",
-      "coordinates": [ 0, 960, 0 ]
-    },
-    "Speed": 6, 
-    "Orientation": 0,
-    "Transmitter1": {
-      "ID": "Device1",
-      "type": "TRANSMITTER",
-      "Gain": "20",
-      "Location_Offset": [ 1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Power": "43",
-      "angle": "30",
-      "BeamWidth": "20",
-      "PolarizationMethod": "垂直极化",
-      "AntennaType": "喇叭天线"
-    },
-    "Receiver1": {
-      "ID": "Device2",
-      "type": "RECEIVER",
-      "Gain": "20",
-      "Location_Offset": [ -1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Sensitivity": "100.0",
-      "interferenceMargin": "-20",
-      "SINRMargin": "0",
-      "noiseFigure": "3"
-    }
-  },
-
-  "USV7": {
-    "ID": "USV7",
-    "Location": {
-      "type": "Point_3D",
-      "coordinates": [ 1440, 960, 0 ]
-    },
-    "Speed": 6, 
-    "Orientation": 0,
-    "Transmitter1": {
-      "ID": "Device1",
-      "type": "TRANSMITTER",
-      "Gain": "20",
-      "Location_Offset": [ 1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Power": "43",
-      "angle": "30",
-      "BeamWidth": "20",
-      "PolarizationMethod": "垂直极化",
-      "AntennaType": "垂直极化"
-    },
-    "Receiver1": {
-      "ID": "Device2",
-      "type": "RECEIVER",
-      "Gain": "20",
-      "Location_Offset": [ -1, 0, 2 ],
-      "Central_F": "1",
-      "Bandwith": "100",
-      "Sensitivity": "100.0",
-      "interferenceMargin": "-20",
-      "SINRMargin": "0",
-      "noiseFigure": "3"
-    }
-  }
+  ]
 }

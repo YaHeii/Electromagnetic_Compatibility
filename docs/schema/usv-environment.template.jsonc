@@ -1,0 +1,66 @@
+{
+  // 标准输入格式版本
+  "schemaVersion": "1.0.0",
+
+  // 环境参数接口，对应 EnvironmentData
+  "environment": {
+    "maxRange": 2000.0,        // 最大传播距离，单位 m
+    "ductHeight": 20.0,        // 蒸发波导高度 H0，单位 m
+    "windSpeed": 7.0,          // 风速，单位 m/s
+    "dx": 5.0,                 // 距离步进，单位 m
+    "dz": 0.1,                 // 垂直分辨率，单位 m
+    "nz": 2048,                // 垂直网格数量
+    "angleStepDeg": 5          // 二维仿真的角度步进，单位度
+  },
+
+  // 无人艇数组接口
+  "usvs": [
+    {
+      "ID": "USV1",
+
+      // 船只世界坐标
+      // 原点位于左下角
+      // X 轴向右，Y 轴向上，Z 轴向上
+      "location": {
+        "type": "Point3D",
+        "coordinates": [0.0, 0.0, 0.0]
+      },
+
+      "speed": 0.0,                // 船速，单位 m/s
+      "shipOrientationDeg": 0.0,   // 船只在二维平面的朝向角，范围 0~360
+
+      // 发射机数组
+      "transmitters": [
+        {
+          "ID": "TX1",
+          "type": "TRANSMITTER",
+          "gainDbi": 0.0,                  // 增益，单位 dBi
+          "locationOffset": [0.0, 0.0, 0.0], // 相对船体中心偏移，单位 m
+          "centerFrequencyGHz": 1.0,       // 中心频率，单位 GHz
+          "bandwidthMHz": 100.0,           // 带宽，单位 MHz
+          "powerDbm": 0.0,                 // 发射功率，单位 dBm
+          "antennaPhiDeg": 0.0,            // 相对正 z 轴向下倾斜的角度，范围 0~180
+          "beamWidthDeg": 20.0,            // 波束宽度，单位度
+          "polarization": "VERTICAL",      // 枚举：VERTICAL / HORIZONTAL
+          "antennaType": "HORN"            // 枚举：OMNI / DIRECTIONAL / HORN / SHAPED_BEAM / REFLECTOR
+        }
+      ],
+
+      // 接收机数组
+      "receivers": [
+        {
+          "ID": "RX1",
+          "type": "RECEIVER",
+          "gainDbi": 0.0,                  // 增益，单位 dBi
+          "locationOffset": [0.0, 0.0, 0.0], // 相对船体中心偏移，单位 m
+          "centerFrequencyGHz": 1.0,       // 中心频率，单位 GHz
+          "bandwidthMHz": 100.0,           // 带宽，单位 MHz
+          "sensitivityDbm": -85.0,         // 接收机灵敏度，单位 dBm，必须为负值
+          "interferenceMarginDb": 0.0,     // 干扰容限或等效带外抑制，单位 dB
+          "sinrMarginDb": 0.0,             // SINR 裕量，单位 dB
+          "noiseFigureDb": 3.0             // 噪声系数，单位 dB
+        }
+      ]
+    }
+  ]
+}

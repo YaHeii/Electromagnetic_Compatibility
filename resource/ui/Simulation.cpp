@@ -46,7 +46,11 @@ void Simulation::on_StartSimulate_clicked() {
         _workerThread.join();
     }
 
-    JsonLoader::LoadFile("D:/code/Electromagnetic_compatibility/tests/Test.json");
+    if (!JsonLoader::LoadFile("D:/code/Electromagnetic_compatibility/Tests/Test.jsonc")) {
+        spdlog::error("加载测试配置失败，已取消仿真。");
+        QMessageBox::warning(this, "配置加载失败", "无法读取新的 schema 测试配置文件。");
+        return;
+    }
     auto dataSnapshot = DataModel::instance()->createSnapshot();
     
     StartSimulate->setEnabled(false); // 禁用按钮防止重复点击
