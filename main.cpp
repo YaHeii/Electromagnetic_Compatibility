@@ -11,7 +11,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h" // 控制台输出
 #include "spdlog/sinks/basic_file_sink.h"    // 文件输出
 
-// 引入ui
+//Introduce ui
 #include "ElaApplication.h"
 
 using GridMap = std::vector<std::vector<double>>;
@@ -22,17 +22,17 @@ Q_DECLARE_METATYPE(LineMap)
 
 void init_logger(MainWindow& w) {
     try {
-        // 1. 初始化线程池
+//1. Initialize the thread pool
         spdlog::init_thread_pool(8192, 1);
 
-        // 2. 创建 Sinks
+//2. Create Sinks
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/app_log.txt", true);
-        auto gui_sink = w.createGuiLogSink(); // 从 MainWindow 获取 GUI sink
+        auto gui_sink = w.createGuiLogSink();//Get the GUI sink from MainWindow
 
         std::vector<spdlog::sink_ptr> sinks{ console_sink, file_sink, gui_sink };
 
-        // 3. 创建异步 Logger
+//3. Create an asynchronous Logger
         auto logger = std::make_shared<spdlog::async_logger>(
             "global_logger",
             sinks.begin(),
@@ -41,10 +41,10 @@ void init_logger(MainWindow& w) {
             spdlog::async_overflow_policy::block
         );
 
-        // 4. 注册为全局默认 Logger
+//4. Register as global default Logger
         spdlog::set_default_logger(logger);
 
-        // 5. 设置级别和刷新策略
+//5. Set level and refresh strategy
         spdlog::set_level(spdlog::level::debug);
         spdlog::flush_every(std::chrono::seconds(3));
 
@@ -96,19 +96,19 @@ int main(int argc, char *argv[])
     //// --- 调试代码结束 ---
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
-    //初始化大小
+//initial size
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
     QApplication a(argc, argv);
     //初始化控件
     eApp->init();
-    //初始化自定义传递信号
+//Initialize custom delivery signal
     qRegisterMetaType<GridMap>("GridMap");
     qRegisterMetaType<Matrix>("Matrix");
     qRegisterMetaType<LineMap>("LineMap");
     MainWindow w;
 
-    // 初始化日志系统
+//Initialize the log system
     init_logger(w);
     qInstallMessageHandler(qt_message_handler);
     

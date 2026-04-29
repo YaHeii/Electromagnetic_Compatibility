@@ -4,58 +4,26 @@
 #include <memory>
 #include <vector>
 
-#include <omp.h>
-#include <spdlog/spdlog.h>
-#include <Eigen/Dense>
-#include "Interface/DataModel.h"
-#include "Interface/TransferToPEdata.hpp"
+#include <QObject>
 #include "Models/fleet.h"
+#include "Interface/SimulationResult.h"
+#include "Simulation/EMCComputationResult.h"
 
-#include "Utils/PaintImage.hpp"
+class Fleet;
+class PEPropagationSolver;
 
-enum class ModelType {
-    PE,
-    RayModel
-};
 using GridMap = std::vector<std::vector<double>>;
-using Matrix = std::vector<std::vector<double>>;
-using LineMap = std::vector<double>;
-using GridMatrix = Eigen::MatrixXd;
-
-class Propagation_Engine {
-public:
-    Propagation_Engine(ModelType model_type, const Fleet* fleet)
-        : _model_type(model_type), _fleet(fleet) {}
-    LineMap PEmodel_computing1D(Transmitter_PE_data PEdata, EnvironmentData env, double reciever_antenna_height);
-    GridMatrix PEmodel_computing2D(Transmitter_PE_data PEdata, EnvironmentData env, double reciever_antenna_height);
-
-private:
-    const Fleet* _fleet;
-    ModelType _model_type;
-    Transmitter_PE_data _PEdata;
-    GridMap _LossGrid;
-    LineMap _LossLine;
-    EnvironmentData _env;
-};
-
 
 class EMC_Engine : public QObject {
     Q_OBJECT
 public:
     using DataSnapshot = DataModel::DataSnapshot;
 
-    EMC_Engine(ModelType modelType, std::unique_ptr<Fleet> fleet, DataSnapshot dataSnapshot)
-        : _fleet(std::move(fleet)),
-          _dataSnapshot(std::move(dataSnapshot)),
-          _modelType(modelType) {
-        if (!_fleet) {
-            spdlog::error("EMC_Engine initialization failed: fleet is null");
-        }
-        _env = _dataSnapshot.environmentConfig;
-        _propagationEngine = std::make_unique<Propagation_Engine>(_modelType, _fleet.get());
-    }
-
+    EMC_Engine(ModelType modelType, std::unique_ptr<Fleet> fleet, DataSnapshot dataSnapshot);
+    ~EMC_Engine();
+    //TODO: 改造计算接口,依据Validation_test中experiment3 添加计算
     void do_PE_computing();
+    // TODO: 目前计算返回的仍然是GridMap,没有与ScalarField2D对齐
     GridMap do_PE_test();
     void do_Validation_TwoRay();
     void do_Validation_Roughness();
@@ -81,8 +49,8 @@ public:
         return _lastErrorMessage;
     }
 
-    const GridMap& lossGrid() const {
-        return _LossGrid;
+    const EMCComputationResult& computationResult() const {
+        return _computationResult;
     }
 
     const DataSnapshot& inputSnapshot() const {
@@ -90,32 +58,20 @@ public:
     }
 
 private:
-    void markFailed(const QString& errorMessage) {
-        _completedSuccessfully = false;
-        _wasCancelled = false;
-        _lastErrorMessage = errorMessage;
-        spdlog::error("EMC_Engine failed: {}", errorMessage.toStdString());
-    }
+    void markFailed(const QString& errorMessage);
+    void markCancelled();
 
-    void markCancelled() {
-        _completedSuccessfully = false;
-        _wasCancelled = true;
-        _lastErrorMessage.clear();
-        _LossGrid.clear();
-        spdlog::info("EMC_Engine cancellation requested, aborting current task.");
-    }
-
-    std::atomic<bool> isStopRequested{ false };
-    GridMap _LossGrid;
-    std::vector<Transmitter_PE_data> _peDataList;
+    std::atomic<bool> isStopRequested{false};
     std::unique_ptr<Fleet> _fleet;
     DataSnapshot _dataSnapshot;
-    ModelType _modelType;
-    std::unique_ptr<Propagation_Engine> _propagationEngine;
+    ModelType _modelType{ModelType::PE};
+    std::unique_ptr<PEPropagationSolver> _propagationSolver;
     EnvironmentData _env;
+    EMCComputationResult _computationResult;
     bool _completedSuccessfully{false};
     bool _wasCancelled{false};
     QString _lastErrorMessage;
+
 signals:
     void peComputationFinished(const GridMap& lossGrid);
 };

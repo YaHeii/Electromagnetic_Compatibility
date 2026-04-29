@@ -1,0 +1,137 @@
+{
+  // 仿真结果对象 schema 版本
+  "resultSchemaVersion": "1.0.0",
+  "taskId": "sample-task-0001",
+  "modelType": "PE",
+  "status": "Succeeded",
+  "formationSource": "PresetFormation",
+  "presetFormationId": 3,
+  "startedAtUtcMs": 1777420800000,
+  "finishedAtUtcMs": 1777420803200,
+  "durationMs": 3200,
+  "errorMessage": "",
+  "summaryText": "仿真完成",
+
+  // 这里保存的是 DataModel::DataSnapshot 内部形态
+  "inputSnapshot": {
+    "allEquipments": [
+      {
+        "equipmentId": "USV1_TX1",
+        "equipmentType": "TRANSMITTER",
+        "gainDbi": 20.0,
+        "offsetX": 1.0,
+        "offsetY": 0.0,
+        "offsetZ": 2.0,
+        "receiverCenterFrequencyGHz": 0.0,
+        "receiverBandwidthMHz": 0.0,
+        "receiverSensitivityDbm": -100.0,
+        "receiverInterferenceMarginDb": 0.0,
+        "receiverSinrMarginDb": 0.0,
+        "receiverNoiseFigureDb": 3.0,
+        "transmitterCenterFrequencyGHz": 1.0,
+        "transmitterBandwidthMHz": 100.0,
+        "transmitterPowerDbm": 30.0,
+        "transmitterAntennaPhiDeg": 0.0,
+        "transmitterBeamWidthDeg": 20.0,
+        "transmitterPolarization": "VERTICAL",
+        "transmitterAntennaType": "HORN",
+        "antennaCenterFrequencyGHz": 0.0,
+        "antennaBandwidthMHz": 0.0,
+        "antennaPowerDbm": 0.0,
+        "antennaPhiDeg": 0.0,
+        "antennaBeamWidthDeg": 0.0,
+        "antennaPolarization": "VERTICAL",
+        "antennaType": "OMNI"
+      }
+    ],
+    "allShips": [
+      {
+        "shipId": "USV1",
+        "worldX": 0.0,
+        "worldY": 0.0,
+        "worldZ": 0.0,
+        "shipOrientationDeg": 0.0,
+        "shipSpeedMps": 6.0,
+        "equipmentRefs": [
+          {
+            "equipmentId": "USV1_TX1",
+            "isEnabled": true
+          }
+        ]
+      }
+    ],
+    "environmentConfig": {
+      "maxRange": 2000.0,
+      "ductHeight": 20.0,
+      "windSpeed": 7.0,
+      "dx": 5.0,
+      "dz": 0.1,
+      "nz": 2048,
+      "angleStepDeg": 5
+    }
+  },
+
+  "aggregatedField": {
+    "fieldId": "aggregated-power",
+    "displayName": "Aggregated Power Field",
+    "quantity": "AggregatedPowerDbm",
+    "valueUnit": "dBm",
+    "axisXUnit": "m",
+    "axisYUnit": "m",
+    "rows": 2,
+    "cols": 2,
+    "originX": 0.0,
+    "originY": 0.0,
+    "stepX": 5.0,
+    "stepY": 5.0,
+    "noDataValue": null,
+    "values": [
+      -42.0,
+      -41.5,
+      -40.8,
+      -39.9
+    ]
+  },
+
+  "emitterResults": [
+    {
+      "emitterId": "USV1_TX1",
+      "shipId": "USV1",
+      "status": "Succeeded",
+      "centerFrequencyGHz": 1.0,
+      "transmitPowerDbm": 30.0,
+      "worldX": 1.0,
+      "worldY": 0.0,
+      "worldZ": 2.0,
+      "errorMessage": "",
+      "field2D": {
+        "fieldId": "path-loss-USV1_TX1",
+        "displayName": "Path Loss Field",
+        "quantity": "PathLossDb",
+        "valueUnit": "dB",
+        "axisXUnit": "m",
+        "axisYUnit": "m",
+        "rows": 2,
+        "cols": 2,
+        "originX": 0.0,
+        "originY": 0.0,
+        "stepX": 5.0,
+        "stepY": 5.0,
+        "noDataValue": null,
+        "values": [
+          101.0,
+          99.5,
+          98.8,
+          97.2
+        ]
+      }
+    }
+  ],
+
+  // 第一版只保留指标容器，不强行放入实验 3 指标
+  "derivedMetrics": {
+    "available": false,
+    "metricsSchemaVersion": "",
+    "note": "指标链路待后续实现"
+  }
+}

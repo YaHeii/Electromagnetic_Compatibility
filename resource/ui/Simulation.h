@@ -1,13 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <thread>
 
 #include <QLabel>
 
 #include "BasePage.h"
-#include "Simulation/EMC_Engine.h"
-
+#include "Simulation/simSchedulerCtx.h"
 #include "qcustomplot.h"
 
 class ElaPushButton;
@@ -40,17 +40,15 @@ public slots:
     void onInputModelCommitted();
 
 private:
-    using DataSnapshot = DataModel::DataSnapshot;
-
     void setState(TaskState state, const QString& detail = QString());
     void refreshStatusText();
     void joinWorkerIfNeeded();
     void requestStop();
-    void onWorkerFinished();
+    void onWorkerFinished(SimulationTaskResult taskResult);
     bool hasStaleSuccessfulResult() const;
     QString stateText(TaskState state) const;
 
-    std::unique_ptr<EMC_Engine> _emcEngine;
+    std::unique_ptr<simSchedulerCtx> _scheduler;
     std::thread _workerThread;
     QCustomPlot* _plot{nullptr};
     ElaPushButton* _startButton{nullptr};
@@ -59,6 +57,6 @@ private:
     TaskState _state{TaskState::Idle};
     QString _stateDetail;
     bool _hasDirtyInputs{false};
-    bool _hasLastSuccessfulSnapshot{false};
-    DataSnapshot _lastSuccessfulSnapshot;
+    std::optional<SimulationTaskResult> _lastSuccessfulResult;
+    std::optional<SimulationTaskResult> _lastFinishedResult;
 };

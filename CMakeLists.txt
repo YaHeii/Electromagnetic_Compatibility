@@ -98,12 +98,25 @@ if(BUILD_TESTING)
 
     add_executable(SchemaDtoValidationTests
         Tests/SchemaDtoValidationTests.cpp
+        Tests/SimulationResultTests.cpp
+        Tests/SimulationSchedulerTests.cpp
         Tests/UiMainlineTests.cpp
         Tests/TreeViewModelTests.cpp
         Interface/DataModel.h
+        Interface/SimulationResult.h
         Interface/SchemaConstants.h
+        Interface/TransferToEngin.cpp
+        Interface/TransferToEngin.h
         Utils/JsonLoader.hpp
+        Simulation/EMC_Engine.cpp
+        Simulation/EMCComputationResult.h
         Simulation/EMC_Engine.h
+        Simulation/PEModel.cpp
+        Simulation/PEModel.h
+        Simulation/PEPropagationSolver.cpp
+        Simulation/PEPropagationSolver.h
+        Simulation/simSchedulerCtx.cpp
+        Simulation/simSchedulerCtx.h
         ModelView/T_TreeItem.cpp
         ModelView/T_TreeItem.h
         ModelView/T_TreeViewModel.cpp
@@ -139,6 +152,7 @@ if(BUILD_TESTING)
         ElaWidgetTools
         Eigen3::Eigen
         FFTW3::fftw3
+        OpenMP::OpenMP_CXX
     )
 
     include(Catch)

@@ -1,14 +1,14 @@
 #include "Simulation.h"
-#include <Eigen/Dense>
+
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QVBoxLayout>
-#include "Utils/PaintImage.hpp"
+
 #include "ElaMessageBar.h"
 #include "ElaPushButton.h"
 #include "Interface/DataModel.h"
-#include "Interface/TransferToEngin.h"
+#include "Utils/PaintImage.hpp"
 #include "spdlog/spdlog.h"
 
 Simulation::Simulation(QWidget* parent)
@@ -45,7 +45,7 @@ Simulation::Simulation(QWidget* parent)
 Simulation::~Simulation() {
     requestStop();
     joinWorkerIfNeeded();
-    _emcEngine.reset();
+    _scheduler.reset();
 }
 
 bool Simulation::isBusy() const {
@@ -62,35 +62,37 @@ void Simulation::on_StartSimulate_clicked() {
     DataModel* model = DataModel::instance();
     const auto validationResult = model->validateCurrentModel();
     if (!validationResult.first) {
-        spdlog::error("Current model validation failed before simulation: {}", validationResult.second.toStdString());
+        spdlog::error(
+            "Current model validation failed before simulation: {}",
+            validationResult.second.toStdString());
         QMessageBox::warning(this, QStringLiteral("输入校验失败"), validationResult.second);
         return;
     }
 
-    const DataSnapshot snapshot = model->createSnapshot();
-    auto fleet = TransferToEngine::convertDataModelToFleet(snapshot);
-    if (!fleet) {
-        const QString errorMessage = QStringLiteral("无法从当前快照构建 Fleet，仿真未启动");
-        spdlog::error(errorMessage.toStdString());
-        setState(TaskState::Failed, errorMessage);
-        ElaMessageBar::error(ElaMessageBarType::BottomRight, QStringLiteral("启动失败"), errorMessage, 2000, this);
-        return;
-    }
-
-    _emcEngine = std::make_unique<EMC_Engine>(ModelType::PE, std::move(fleet), snapshot);
+    const DataModel::DataSnapshot snapshot = model->createSnapshot();
+    _scheduler = std::make_unique<simSchedulerCtx>(
+        ModelType::PE,
+        snapshot,
+        FormationSource::ManualInput,
+        std::nullopt);
     setState(
         TaskState::Running,
         _hasDirtyInputs ? QStringLiteral("存在未保存草稿，本次仿真只使用当前已保存模型") : QString());
     spdlog::info("Simulation launched with frozen DataModel snapshot.");
 
     _workerThread = std::thread([this]() {
-        EMC_Engine* engine = _emcEngine.get();
-        if (!engine) {
+        simSchedulerCtx* scheduler = _scheduler.get();
+        if (!scheduler) {
             return;
         }
 
-        engine->do_PE_computing();
-        QMetaObject::invokeMethod(this, [this]() { onWorkerFinished(); }, Qt::QueuedConnection);
+        SimulationTaskResult taskResult = scheduler->run();
+        QMetaObject::invokeMethod(
+            this,
+            [this, taskResult = std::move(taskResult)]() mutable {
+                onWorkerFinished(std::move(taskResult));
+            },
+            Qt::QueuedConnection);
     });
 }
 
@@ -146,43 +148,51 @@ void Simulation::joinWorkerIfNeeded() {
 }
 
 void Simulation::requestStop() {
-    if (_emcEngine) {
-        _emcEngine->stop();
+    if (_scheduler) {
+        _scheduler->requestStop();
     }
 }
 
-void Simulation::onWorkerFinished() {
+void Simulation::onWorkerFinished(SimulationTaskResult taskResult) {
     joinWorkerIfNeeded();
-    if (!_emcEngine) {
-        setState(TaskState::Idle);
+    _lastFinishedResult = taskResult;
+
+    const auto validation = taskResult.validate();
+    if (!validation.first) {
+        const QString errorMessage =
+            QStringLiteral("任务结果非法：%1，已保留上一张成功结果").arg(validation.second);
+        spdlog::error("Simulation task result validation failed: {}", validation.second.toStdString());
+        setState(TaskState::Failed, errorMessage);
+        ElaMessageBar::error(ElaMessageBarType::BottomRight, QStringLiteral("结果非法"), errorMessage, 2500, this);
+        _scheduler.reset();
+        refreshStatusText();
         return;
     }
 
-    if (_emcEngine->completedSuccessfully()) {
-        const GridMap& result = _emcEngine->lossGrid();
-        if (result.empty() || result.front().empty()) {
-            const QString errorMessage = QStringLiteral("仿真返回空结果，已保留上一次成功图像");
+    if (taskResult.status == SimulationResultStatus::Succeeded) {
+        if (taskResult.aggregatedField.values.empty()) {
+            const QString errorMessage = QStringLiteral("仿真返回空结果，已保留上一张成功结果");
             spdlog::warn(errorMessage.toStdString());
             setState(TaskState::Failed, errorMessage);
             ElaMessageBar::warning(ElaMessageBarType::BottomRight, QStringLiteral("结果为空"), errorMessage, 2000, this);
-            _emcEngine.reset();
+            _scheduler.reset();
+            refreshStatusText();
             return;
         }
 
         try {
             spdlog::info("Painting simulation result to QCustomPlot.");
-            PEmodel_Painting2D(result, _plot);
-            _lastSuccessfulSnapshot = _emcEngine->inputSnapshot();
-            _hasLastSuccessfulSnapshot = true;
-            setState(TaskState::Succeeded, QStringLiteral("仿真完成"));
+            PEmodel_Painting2D(taskResult.aggregatedField, _plot);
+            _lastSuccessfulResult = taskResult;
+            setState(TaskState::Succeeded, taskResult.summaryText);
         } catch (const std::exception& e) {
             const QString errorMessage = QStringLiteral("绘图失败：%1").arg(QString::fromUtf8(e.what()));
             spdlog::error("Simulation painting failed: {}", e.what());
             setState(TaskState::Failed, errorMessage);
             QMessageBox::critical(this, QStringLiteral("绘图错误"), errorMessage);
         }
-    } else if (_emcEngine->wasCancelled()) {
-        setState(TaskState::Cancelled, QStringLiteral("仿真已取消，保留上一次成功结果"));
+    } else if (taskResult.status == SimulationResultStatus::Cancelled) {
+        setState(TaskState::Cancelled, QStringLiteral("仿真已取消，保留上一张成功结果"));
         ElaMessageBar::warning(
             ElaMessageBarType::BottomRight,
             QStringLiteral("任务已取消"),
@@ -190,23 +200,24 @@ void Simulation::onWorkerFinished() {
             2000,
             this);
     } else {
-        QString errorMessage = _emcEngine->lastErrorMessage();
+        QString errorMessage = taskResult.errorMessage;
         if (errorMessage.isEmpty()) {
-            errorMessage = QStringLiteral("仿真失败，已保留上一次成功结果");
+            errorMessage = QStringLiteral("仿真失败，已保留上一张成功结果");
         }
         setState(TaskState::Failed, errorMessage);
         ElaMessageBar::error(ElaMessageBarType::BottomRight, QStringLiteral("仿真失败"), errorMessage, 2500, this);
     }
 
-    _emcEngine.reset();
+    _scheduler.reset();
     refreshStatusText();
 }
 
 bool Simulation::hasStaleSuccessfulResult() const {
-    if (!_hasLastSuccessfulSnapshot) {
+    if (!_lastSuccessfulResult.has_value()) {
         return false;
     }
-    return _hasDirtyInputs || !(DataModel::instance()->createSnapshot() == _lastSuccessfulSnapshot);
+    return _hasDirtyInputs ||
+           (DataModel::instance()->createSnapshot() != _lastSuccessfulResult->inputSnapshot);
 }
 
 QString Simulation::stateText(TaskState state) const {

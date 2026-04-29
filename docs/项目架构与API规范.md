@@ -256,3 +256,75 @@ JSONC / UI
 6. 本文档
 
 当前最重要的架构纪律不是继续堆叠 UI，而是保持“schema、运行时代码、验证口径”三者同口径。
+## 6. 2026-04-29 仿真结果边界更新
+### 6.1 当前已实现
+
+主程序仿真主链路已从：
+
+```text
+DataModel / Fleet
+  -> EMC_Engine
+  -> GridMap
+  -> Simulation.cpp / PaintImage
+```
+
+收敛为：
+
+```text
+DataModel::DataSnapshot
+  -> simSchedulerCtx
+  -> TransferToEngine
+  -> EMC_Engine
+  -> PEPropagationSolver / PEModel
+  -> EMCComputationResult
+  -> SimulationTaskResult
+  -> UI / 后续指标 / 后续报告
+```
+
+职责边界如下：
+
+- `PEPropagationSolver`
+  - 单发射机 1D/2D PE 求解
+  - 不关心任务状态、UI 和报告
+- `EMC_Engine`
+  - 持有冻结后的 `Fleet` 与 `DataSnapshot`
+  - 调度多发射机计算
+  - 聚合总场
+  - 产出 `EMCComputationResult`
+- `simSchedulerCtx`
+  - 持有任务级输入快照与取消状态
+  - 统一构建 `Fleet`
+  - 调用 `EMC_Engine`
+  - 组装 `SimulationTaskResult`
+- `Resource/ui/Simulation.cpp`
+  - 仅消费 `SimulationTaskResult`
+  - 主图绘制读取 `aggregatedField`
+  - 旧输入提示读取 `inputSnapshot`
+
+### 6.2 结果对象接口约定
+
+新增稳定结果边界：
+
+- `SimulationTaskResult`
+  - 任务根对象
+  - 保留 `formationSource + optional<int> presetFormationId`
+  - 保留 `inputSnapshot`
+- `ScalarField2D`
+  - 行主序二维标量场
+  - 当前承接 `AggregatedPowerDbm` 与 `PathLossDb`
+- `EmitterResult`
+  - 单发射机结果与最小元数据
+- `DerivedMetrics`
+  - 第一版仅作为派生指标容器壳结构
+
+结果侧校验策略：
+
+- C++ 运行时校验：各结构体内置 `validate()`
+- 文档化 schema：`docs/schema/simulation-result.schema.json`
+- 当前不提供结果 JSON 导入链路
+
+### 6.3 与输入 schema 的关系
+
+- 输入侧标准仍以 `Interface/SchemaConstants.h + Utils/JsonLoader.hpp + docs/schema/usv-environment.*` 为准。
+- 结果侧 schema 只描述仿真输出对象，不改变输入 schema 语义。
+- `SimulationTaskResult::inputSnapshot` 保存的是 `DataModel::DataSnapshot` 内部形态，不是外部 JSON 根结构。

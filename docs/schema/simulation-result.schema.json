@@ -1,0 +1,415 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://electromagnetic-compatibility.local/schema/simulation-result.schema.json",
+  "title": "Simulation Result Schema",
+  "description": "主程序仿真结果根对象的文档化 schema，描述 SimulationTaskResult 的结构边界。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "resultSchemaVersion",
+    "taskId",
+    "modelType",
+    "status",
+    "formationSource",
+    "startedAtUtcMs",
+    "finishedAtUtcMs",
+    "durationMs",
+    "inputSnapshot",
+    "derivedMetrics"
+  ],
+  "properties": {
+    "resultSchemaVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "modelType": {
+      "type": "string",
+      "enum": [
+        "PE",
+        "RayModel"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Succeeded",
+        "Failed",
+        "Cancelled"
+      ]
+    },
+    "formationSource": {
+      "type": "string",
+      "enum": [
+        "ManualInput",
+        "PresetFormation"
+      ]
+    },
+    "presetFormationId": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "startedAtUtcMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "finishedAtUtcMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "errorMessage": {
+      "type": "string"
+    },
+    "summaryText": {
+      "type": "string"
+    },
+    "inputSnapshot": {
+      "$ref": "#/$defs/dataSnapshot"
+    },
+    "aggregatedField": {
+      "$ref": "#/$defs/scalarField2D"
+    },
+    "emitterResults": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/emitterResult"
+      }
+    },
+    "derivedMetrics": {
+      "$ref": "#/$defs/derivedMetrics"
+    }
+  },
+  "$defs": {
+    "scalarFieldQuantity": {
+      "type": "string",
+      "enum": [
+        "AggregatedPowerDbm",
+        "PathLossDb"
+      ]
+    },
+    "scalarField2D": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fieldId",
+        "displayName",
+        "quantity",
+        "valueUnit",
+        "axisXUnit",
+        "axisYUnit",
+        "rows",
+        "cols",
+        "originX",
+        "originY",
+        "stepX",
+        "stepY",
+        "values"
+      ],
+      "properties": {
+        "fieldId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quantity": {
+          "$ref": "#/$defs/scalarFieldQuantity"
+        },
+        "valueUnit": {
+          "type": "string"
+        },
+        "axisXUnit": {
+          "type": "string"
+        },
+        "axisYUnit": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cols": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "originX": {
+          "type": "number"
+        },
+        "originY": {
+          "type": "number"
+        },
+        "stepX": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "stepY": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "noDataValue": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "emitterResultStatus": {
+      "type": "string",
+      "enum": [
+        "Succeeded",
+        "Failed",
+        "Cancelled",
+        "Skipped"
+      ]
+    },
+    "emitterResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "emitterId",
+        "shipId",
+        "status",
+        "centerFrequencyGHz",
+        "transmitPowerDbm",
+        "worldX",
+        "worldY",
+        "worldZ"
+      ],
+      "properties": {
+        "emitterId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shipId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "$ref": "#/$defs/emitterResultStatus"
+        },
+        "centerFrequencyGHz": {
+          "type": "number"
+        },
+        "transmitPowerDbm": {
+          "type": "number"
+        },
+        "worldX": {
+          "type": "number"
+        },
+        "worldY": {
+          "type": "number"
+        },
+        "worldZ": {
+          "type": "number"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "field2D": {
+          "$ref": "#/$defs/scalarField2D"
+        }
+      }
+    },
+    "derivedMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "metricsSchemaVersion": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "equipmentOnShip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "equipmentId",
+        "isEnabled"
+      ],
+      "properties": {
+        "equipmentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "isEnabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "shipData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shipId",
+        "worldX",
+        "worldY",
+        "worldZ",
+        "shipOrientationDeg",
+        "shipSpeedMps",
+        "equipmentRefs"
+      ],
+      "properties": {
+        "shipId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "worldX": {
+          "type": "number"
+        },
+        "worldY": {
+          "type": "number"
+        },
+        "worldZ": {
+          "type": "number"
+        },
+        "shipOrientationDeg": {
+          "type": "number"
+        },
+        "shipSpeedMps": {
+          "type": "number"
+        },
+        "equipmentRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equipmentOnShip"
+          }
+        }
+      }
+    },
+    "equipmentData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "equipmentId",
+        "equipmentType",
+        "gainDbi",
+        "offsetX",
+        "offsetY",
+        "offsetZ",
+        "receiverCenterFrequencyGHz",
+        "receiverBandwidthMHz",
+        "receiverSensitivityDbm",
+        "receiverInterferenceMarginDb",
+        "receiverSinrMarginDb",
+        "receiverNoiseFigureDb",
+        "transmitterCenterFrequencyGHz",
+        "transmitterBandwidthMHz",
+        "transmitterPowerDbm",
+        "transmitterAntennaPhiDeg",
+        "transmitterBeamWidthDeg",
+        "transmitterPolarization",
+        "transmitterAntennaType",
+        "antennaCenterFrequencyGHz",
+        "antennaBandwidthMHz",
+        "antennaPowerDbm",
+        "antennaPhiDeg",
+        "antennaBeamWidthDeg",
+        "antennaPolarization",
+        "antennaType"
+      ],
+      "properties": {
+        "equipmentId": { "type": "string", "minLength": 1 },
+        "equipmentType": { "type": "string" },
+        "gainDbi": { "type": "number" },
+        "offsetX": { "type": "number" },
+        "offsetY": { "type": "number" },
+        "offsetZ": { "type": "number" },
+        "receiverCenterFrequencyGHz": { "type": "number" },
+        "receiverBandwidthMHz": { "type": "number" },
+        "receiverSensitivityDbm": { "type": "number" },
+        "receiverInterferenceMarginDb": { "type": "number" },
+        "receiverSinrMarginDb": { "type": "number" },
+        "receiverNoiseFigureDb": { "type": "number" },
+        "transmitterCenterFrequencyGHz": { "type": "number" },
+        "transmitterBandwidthMHz": { "type": "number" },
+        "transmitterPowerDbm": { "type": "number" },
+        "transmitterAntennaPhiDeg": { "type": "number" },
+        "transmitterBeamWidthDeg": { "type": "number" },
+        "transmitterPolarization": { "type": "string" },
+        "transmitterAntennaType": { "type": "string" },
+        "antennaCenterFrequencyGHz": { "type": "number" },
+        "antennaBandwidthMHz": { "type": "number" },
+        "antennaPowerDbm": { "type": "number" },
+        "antennaPhiDeg": { "type": "number" },
+        "antennaBeamWidthDeg": { "type": "number" },
+        "antennaPolarization": { "type": "string" },
+        "antennaType": { "type": "string" }
+      }
+    },
+    "environmentConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxRange",
+        "ductHeight",
+        "windSpeed",
+        "dx",
+        "dz",
+        "nz",
+        "angleStepDeg"
+      ],
+      "properties": {
+        "maxRange": { "type": "number", "exclusiveMinimum": 0 },
+        "ductHeight": { "type": "number", "minimum": 0 },
+        "windSpeed": { "type": "number", "minimum": 0 },
+        "dx": { "type": "number", "exclusiveMinimum": 0 },
+        "dz": { "type": "number", "exclusiveMinimum": 0 },
+        "nz": { "type": "integer", "minimum": 1 },
+        "angleStepDeg": { "type": "integer", "minimum": 1, "maximum": 360 }
+      }
+    },
+    "dataSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allEquipments",
+        "allShips",
+        "environmentConfig"
+      ],
+      "properties": {
+        "allEquipments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equipmentData"
+          }
+        },
+        "allShips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/shipData"
+          }
+        },
+        "environmentConfig": {
+          "$ref": "#/$defs/environmentConfig"
+        }
+      }
+    }
+  }
+}
