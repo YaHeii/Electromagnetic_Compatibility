@@ -98,13 +98,24 @@ if(BUILD_TESTING)
 
     add_executable(SchemaDtoValidationTests
         Tests/SchemaDtoValidationTests.cpp
+        Tests/UiMainlineTests.cpp
+        Tests/TreeViewModelTests.cpp
         Interface/DataModel.h
         Interface/SchemaConstants.h
         Utils/JsonLoader.hpp
+        Simulation/EMC_Engine.h
+        ModelView/T_TreeItem.cpp
+        ModelView/T_TreeItem.h
+        ModelView/T_TreeViewModel.cpp
+        ModelView/T_TreeViewModel.h
         Resource/ui/BasePage.cpp
         Resource/ui/BasePage.h
         Resource/ui/DeviceWidget.cpp
         Resource/ui/DeviceWidget.h
+        Resource/ui/EnvironmentWidget.cpp
+        Resource/ui/EnvironmentWidget.h
+        Resource/ui/TreeView.cpp
+        Resource/ui/TreeView.h
         Resource/ui/deviceonship.cpp
         Resource/ui/deviceonship.h
         Resource/ui/shipwidget.cpp
@@ -126,6 +137,8 @@ if(BUILD_TESTING)
         Qt6::Widgets
         spdlog::spdlog
         ElaWidgetTools
+        Eigen3::Eigen
+        FFTW3::fftw3
     )
 
     include(Catch)

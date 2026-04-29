@@ -1,7 +1,7 @@
 #include "T_LogModel.h"
 
 T_LogModel::T_LogModel(QObject* parent)
-    : QAbstractListModel{parent}, _currentFilterLevel("debug")
+    : QAbstractListModel{parent}, _currentFilterLevel("info")
 {
 }
 

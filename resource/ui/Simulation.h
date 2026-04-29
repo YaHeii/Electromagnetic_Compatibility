@@ -1,33 +1,64 @@
 #pragma once
-#include "Utils/PaintImage.hpp"
-#include "Simulation/EMC_Engine.h"
-#include <QWidget>
-#include <QTabWidget>
-#include <QVBoxLayout>
-#include "qcustomplot.h"
-#include <ElaPushButton.h>
+
+#include <memory>
+#include <thread>
+
+#include <QLabel>
+
 #include "BasePage.h"
+#include "Simulation/EMC_Engine.h"
+
+#include "qcustomplot.h"
+
+class ElaPushButton;
 
 class Simulation : public BasePage {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit Simulation(QWidget* parent = nullptr);
-	~Simulation();
+    enum class TaskState {
+        Idle,
+        Running,
+        Cancelling,
+        Succeeded,
+        Failed,
+        Cancelled
+    };
+
+    explicit Simulation(QWidget* parent = nullptr);
+    ~Simulation() override;
+
+    bool isBusy() const;
 
 signals:
-	// 用于从工作线程安全地将结果传递到UI线程
-	void simulationDone(const GridMap& result);
+    void busyStateChanged(bool busy);
+
+public slots:
+    void on_StartSimulate_clicked();
+    void on_CancelSimulate_clicked();
+    void onInputDraftStateChanged(bool hasDirtyInputs);
+    void onInputModelCommitted();
 
 private:
-	EMC_Engine* _emcEngine;
-	std::thread _workerThread;
+    using DataSnapshot = DataModel::DataSnapshot;
 
-	// 2D Power Distribution Tab
-	QCustomPlot* PEmodel2Dplot;
-	ElaPushButton* StartSimulate;
-public slots:
-	void on_StartSimulate_clicked();
-	// 槽函数现在接收GridMap作为参数
-	void onSimulationFinished(const GridMap& result);
+    void setState(TaskState state, const QString& detail = QString());
+    void refreshStatusText();
+    void joinWorkerIfNeeded();
+    void requestStop();
+    void onWorkerFinished();
+    bool hasStaleSuccessfulResult() const;
+    QString stateText(TaskState state) const;
+
+    std::unique_ptr<EMC_Engine> _emcEngine;
+    std::thread _workerThread;
+    QCustomPlot* _plot{nullptr};
+    ElaPushButton* _startButton{nullptr};
+    ElaPushButton* _cancelButton{nullptr};
+    QLabel* _statusLabel{nullptr};
+    TaskState _state{TaskState::Idle};
+    QString _stateDetail;
+    bool _hasDirtyInputs{false};
+    bool _hasLastSuccessfulSnapshot{false};
+    DataSnapshot _lastSuccessfulSnapshot;
 };

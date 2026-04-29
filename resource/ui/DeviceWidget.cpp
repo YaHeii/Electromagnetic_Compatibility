@@ -1,13 +1,17 @@
 #include "DeviceWidget.h"
 
+#include <QComboBox>
 #include <QDebug>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QLayoutItem>
+#include <QLineEdit>
 #include <QVariant>
 #include <QVBoxLayout>
 
 #include "ElaComboBox.h"
 #include "ElaLineEdit.h"
+#include "ElaMessageBar.h"
 #include "ElaPushButton.h"
 #include "ElaText.h"
 #include "Interface/SchemaConstants.h"
@@ -72,11 +76,21 @@ bool typeSupportsReceiverFields(const QString& type) {
            type == QString::fromLatin1(SchemaValues::Transceiver);
 }
 
+void clearLayoutWidgets(QLayout* layout) {
+    while (QLayoutItem* child = layout->takeAt(0)) {
+        if (QWidget* widget = child->widget()) {
+            delete widget;
+        }
+        delete child;
+    }
+}
+
 }  // namespace
 
 DeviceWidget::DeviceWidget(QWidget* parent)
     : BasePage(parent) {
-    createCustomWidget("此页面可动态添加和管理多个可用设备");
+    createCustomWidget("此页用于维护可挂载设备库，保存时会统一校验完整快照");
+
     AddDeviceBtn = new ElaPushButton("添加新设备", this);
     AddDeviceBtn->setFixedSize(120, 36);
     SaveEquipmentBtn = new ElaPushButton("保存所有设备", this);
@@ -104,18 +118,98 @@ DeviceWidget::DeviceWidget(QWidget* parent)
     connect(AddDeviceBtn, &ElaPushButton::clicked, this, &DeviceWidget::on_AddDeviceBtn_clicked);
     connect(SaveEquipmentBtn, &ElaPushButton::clicked, this, &DeviceWidget::on_SaveEquipmentBtn_clicked);
 
-    on_AddDeviceBtn_clicked();
+    loadFromModel();
 }
 
 DeviceWidget::~DeviceWidget() = default;
 
+void DeviceWidget::loadFromModel() {
+    _isLoading = true;
+    clearItems();
+
+    const auto& equipments = DataModel::instance()->allEquipments;
+    if (equipments.empty()) {
+        on_AddDeviceBtn_clicked();
+    } else {
+        for (const auto& equipment : equipments) {
+            auto* newItem = new DeviceItemWidget(this);
+            newItem->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+            newItem->setData(equipment);
+            newItem->setReadOnly(_isReadOnly);
+            _deviceListLayout->addWidget(newItem);
+            connect(newItem, &DeviceItemWidget::deleteMe, this, &DeviceWidget::on_RemoveItemRequested);
+            connect(newItem, &DeviceItemWidget::dataEdited, this, &DeviceWidget::on_ItemEdited);
+        }
+    }
+
+    _isLoading = false;
+    setDirty(false);
+}
+
+bool DeviceWidget::saveToModel(QString* errorMessage) {
+    auto* model = DataModel::instance();
+    std::vector<EquipmentData> equipments;
+
+    for (int i = 0; i < _deviceListLayout->count(); ++i) {
+        QLayoutItem* layoutItem = _deviceListLayout->itemAt(i);
+        if (auto* widget = qobject_cast<DeviceItemWidget*>(layoutItem->widget())) {
+            EquipmentData data;
+            QString localError;
+            if (!widget->tryBuildData(data, localError)) {
+                if (errorMessage) {
+                    *errorMessage = localError;
+                }
+                return false;
+            }
+            equipments.push_back(std::move(data));
+        }
+    }
+
+    auto snapshot = model->createSnapshot();
+    snapshot.allEquipments = equipments;
+
+    const auto validationResult = DataModel::validateSnapshot(snapshot);
+    if (!validationResult.first) {
+        if (errorMessage) {
+            *errorMessage = validationResult.second;
+        }
+        return false;
+    }
+
+    model->allEquipments = std::move(snapshot.allEquipments);
+    setDirty(false);
+    emit modelCommitted();
+    emit equipmentsCommitted();
+    return true;
+}
+
+void DeviceWidget::setReadOnly(bool readOnly) {
+    _isReadOnly = readOnly;
+    AddDeviceBtn->setEnabled(!readOnly);
+    SaveEquipmentBtn->setEnabled(!readOnly);
+    for (int i = 0; i < _deviceListLayout->count(); ++i) {
+        if (auto* widget = qobject_cast<DeviceItemWidget*>(_deviceListLayout->itemAt(i)->widget())) {
+            widget->setReadOnly(readOnly);
+        }
+    }
+}
+
 void DeviceWidget::on_AddDeviceBtn_clicked() {
-    DeviceItemWidget* newItem = new DeviceItemWidget(this);
+    if (_isReadOnly && !_isLoading) {
+        return;
+    }
+
+    auto* newItem = new DeviceItemWidget(this);
     newItem->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    _deviceListLayout->insertWidget(_deviceListLayout->count() - 1, newItem);
+    newItem->setReadOnly(_isReadOnly);
+    _deviceListLayout->addWidget(newItem);
 
     connect(newItem, &DeviceItemWidget::deleteMe, this, &DeviceWidget::on_RemoveItemRequested);
+    connect(newItem, &DeviceItemWidget::dataEdited, this, &DeviceWidget::on_ItemEdited);
     spdlog::info("已添加新的设备 UI 条目");
+    if (!_isLoading) {
+        setDirty(true);
+    }
 }
 
 void DeviceWidget::on_RemoveItemRequested(DeviceItemWidget* item) {
@@ -126,37 +220,40 @@ void DeviceWidget::on_RemoveItemRequested(DeviceItemWidget* item) {
     _deviceListLayout->removeWidget(item);
     item->deleteLater();
     spdlog::info("已移除设备 UI 条目");
+    if (!_isLoading) {
+        setDirty(true);
+    }
 }
 
 void DeviceWidget::on_SaveEquipmentBtn_clicked() {
-    auto* model = DataModel::instance();
-    std::vector<EquipmentData> equipments;
-
-    for (int i = 0; i < _deviceListLayout->count(); ++i) {
-        QLayoutItem* layoutItem = _deviceListLayout->itemAt(i);
-        if (auto* widget = qobject_cast<DeviceItemWidget*>(layoutItem->widget())) {
-            EquipmentData data;
-            QString errorMessage;
-            if (!widget->tryBuildData(data, errorMessage)) {
-                spdlog::error("设备 UI 基础校验失败，第 {} 项: {}", i + 1, errorMessage.toStdString());
-                return;
-            }
-
-            equipments.push_back(std::move(data));
-        }
-    }
-
-    auto snapshot = model->createSnapshot();
-    snapshot.allEquipments = equipments;
-
-    const auto validationResult = DataModel::validateSnapshot(snapshot);
-    if (!validationResult.first) {
-        spdlog::error("设备快照核心校验失败: {}", validationResult.second.toStdString());
+    QString errorMessage;
+    if (!saveToModel(&errorMessage)) {
+        spdlog::error("设备保存失败: {}", errorMessage.toStdString());
+        ElaMessageBar::error(ElaMessageBarType::BottomRight, QStringLiteral("保存失败"), errorMessage, 2000, this);
         return;
     }
 
-    model->allEquipments = std::move(snapshot.allEquipments);
-    spdlog::info("设备保存成功，当前 DataModel 中共有 {} 个设备", model->allEquipments.size());
+    spdlog::info("设备保存成功，当前 DataModel 中共有 {} 个设备", DataModel::instance()->allEquipments.size());
+    ElaMessageBar::success(ElaMessageBarType::BottomRight, QStringLiteral("保存成功"), QStringLiteral("设备库已同步到当前模型"), 1500, this);
+}
+
+void DeviceWidget::on_ItemEdited() {
+    if (_isLoading || _isReadOnly) {
+        return;
+    }
+    setDirty(true);
+}
+
+void DeviceWidget::setDirty(bool dirty) {
+    if (_isDirty == dirty) {
+        return;
+    }
+    _isDirty = dirty;
+    emit dirtyStateChanged(_isDirty);
+}
+
+void DeviceWidget::clearItems() {
+    clearLayoutWidgets(_deviceListLayout);
 }
 
 DeviceItemWidget::DeviceItemWidget(QWidget* parent)
@@ -168,8 +265,7 @@ DeviceItemWidget::DeviceItemWidget(QWidget* parent)
     addComboItem(_equipmentType, QStringLiteral("接收机"), QString::fromLatin1(SchemaValues::Receiver));
     addComboItem(_equipmentType, QStringLiteral("收发一体机"), QString::fromLatin1(SchemaValues::Transceiver));
 
-    connect(_equipmentType, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &DeviceItemWidget::onEquipmentTypeChanged);
+    connect(_equipmentType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DeviceItemWidget::onEquipmentTypeChanged);
 
     ElaText* gainText = new ElaText("设备增益", this);
     gainText->setTextPixelSize(15);
@@ -236,6 +332,15 @@ DeviceItemWidget::DeviceItemWidget(QWidget* parent)
     mainLayout->addWidget(_TransmitterWidget);
     mainLayout->addWidget(_RecieverWidget);
     mainLayout->addWidget(ReductionEquipmentBtn);
+
+    const auto lineEdits = findChildren<QLineEdit*>();
+    for (QLineEdit* lineEdit : lineEdits) {
+        connect(lineEdit, &QLineEdit::textChanged, this, [this]() { emit dataEdited(); });
+    }
+    const auto comboBoxes = findChildren<QComboBox*>();
+    for (QComboBox* comboBox : comboBoxes) {
+        connect(comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() { emit dataEdited(); });
+    }
 
     onEquipmentTypeChanged();
 }
@@ -317,6 +422,8 @@ void DeviceItemWidget::setData(const EquipmentData& data) {
         _InterferenceMargin_Receiver->setText(QString::number(data.receiverInterferenceMarginDb));
         _SINRMargin_Receiver->setText(QString::number(data.receiverSinrMarginDb));
         _NoiseFigure_Receiver->setText(QString::number(data.receiverNoiseFigureDb));
+    } else {
+        resetReceiverUI();
     }
 
     if (typeSupportsTransmitterFields(data.equipmentType)) {
@@ -327,6 +434,8 @@ void DeviceItemWidget::setData(const EquipmentData& data) {
         _Beamwidth_Transmitter->setText(QString::number(data.transmitterBeamWidthDeg));
         setComboValue(_PolarizationMethod_Transmitter, data.transmitterPolarization);
         setComboValue(_antennaType_Transmitter, data.transmitterAntennaType);
+    } else {
+        resetTransmitterUI();
     }
 }
 
@@ -341,6 +450,18 @@ void DeviceItemWidget::onEquipmentTypeChanged() {
 
 void DeviceItemWidget::on_ReductionBtn_clicked() {
     emit deleteMe(this);
+}
+
+void DeviceItemWidget::setReadOnly(bool readOnly) {
+    const auto lineEdits = findChildren<QLineEdit*>();
+    for (QLineEdit* lineEdit : lineEdits) {
+        lineEdit->setReadOnly(readOnly);
+    }
+    const auto comboBoxes = findChildren<QComboBox*>();
+    for (QComboBox* comboBox : comboBoxes) {
+        comboBox->setEnabled(!readOnly);
+    }
+    ReductionEquipmentBtn->setEnabled(!readOnly);
 }
 
 void DeviceItemWidget::resetTransmitterUI() {

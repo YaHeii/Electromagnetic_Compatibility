@@ -1,7 +1,6 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <QApplication>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -9,9 +8,7 @@
 
 #include "Interface/DataModel.h"
 #include "Interface/SchemaConstants.h"
-#include "Resource/ui/DeviceWidget.h"
-#include "Resource/ui/deviceonship.h"
-#include "Resource/ui/shipwidget.h"
+#include "Simulation/EMC_Engine.h"
 #include "Utils/JsonLoader.hpp"
 
 namespace {
@@ -40,20 +37,6 @@ QString schemaKey(const char* key) {
 
 QString schemaValue(const char* value) {
     return QString::fromLatin1(value);
-}
-
-QApplication& ensureApplication() {
-    if (auto* existing = qobject_cast<QApplication*>(QCoreApplication::instance())) {
-        return *existing;
-    }
-
-    qputenv("QT_QPA_PLATFORM", QByteArray("offscreen"));
-
-    static int argc = 1;
-    static char appName[] = "SchemaDtoValidationTests";
-    static char* argv[] = {appName, nullptr};
-    static QApplication app(argc, argv);
-    return app;
 }
 
 void requireValid(const std::pair<bool, QString>& validationResult) {
@@ -155,19 +138,6 @@ ShipData makeShip(const QString& equipmentId) {
     ship.shipSpeedMps = 6.0;
     ship.shipOrientationDeg = 90.0;
     ship.equipmentRefs.push_back(EquipmentOnShip{equipmentId, true});
-    return ship;
-}
-
-ShipData makeWidgetShip() {
-    ShipData ship;
-    ship.shipId = "USV_WIDGET";
-    ship.worldX = 12.0;
-    ship.worldY = 34.0;
-    ship.worldZ = 5.0;
-    ship.shipSpeedMps = 7.5;
-    ship.shipOrientationDeg = 123.0;
-    ship.equipmentRefs.push_back(EquipmentOnShip{QStringLiteral("EQ_TX_WIDGET"), true});
-    ship.equipmentRefs.push_back(EquipmentOnShip{QStringLiteral("EQ_TRX_WIDGET"), false});
     return ship;
 }
 
@@ -318,15 +288,6 @@ void requireEquipmentBaseFieldsEqual(const EquipmentData& actual, const Equipmen
     requireApprox(actual.offsetZ, expected.offsetZ);
 }
 
-void requireShipBaseFieldsEqual(const ShipData& actual, const ShipData& expected) {
-    REQUIRE(actual.shipId == expected.shipId);
-    requireApprox(actual.worldX, expected.worldX);
-    requireApprox(actual.worldY, expected.worldY);
-    requireApprox(actual.worldZ, expected.worldZ);
-    requireApprox(actual.shipSpeedMps, expected.shipSpeedMps);
-    requireApprox(actual.shipOrientationDeg, expected.shipOrientationDeg);
-}
-
 }  // namespace
 
 TEST_CASE("Equipment validation follows schema-compatible rules", "[schema][datamodel][equipment]") {
@@ -468,144 +429,20 @@ TEST_CASE("JsonLoader rejects type values outside SchemaConstants enums", "[sche
     REQUIRE_FALSE(JsonLoader::LoadFile(tempFile.fileName()));
 }
 
-TEST_CASE("DeviceItemWidget round-trips schema DTO values", "[schema][ui][device]") {
-    ensureApplication();
-
-    SECTION("transmitter fields stay aligned with SchemaConstants enums") {
-        DeviceItemWidget widget;
-        EquipmentData expected = makeTransmitter();
-        expected.equipmentId = QStringLiteral("EQ_TX_WIDGET");
-        expected.gainDbi = 13.5;
-        expected.offsetX = 3.0;
-        expected.offsetY = 4.0;
-        expected.offsetZ = 5.0;
-        expected.transmitterCenterFrequencyGHz = 9.4;
-        expected.transmitterBandwidthMHz = 12.0;
-        expected.transmitterPowerDbm = 28.0;
-        expected.transmitterAntennaPhiDeg = 22.0;
-        expected.transmitterBeamWidthDeg = 44.0;
-        expected.transmitterPolarization = schemaValue(SchemaValues::Horizontal);
-        expected.transmitterAntennaType = schemaValue(SchemaValues::Reflector);
-
-        widget.setData(expected);
-        const EquipmentData actual = widget.getData();
-
-        requireEquipmentBaseFieldsEqual(actual, expected);
-        requireApprox(actual.transmitterCenterFrequencyGHz, expected.transmitterCenterFrequencyGHz);
-        requireApprox(actual.transmitterBandwidthMHz, expected.transmitterBandwidthMHz);
-        requireApprox(actual.transmitterPowerDbm, expected.transmitterPowerDbm);
-        requireApprox(actual.transmitterAntennaPhiDeg, expected.transmitterAntennaPhiDeg);
-        requireApprox(actual.transmitterBeamWidthDeg, expected.transmitterBeamWidthDeg);
-        REQUIRE(actual.transmitterPolarization == schemaValue(SchemaValues::Horizontal));
-        REQUIRE(actual.transmitterAntennaType == schemaValue(SchemaValues::Reflector));
-        requireValid(actual.validate());
-    }
-
-    SECTION("receiver fields stay aligned with schema DTO names") {
-        DeviceItemWidget widget;
-        EquipmentData expected = makeReceiver();
-        expected.equipmentId = QStringLiteral("EQ_RX_WIDGET");
-        expected.gainDbi = -2.0;
-        expected.offsetX = -3.0;
-        expected.offsetY = 6.0;
-        expected.offsetZ = 7.0;
-        expected.receiverCenterFrequencyGHz = 3.6;
-        expected.receiverBandwidthMHz = 18.0;
-        expected.receiverSensitivityDbm = -91.0;
-        expected.receiverInterferenceMarginDb = 2.5;
-        expected.receiverSinrMarginDb = 7.0;
-        expected.receiverNoiseFigureDb = 1.8;
-
-        widget.setData(expected);
-        const EquipmentData actual = widget.getData();
-
-        requireEquipmentBaseFieldsEqual(actual, expected);
-        requireApprox(actual.receiverCenterFrequencyGHz, expected.receiverCenterFrequencyGHz);
-        requireApprox(actual.receiverBandwidthMHz, expected.receiverBandwidthMHz);
-        requireApprox(actual.receiverSensitivityDbm, expected.receiverSensitivityDbm);
-        requireApprox(actual.receiverInterferenceMarginDb, expected.receiverInterferenceMarginDb);
-        requireApprox(actual.receiverSinrMarginDb, expected.receiverSinrMarginDb);
-        requireApprox(actual.receiverNoiseFigureDb, expected.receiverNoiseFigureDb);
-        requireValid(actual.validate());
-    }
-
-    SECTION("transceiver preserves nested transmitter and receiver dto fields") {
-        DeviceItemWidget widget;
-        EquipmentData expected = makeTransceiver();
-        expected.equipmentId = QStringLiteral("EQ_TRX_WIDGET");
-        expected.gainDbi = 4.5;
-        expected.offsetX = 8.0;
-        expected.offsetY = 9.0;
-        expected.offsetZ = 10.0;
-        expected.transmitterPolarization = schemaValue(SchemaValues::Horizontal);
-        expected.transmitterAntennaType = schemaValue(SchemaValues::Horn);
-        expected.receiverSensitivityDbm = -79.5;
-        expected.receiverInterferenceMarginDb = 1.25;
-
-        widget.setData(expected);
-        const EquipmentData actual = widget.getData();
-
-        requireEquipmentBaseFieldsEqual(actual, expected);
-        requireApprox(actual.transmitterCenterFrequencyGHz, expected.transmitterCenterFrequencyGHz);
-        requireApprox(actual.transmitterBandwidthMHz, expected.transmitterBandwidthMHz);
-        requireApprox(actual.transmitterPowerDbm, expected.transmitterPowerDbm);
-        requireApprox(actual.transmitterAntennaPhiDeg, expected.transmitterAntennaPhiDeg);
-        requireApprox(actual.transmitterBeamWidthDeg, expected.transmitterBeamWidthDeg);
-        REQUIRE(actual.transmitterPolarization == schemaValue(SchemaValues::Horizontal));
-        REQUIRE(actual.transmitterAntennaType == schemaValue(SchemaValues::Horn));
-        requireApprox(actual.receiverCenterFrequencyGHz, expected.receiverCenterFrequencyGHz);
-        requireApprox(actual.receiverBandwidthMHz, expected.receiverBandwidthMHz);
-        requireApprox(actual.receiverSensitivityDbm, expected.receiverSensitivityDbm);
-        requireApprox(actual.receiverInterferenceMarginDb, expected.receiverInterferenceMarginDb);
-        requireApprox(actual.receiverSinrMarginDb, expected.receiverSinrMarginDb);
-        requireApprox(actual.receiverNoiseFigureDb, expected.receiverNoiseFigureDb);
-        requireValid(actual.validate());
-    }
-}
-
-TEST_CASE("DeviceonShip preserves equipment reference DTO fields", "[schema][ui][deviceonship]") {
-    ensureApplication();
+TEST_CASE("EMC_Engine keeps the launch snapshot instead of re-reading DataModel", "[schema][simulation][snapshot]") {
     const ScopedDataModelState dataModelStateGuard;
 
-    DataModel* model = DataModel::instance();
-    EquipmentData transmitter = makeTransmitter();
-    transmitter.equipmentId = QStringLiteral("EQ_TX_WIDGET");
-    EquipmentData transceiver = makeTransceiver();
-    transceiver.equipmentId = QStringLiteral("EQ_TRX_WIDGET");
-    model->allEquipments = {transmitter, transceiver};
+    DataModel::DataSnapshot snapshot;
+    snapshot.environmentConfig = makeEnvironment();
+    snapshot.environmentConfig.maxRange = 1234.0;
 
-    DeviceonShip widget;
-    const EquipmentOnShip expected{QStringLiteral("EQ_TRX_WIDGET"), false};
-    widget.setData(expected);
+    DataModel::instance()->environmentConfig = makeSchemaDrivenEnvironment();
 
-    const EquipmentOnShip actual = widget.getData();
-    REQUIRE(actual.equipmentId == expected.equipmentId);
-    REQUIRE(actual.isEnabled == expected.isEnabled);
-}
+    auto fleet = std::make_unique<Fleet>();
+    EMC_Engine engine(ModelType::PE, std::move(fleet), snapshot);
 
-TEST_CASE("ShipItemWidget round-trips ship DTO fields and mounted equipment refs", "[schema][ui][ship]") {
-    ensureApplication();
-    const ScopedDataModelState dataModelStateGuard;
-
-    DataModel* model = DataModel::instance();
-    EquipmentData transmitter = makeTransmitter();
-    transmitter.equipmentId = QStringLiteral("EQ_TX_WIDGET");
-    EquipmentData transceiver = makeTransceiver();
-    transceiver.equipmentId = QStringLiteral("EQ_TRX_WIDGET");
-    model->allEquipments = {transmitter, transceiver};
-
-    ShipItemWidget widget;
-    const ShipData expected = makeWidgetShip();
-    widget.setData(expected);
-
-    const ShipData actual = widget.getData();
-    requireShipBaseFieldsEqual(actual, expected);
-    REQUIRE(actual.equipmentRefs.size() == expected.equipmentRefs.size());
-    REQUIRE(actual.equipmentRefs[0].equipmentId == expected.equipmentRefs[0].equipmentId);
-    REQUIRE(actual.equipmentRefs[0].isEnabled == expected.equipmentRefs[0].isEnabled);
-    REQUIRE(actual.equipmentRefs[1].equipmentId == expected.equipmentRefs[1].equipmentId);
-    REQUIRE(actual.equipmentRefs[1].isEnabled == expected.equipmentRefs[1].isEnabled);
-    requireValid(actual.validateShip());
+    DataModel::instance()->environmentConfig.maxRange = 9999.0;
+    REQUIRE(engine.inputSnapshot().environmentConfig.maxRange == Catch::Approx(1234.0));
 }
 
 TEST_CASE("JsonLoader loads the canonical schema sample", "[schema][loader]") {

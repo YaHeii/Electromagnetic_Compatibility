@@ -3,9 +3,10 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QCoreApplication>
+#include <QHBoxLayout>
 #include <QVBoxLayout>
+#include "ElaText.h"
 #include "Resource/ui/BasePage.h"
-#include "ElaLog.h"
 #include "ModelView/T_LogModel.h"
 #include "ElaMessageBar.h"
 LogWidget::LogWidget(QWidget* parent)
@@ -30,9 +31,9 @@ LogWidget::LogWidget(QWidget* parent)
 
     levelFilter->setFixedWidth(80);
     levelFilter->setFixedHeight(30);
-    emit(levelFilter->currentIndexChanged(0)); 
     connect(levelFilter, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LogWidget::onLevelFilterChanged);
+    levelFilter->setCurrentIndex(0);
     
     // 清空按钮
     clearButton = new ElaToolButton(this);
@@ -85,6 +86,8 @@ LogWidget::LogWidget(QWidget* parent)
     centerVLayout->addWidget(logListView, 1);
     // centerVLayout->addStretch();
     addCentralWidget(centralWidget);
+
+    onLevelFilterChanged();
 }
 
 LogWidget::~LogWidget()
@@ -151,7 +154,7 @@ void LogWidget::on_pauseBtn_clicked()
 
 void LogWidget::on_openFileBtn_clicked()
 {
-QString logFilePath = QCoreApplication::applicationDirPath() + "/app_log.txt";
+QString logFilePath = QCoreApplication::applicationDirPath() + "/logs/app_log.txt";
     
     // 使用本地桌面服务打开文件
     if (QDesktopServices::openUrl(QUrl::fromLocalFile(logFilePath))) {

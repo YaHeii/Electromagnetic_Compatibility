@@ -2,8 +2,11 @@
 
 #include <QFrame>
 #include <QLayout>
+#include <QLayoutItem>
+#include <QLineEdit>
 
 #include "ElaLineEdit.h"
+#include "ElaMessageBar.h"
 #include "ElaPushButton.h"
 #include "ElaScrollArea.h"
 #include "ElaText.h"
@@ -31,11 +34,20 @@ bool readRequiredNumber(const QLineEdit* lineEdit, const QString& fieldName, dou
     return true;
 }
 
+void clearLayoutWidgets(QLayout* layout) {
+    while (QLayoutItem* child = layout->takeAt(0)) {
+        if (QWidget* widget = child->widget()) {
+            delete widget;
+        }
+        delete child;
+    }
+}
+
 }  // namespace
 
 ShipWidget::ShipWidget(QWidget* parent)
     : BasePage(parent) {
-    createCustomWidget("此页面可动态添加和管理多个船只");
+    createCustomWidget("此页维护船只与挂载设备引用，保存时会校验设备引用和环境快照");
 
     _AddShipBtn = new ElaPushButton("添加新船只", this);
     _AddShipBtn->setFixedSize(120, 36);
@@ -65,17 +77,103 @@ ShipWidget::ShipWidget(QWidget* parent)
     mainLayout->setStretch(0, 1);
     addCentralWidget(centralWidget);
 
-    on_AddShipBtn_clicked();
+    loadFromModel();
 }
 
 ShipWidget::~ShipWidget() = default;
 
+void ShipWidget::loadFromModel() {
+    _isLoading = true;
+    clearItems();
+
+    const auto& ships = DataModel::instance()->allShips;
+    if (ships.empty()) {
+        on_AddShipBtn_clicked();
+    } else {
+        for (const auto& ship : ships) {
+            auto* newItem = new ShipItemWidget(this);
+            newItem->setData(ship);
+            newItem->setReadOnly(_isReadOnly);
+            _ShipListLayout->addWidget(newItem);
+            connect(newItem, &ShipItemWidget::deleteMe, this, &ShipWidget::on_RemoveShipItemRequested);
+            connect(newItem, &ShipItemWidget::dataEdited, this, &ShipWidget::on_ItemEdited);
+        }
+    }
+
+    _isLoading = false;
+    setDirty(false);
+}
+
+bool ShipWidget::saveToModel(QString* errorMessage) {
+    auto* model = DataModel::instance();
+    std::vector<ShipData> ships;
+
+    for (int i = 0; i < _ShipListLayout->count(); ++i) {
+        QLayoutItem* layoutItem = _ShipListLayout->itemAt(i);
+        if (auto* widget = qobject_cast<ShipItemWidget*>(layoutItem->widget())) {
+            ShipData data;
+            QString localError;
+            if (!widget->tryBuildData(data, localError)) {
+                if (errorMessage) {
+                    *errorMessage = localError;
+                }
+                return false;
+            }
+            ships.push_back(std::move(data));
+        }
+    }
+
+    auto snapshot = model->createSnapshot();
+    snapshot.allShips = ships;
+
+    const auto validationResult = DataModel::validateSnapshot(snapshot);
+    if (!validationResult.first) {
+        if (errorMessage) {
+            *errorMessage = validationResult.second;
+        }
+        return false;
+    }
+
+    model->allShips = std::move(snapshot.allShips);
+    setDirty(false);
+    emit modelCommitted();
+    return true;
+}
+
+void ShipWidget::setReadOnly(bool readOnly) {
+    _isReadOnly = readOnly;
+    _AddShipBtn->setEnabled(!readOnly);
+    _SaveShipBtn->setEnabled(!readOnly);
+    for (int i = 0; i < _ShipListLayout->count(); ++i) {
+        if (auto* widget = qobject_cast<ShipItemWidget*>(_ShipListLayout->itemAt(i)->widget())) {
+            widget->setReadOnly(readOnly);
+        }
+    }
+}
+
+void ShipWidget::refreshEquipmentReferences() {
+    for (int i = 0; i < _ShipListLayout->count(); ++i) {
+        if (auto* widget = qobject_cast<ShipItemWidget*>(_ShipListLayout->itemAt(i)->widget())) {
+            widget->refreshEquipmentOptions();
+        }
+    }
+}
+
 void ShipWidget::on_AddShipBtn_clicked() {
+    if (_isReadOnly && !_isLoading) {
+        return;
+    }
+
     ShipItemWidget* newItem = new ShipItemWidget(this);
-    _ShipListLayout->insertWidget(_ShipListLayout->count() - 1, newItem);
+    newItem->setReadOnly(_isReadOnly);
+    _ShipListLayout->addWidget(newItem);
 
     connect(newItem, &ShipItemWidget::deleteMe, this, &ShipWidget::on_RemoveShipItemRequested);
+    connect(newItem, &ShipItemWidget::dataEdited, this, &ShipWidget::on_ItemEdited);
     spdlog::info("已添加新的船只 UI 条目");
+    if (!_isLoading) {
+        setDirty(true);
+    }
 }
 
 void ShipWidget::on_RemoveShipItemRequested(ShipItemWidget* item) {
@@ -86,37 +184,40 @@ void ShipWidget::on_RemoveShipItemRequested(ShipItemWidget* item) {
     _ShipListLayout->removeWidget(item);
     item->deleteLater();
     spdlog::info("已移除船只 UI 条目");
+    if (!_isLoading) {
+        setDirty(true);
+    }
 }
 
 void ShipWidget::on_SaveShipBtn_clicked() {
-    auto* model = DataModel::instance();
-    std::vector<ShipData> ships;
-
-    for (int i = 0; i < _ShipListLayout->count(); ++i) {
-        QLayoutItem* layoutItem = _ShipListLayout->itemAt(i);
-        if (auto* widget = qobject_cast<ShipItemWidget*>(layoutItem->widget())) {
-            ShipData data;
-            QString errorMessage;
-            if (!widget->tryBuildData(data, errorMessage)) {
-                spdlog::error("船只 UI 基础校验失败，第 {} 项: {}", i + 1, errorMessage.toStdString());
-                return;
-            }
-
-            ships.push_back(std::move(data));
-        }
-    }
-
-    auto snapshot = model->createSnapshot();
-    snapshot.allShips = ships;
-
-    const auto validationResult = DataModel::validateSnapshot(snapshot);
-    if (!validationResult.first) {
-        spdlog::error("船只快照核心校验失败: {}", validationResult.second.toStdString());
+    QString errorMessage;
+    if (!saveToModel(&errorMessage)) {
+        spdlog::error("船只保存失败: {}", errorMessage.toStdString());
+        ElaMessageBar::error(ElaMessageBarType::BottomRight, QStringLiteral("保存失败"), errorMessage, 2000, this);
         return;
     }
 
-    model->allShips = std::move(snapshot.allShips);
-    spdlog::info("船只保存成功，当前 DataModel 中共有 {} 艘船", model->allShips.size());
+    spdlog::info("船只保存成功，当前 DataModel 中共有 {} 艘船", DataModel::instance()->allShips.size());
+    ElaMessageBar::success(ElaMessageBarType::BottomRight, QStringLiteral("保存成功"), QStringLiteral("船只配置已同步到当前模型"), 1500, this);
+}
+
+void ShipWidget::on_ItemEdited() {
+    if (_isLoading || _isReadOnly) {
+        return;
+    }
+    setDirty(true);
+}
+
+void ShipWidget::setDirty(bool dirty) {
+    if (_isDirty == dirty) {
+        return;
+    }
+    _isDirty = dirty;
+    emit dirtyStateChanged(_isDirty);
+}
+
+void ShipWidget::clearItems() {
+    clearLayoutWidgets(_ShipListLayout);
 }
 
 ShipItemWidget::ShipItemWidget(QWidget* parent)
@@ -213,6 +314,11 @@ ShipItemWidget::ShipItemWidget(QWidget* parent)
     QVBoxLayout* centerVLayout = new QVBoxLayout(this);
     centerVLayout->addWidget(mainWidget);
     centerVLayout->addWidget(_ReductionShipBtn);
+
+    const auto lineEdits = findChildren<QLineEdit*>();
+    for (QLineEdit* lineEdit : lineEdits) {
+        connect(lineEdit, &QLineEdit::textChanged, this, [this]() { emit dataEdited(); });
+    }
 }
 
 void ShipItemWidget::setData(const ShipData& data) {
@@ -223,17 +329,8 @@ void ShipItemWidget::setData(const ShipData& data) {
     _ship_Speed->setText(QString::number(data.shipSpeedMps));
     _ship_Orienteation->setText(QString::number(data.shipOrientationDeg));
 
-    QLayoutItem* child = nullptr;
-    while ((child = _deviceOnShipLayout->takeAt(0)) != nullptr) {
-        if (child->spacerItem()) {
-            _deviceOnShipLayout->addItem(child);
-            break;
-        }
-        if (child->widget()) {
-            child->widget()->deleteLater();
-        }
-        delete child;
-    }
+    clearLayoutWidgets(_deviceOnShipLayout);
+    _deviceOnShipLayout->addStretch();
 
     for (const auto& deviceData : data.equipmentRefs) {
         DeviceonShip* deviceWidget = new DeviceonShip(this);
@@ -243,7 +340,9 @@ void ShipItemWidget::setData(const ShipData& data) {
         connect(deviceWidget, &DeviceonShip::removalRequested, this, [this, deviceWidget]() {
             _deviceOnShipLayout->removeWidget(deviceWidget);
             deviceWidget->deleteLater();
+            emit dataEdited();
         });
+        connect(deviceWidget, &DeviceonShip::dataEdited, this, &ShipItemWidget::dataEdited);
     }
 }
 
@@ -288,14 +387,43 @@ bool ShipItemWidget::tryBuildData(ShipData& data, QString& errorMessage) const {
     return true;
 }
 
+void ShipItemWidget::refreshEquipmentOptions() {
+    for (int i = 0; i < _deviceOnShipLayout->count(); ++i) {
+        if (auto* deviceWidget = qobject_cast<DeviceonShip*>(_deviceOnShipLayout->itemAt(i)->widget())) {
+            deviceWidget->refreshEquipmentList();
+        }
+    }
+}
+
+void ShipItemWidget::setReadOnly(bool readOnly) {
+    const auto lineEdits = findChildren<QLineEdit*>();
+    for (QLineEdit* lineEdit : lineEdits) {
+        lineEdit->setReadOnly(readOnly);
+    }
+    _AddDeviceOnShipBtn->setEnabled(!readOnly);
+    _ReductionShipBtn->setEnabled(!readOnly);
+    for (int i = 0; i < _deviceOnShipLayout->count(); ++i) {
+        if (auto* deviceWidget = qobject_cast<DeviceonShip*>(_deviceOnShipLayout->itemAt(i)->widget())) {
+            deviceWidget->setReadOnly(readOnly);
+        }
+    }
+}
+
 void ShipItemWidget::on_AddDeviceOnShipBtn_clicked() {
+    if (!_AddDeviceOnShipBtn->isEnabled()) {
+        return;
+    }
+
     DeviceonShip* newDevice = new DeviceonShip(this);
     _deviceOnShipLayout->insertWidget(_deviceOnShipLayout->count() - 1, newDevice);
 
     connect(newDevice, &DeviceonShip::removalRequested, this, [this, newDevice]() {
         _deviceOnShipLayout->removeWidget(newDevice);
         newDevice->deleteLater();
+        emit dataEdited();
     });
+    connect(newDevice, &DeviceonShip::dataEdited, this, &ShipItemWidget::dataEdited);
+    emit dataEdited();
 }
 
 void ShipItemWidget::on_SelfReductionBtn_clicked() {

@@ -174,11 +174,44 @@ struct EquipmentData {
 
         return {false, QStringLiteral("未知设备类型")};
     }
+
+    bool operator==(const EquipmentData& other) const {
+        return equipmentId == other.equipmentId &&
+               equipmentType == other.equipmentType &&
+               gainDbi == other.gainDbi &&
+               offsetX == other.offsetX &&
+               offsetY == other.offsetY &&
+               offsetZ == other.offsetZ &&
+               receiverCenterFrequencyGHz == other.receiverCenterFrequencyGHz &&
+               receiverBandwidthMHz == other.receiverBandwidthMHz &&
+               receiverSensitivityDbm == other.receiverSensitivityDbm &&
+               receiverInterferenceMarginDb == other.receiverInterferenceMarginDb &&
+               receiverSinrMarginDb == other.receiverSinrMarginDb &&
+               receiverNoiseFigureDb == other.receiverNoiseFigureDb &&
+               transmitterCenterFrequencyGHz == other.transmitterCenterFrequencyGHz &&
+               transmitterBandwidthMHz == other.transmitterBandwidthMHz &&
+               transmitterPowerDbm == other.transmitterPowerDbm &&
+               transmitterAntennaPhiDeg == other.transmitterAntennaPhiDeg &&
+               transmitterBeamWidthDeg == other.transmitterBeamWidthDeg &&
+               transmitterPolarization == other.transmitterPolarization &&
+               transmitterAntennaType == other.transmitterAntennaType &&
+               antennaCenterFrequencyGHz == other.antennaCenterFrequencyGHz &&
+               antennaBandwidthMHz == other.antennaBandwidthMHz &&
+               antennaPowerDbm == other.antennaPowerDbm &&
+               antennaPhiDeg == other.antennaPhiDeg &&
+               antennaBeamWidthDeg == other.antennaBeamWidthDeg &&
+               antennaPolarization == other.antennaPolarization &&
+               antennaType == other.antennaType;
+    }
 };
 
 struct EquipmentOnShip {
     QString equipmentId;
     bool isEnabled = true;
+
+    bool operator==(const EquipmentOnShip& other) const {
+        return equipmentId == other.equipmentId && isEnabled == other.isEnabled;
+    }
 };
 
 struct ShipData {
@@ -213,6 +246,16 @@ struct ShipData {
         }
 
         return {true, QString()};
+    }
+
+    bool operator==(const ShipData& other) const {
+        return shipId == other.shipId &&
+               worldX == other.worldX &&
+               worldY == other.worldY &&
+               worldZ == other.worldZ &&
+               shipOrientationDeg == other.shipOrientationDeg &&
+               shipSpeedMps == other.shipSpeedMps &&
+               equipmentRefs == other.equipmentRefs;
     }
 };
 
@@ -251,6 +294,16 @@ struct EnvironmentData {
 
         return {true, QString()};
     }
+
+    bool operator==(const EnvironmentData& other) const {
+        return maxRange == other.maxRange &&
+               ductHeight == other.ductHeight &&
+               windSpeed == other.windSpeed &&
+               dx == other.dx &&
+               dz == other.dz &&
+               nz == other.nz &&
+               angleStepDeg == other.angleStepDeg;
+    }
 };
 
 class DataModel : public QObject {
@@ -262,6 +315,16 @@ public:
         std::vector<EquipmentData> allEquipments;
         std::vector<ShipData> allShips;
         EnvironmentData environmentConfig;
+
+        bool operator==(const DataSnapshot& other) const {
+            return allEquipments == other.allEquipments &&
+                   allShips == other.allShips &&
+                   environmentConfig == other.environmentConfig;
+        }
+
+        bool operator!=(const DataSnapshot& other) const {
+            return !(*this == other);
+        }
     };
 
     static DataModel* instance() {

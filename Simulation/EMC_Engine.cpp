@@ -2,7 +2,10 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+#include <mutex>
+#include "Interface/TransferToFile.hpp"
 #include <spdlog/spdlog.h>
+#include "PEModel.h"
 #include "Interface/TransferToPEdata.hpp"
 #include "Utils/conversions.h"
 
@@ -22,18 +25,28 @@ GridMap eigen_to_vector(const Eigen::MatrixXd& mat) {
 }
 
 void EMC_Engine::do_PE_computing() {
+    _completedSuccessfully = false;
+    _wasCancelled = false;
+    _lastErrorMessage.clear();
+    _LossGrid.clear();
+    _peDataList.clear();
+
     if (isStopRequested) {
-        spdlog::info("Computing aborted by user.");
+        markCancelled();
         return; // 直接退出函数
     }
     if (!_fleet) {
-        spdlog::error("Fleet is null, cannot perform PE computing.");
+        markFailed(QStringLiteral("Fleet 为空，无法启动仿真任务"));
+        return;
+    }
+    if (!_propagationEngine) {
+        markFailed(QStringLiteral("传播引擎未正确初始化"));
         return;
     }
     // 将所有船只和设备转换为 PE_data 列表
     _peDataList = EquipmentConvertToMatrix(_fleet.get());
     if(_peDataList.size() == 0) {
-        spdlog::warn("No equipment data found in fleet, PE computing will be skipped.");
+        markFailed(QStringLiteral("No transmitter data available in the frozen snapshot"));
         return;
 	}
     // 这里可以根据 pe_data 的参数调整接收天线高度，暂时固定为 25.0
@@ -42,6 +55,10 @@ void EMC_Engine::do_PE_computing() {
 
     // XXX: 此处使用预计算来分配尺寸，优化使用参数分配
     auto first_loss_mat = _propagationEngine->PEmodel_computing2D(_peDataList[0], _env, receiver_height);
+    if (isStopRequested) {
+        markCancelled();
+        return;
+    }
     int rows = static_cast<int>(first_loss_mat.rows());
     int cols = static_cast<int>(first_loss_mat.cols());
     // 初始化线性功率累加矩阵 (单位: mW)
@@ -49,7 +66,10 @@ void EMC_Engine::do_PE_computing() {
     
     // 计算二维损耗网格
     for (auto& pe_data : _peDataList) {
-        if (isStopRequested) return;
+        if (isStopRequested) {
+            markCancelled();
+            return;
+        }
         Eigen::MatrixXd current_loss = _propagationEngine->PEmodel_computing2D(pe_data, _env, receiver_height);
         Eigen::MatrixXd current_tx_dbm = pe_data.power_dbm - current_loss.array();
         // [在线性空间 (mW) 进行累加，避免 dBm 直接相加的错误
@@ -64,6 +84,10 @@ void EMC_Engine::do_PE_computing() {
         return mwToDbm(mw);
     });
     _LossGrid = eigen_to_vector(final_total_dbm);
+    if (isStopRequested) {
+        markCancelled();
+        return;
+    }
 
     // 数据落地
 
@@ -79,6 +103,7 @@ void EMC_Engine::do_PE_computing() {
         writeCSVRow(out, "\n");
     }
     // 触发信号，通知UI更新
+    _completedSuccessfully = true;
     emit peComputationFinished(_LossGrid);
 }
 

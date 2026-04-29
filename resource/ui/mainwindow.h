@@ -1,65 +1,73 @@
 #pragma once
 
-#include <QMainWindow>
+#include <memory>
+#include <QMouseEvent>
 #include <QObject>
 #include <QRect>
-#include "ElaWindow.h"
-#include "shipwidget.h"
-#include "DeviceWidget.h"
+#include <QString>
+
 #include <spdlog/spdlog.h>
 
+#include "DeviceWidget.h"
+#include "ElaWindow.h"
+#include "EnvironmentWidget.h"
+#include "Simulation.h"
+#include "shipwidget.h"
+
 namespace Ui {
-    class MainWindow;
+class MainWindow;
 }
 
-class LogWidget; 
-class ElaContentDialog;
-
-class Home;
-class T_Icon;
-class T_BaseComponents;
-class T_Navigation;
-class T_Popup;
-class T_Card;
-class T_ListView;
-class T_TableView;
-class TreeView;
 class About;
+class ElaContentDialog;
+class ElaSuggestBox;
+class ElaToolButton;
+class Home;
+class LogWidget;
 class Setting;
+class T_BaseComponents;
+class T_Icon;
 
 class MainWindow : public ElaWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit MainWindow(QWidget* parent = nullptr);
+    ~MainWindow() override;
 
     std::shared_ptr<spdlog::sinks::sink> createGuiLogSink();
 
     void initWindow();
     void initEdgeLayout();
     void initContent();
-// REVIEW: 是否保留虚函数
+
 protected:
-    virtual void mouseReleaseEvent(QMouseEvent* event);
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
-    Ui::MainWindow *ui;
-    LogWidget* _logWidget;
-    ElaContentDialog* _closeDialog{ nullptr };
-    ElaSuggestBox* _windowSuggestBox{ nullptr };
-    QString _settingKey{ "" };
+    void importJsonConfig();
+    void reloadEditorsFromModel();
+    void updateSimulationDraftState();
+    void setEditorsReadOnly(bool readOnly);
 
-    Home* _homePage{ nullptr };
-    ShipWidget* _shipPage{ nullptr };
-    DeviceWidget* _devicePage { nullptr };
+    Ui::MainWindow* ui;
+    LogWidget* _logWidget{nullptr};
+    ElaContentDialog* _closeDialog{nullptr};
+    ElaSuggestBox* _windowSuggestBox{nullptr};
+    ElaToolButton* _importJsonButton{nullptr};
+    QString _settingKey;
+
+    Home* _homePage{nullptr};
+    ShipWidget* _shipPage{nullptr};
+    DeviceWidget* _devicePage{nullptr};
+    EnvironmentWidget* _environmentPage{nullptr};
+    Simulation* _simulationPage{nullptr};
     T_Icon* _iconPage{nullptr};
     T_BaseComponents* _baseComponentsPage{nullptr};
     About* _aboutPage{nullptr};
     Setting* _settingPage{nullptr};
-    
-    QString _elaDxgiKey{""};
-    QString _viewKey{""};
-    QString _aboutKey{""};
-};
 
+    QString _elaDxgiKey;
+    QString _viewKey;
+    QString _aboutKey;
+};

@@ -2,14 +2,11 @@
 #include <QWidget>
 #include <QAbstractListModel>
 #include <QListView>
-#include <vector>
 #include <memory>
 #include <QString>
-#include "spdlog/spdlog.h"
 #include "Utils/QtSpdlogSink.h"
 #include "ElaComboBox.h"
 #include "ElaToolButton.h"
-#include "ElaText.h"
 #include "ElaListView.h"
 #include "Resource/ui/BasePage.h"
 

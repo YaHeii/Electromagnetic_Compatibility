@@ -1,5 +1,5 @@
 # 项目架构与 API 规范
-
+**注意: 不需要修改验证测代码,不需要处理验证测与主项目的兼容性,验证侧仅用于上下文参考**
 ## 1. 架构总览
 
 当前仓库可以拆成六层，其中前五层属于主程序链路，第六层属于验证侧子模块：
@@ -40,15 +40,15 @@ JSONC / UI
 
 当前需要注意：
 
-- `Simulation.cpp` 现在统一消费当前 `DataModel` 快照，JSON 与 UI 两条输入路径在运行前都会收敛到同一份 DTO
-- 当前仍缺少“选择外部 JSON 文件并加载”的显式 UI 入口；如需走 JSON 文件路径，仍需在入口处调用 `JsonLoader::LoadFile()`
+- `Simulation.cpp` 现在统一消费当前 `DataModel` 快照，JSON 与 UI 两条输入路径在运行前都会收敛到同一份 DTO。
+- 主窗口工具栏已提供 `JSON/JSONC` 导入入口；导入成功时先写入 `DataModel`，再回填环境页、设备页、船只页；导入失败时不改写当前 `DataModel`。
+- `Home/TreeView` 对当前 `DataModel` 提供只读投影，便于浏览环境、船只和设备信息，但它不进入主编辑链路。
 
 ## 3. 标准输入 schema
 
 ### 3.1 标准来源
 
 主程序输入标准由三处共同约束：
-
 - `Interface/SchemaConstants.h`
   - 字段名、固定字符串、枚举值的单一来源
 - `Utils/JsonLoader.hpp`
@@ -57,11 +57,9 @@ JSONC / UI
   - 面向文档和工具的显式 schema
 
 如三者冲突，应优先修正为一致，不能让文档长期偏离运行时代码。
-
 ### 3.2 顶层结构
 
 当前主程序只支持如下顶层结构：
-
 ```json
 {
   "schemaVersion": "1.0.0",
@@ -71,16 +69,13 @@ JSONC / UI
 ```
 
 约束如下：
-
 - `schemaVersion` 必须为 `"1.0.0"`
 - `environment` 必须存在
 - `usvs` 必须存在且至少包含一艘船
 - 未声明字段会被 `JsonLoader` 直接判定为非法
-
 ### 3.3 环境参数接口
 
 `environment` 节点与 `EnvironmentData` 对应关系如下：
-
 | schema 字段 | 内部字段 | 单位 | 说明 |
 | --- | --- | --- | --- |
 | `maxRange` | `maxRange` | m | 最大传播距离 |
@@ -92,14 +87,12 @@ JSONC / UI
 | `angleStepDeg` | `angleStepDeg` | deg | 2D 仿真角度步进 |
 
 当前要求：
-
 - `maxRange`、`dx`、`dz` 必须大于 `0`
 - `ductHeight`、`windSpeed` 不能为负
 - `nz`、`angleStepDeg` 必须为正整数
 - `angleStepDeg` 范围为 `1` 到 `360`
 
 ### 3.4 USV 与设备接口
-
 `usvs` 为数组，每个元素代表一艘船，字段如下：
 
 | 字段 | 类型 | 单位 | 说明 |
@@ -152,7 +145,6 @@ JSONC / UI
 | `noiseFigureDb` | dB | 噪声系数 |
 
 收发一体机字段如下：
-
 | 字段 | 单位 | 说明 |
 | --- | --- | --- |
 | `ID` | - | 设备唯一标识，当前按全局唯一处理 |
@@ -163,7 +155,6 @@ JSONC / UI
 | `receiver` | object | - | 接收子对象，字段与接收机参数一致但不再重复 `ID/type/gainDbi/locationOffset` |
 
 ### 3.5 样例文件状态
-
 | 文件 | 用途 | 状态 |
 | --- | --- | --- |
 | `Tests/Test.jsonc` | 主程序当前标准样例 | 当前已实现 |
@@ -182,16 +173,13 @@ JSONC / UI
 - `EnvironmentData environmentConfig`
 
 当前口径：
-
 - DTO 字段名已与新 schema 对齐
 - `TRANSCEIVER` 已从“内部私有值”收敛为标准 schema 枚举
 - 核心语义校验统一收口到 `DataModel::validateSnapshot()`
 - `validateSnapshot()` 统一负责环境范围、至少一艘船、ID 唯一性与船载设备引用一致性
-
 ### 4.2 `JsonLoader::LoadFile`
 
 职责：
-
 - 读取 JSONC 文本
 - 去除单行 `//` 注释
 - 校验顶层结构、环境字段、船只字段、设备字段
@@ -200,46 +188,59 @@ JSONC / UI
 - 写回 `DataModel::instance()`
 
 边界：
-
 - 只支持新 schema
 - 不保留旧格式兼容逻辑
 - 是主程序标准 JSON 输入的唯一解析入口
 
 ### 4.3 UI 输入页
-
 职责：
-
 - 保持中文界面文案
 - 把控件输入整理为统一 DTO
 - 只做基础格式校验，例如：
   - 必填项是否为空
   - 数值字段能否成功解析
   - schema 枚举值是否来自受支持选项
+- 编辑页统一提供 `loadFromModel()`、`saveToModel()`、`setReadOnly(bool)` 与 dirty 状态切换能力
 
 约束：
-
 - UI 不应复制 `DataModel` 的核心语义规则
-- 设备/船只保存时，应构造候选 `DataSnapshot`
+- 环境页、设备页、船只页保存时，都应构造候选 `DataSnapshot`
 - 跨设备 ID、船只引用一致性、环境范围等核心规则统一交给 `DataModel::validateSnapshot()`
+- 设备保存成功后，只刷新船只页挂载设备可选项，不强制覆盖船只页当前草稿
 
-### 4.4 `TransferToEngine::convertDataModelToFleet`
+### 4.4 `TreeView` 与 `T_TreeViewModel`
 
 职责：
+- `T_TreeViewModel::reloadFromDataModel()`：从当前 `DataModel::instance()` 全量重建只读树
+- `T_TreeViewModel::findItemIndex(const QString& keyword)`：按节点标题执行大小写不敏感的包含匹配，返回首个命中项
+- `TreeView::syncViewWithModel()`：刷新页面视图与树模型同步
+- `TreeView::expandAll()` / `collapseAll()`：控制树展开状态
+- `TreeView::findAndSelect(const QString& keyword)`：展开祖先节点、滚动并选中首个匹配项
 
+展示约定：
+- 一级节点固定为 `环境参数`、`船只列表`、`设备库`
+- 环境节点展示 `EnvironmentData` 关键字段
+- 船只节点展示位置、速度、朝向和挂载设备引用
+- 设备节点展示类型、增益、相对坐标及按类型区分的关键参数
+
+边界：
+- `TreeView` 只承担只读总览，不支持编辑、勾选、删除或页面跳转
+- 它是 `DataModel` 的只读投影，不参与主编辑链路的保存与校验
+
+### 4.5 `TransferToEngine::convertDataModelToFleet`
+
+职责：
 - 将 DTO 快照转换为 `Fleet`
 - 将 `ShipData`、`EquipmentData` 变为领域层对象
 - 为后续 `EMC_Engine` 与 `PEModel` 提供可计算输入
-
-### 4.5 `EMC_Engine` 与 `Propagation_Engine`
+### 4.6 `EMC_Engine` 与 `Propagation_Engine`
 
 职责：
-
 - `EMC_Engine::do_PE_computing()`：调度所有发射机仿真并汇总结果
 - `Propagation_Engine::PEmodel_computing2D()`：计算单发射机二维传播结果
 - `PEModel`：负责传播步进、表面模型和路径损耗求解
 
 当前输出：
-
 - 主程序核心输出仍以二维 `GridMap` 为主
 - EMC 指标、报告对象、结构化评估结果尚未成为稳定 API
 

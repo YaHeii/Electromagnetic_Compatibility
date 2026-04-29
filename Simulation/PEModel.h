@@ -3,11 +3,8 @@
 #include <vector>
 #include <cmath>
 #include <fftw3.h> 
-#include <iostream>
-#include <algorithm>
 #include <Eigen/Dense>
 #include <omp.h>
-#include "spdlog/spdlog.h"
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif

@@ -53,6 +53,9 @@ void Home::mouseReleaseEvent(QMouseEvent* event)
     {
     case Qt::RightButton:
     {
+        if (!_homeMenu) {
+            break;
+        }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         _homeMenu->popup(event->globalPosition().toPoint());
 #else

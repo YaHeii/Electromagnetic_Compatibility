@@ -1,67 +1,90 @@
 #pragma once
-#include <QWidget>
-#include <QVBoxLayout>
+
 #include <QHBoxLayout>
 #include <QScrollArea>
+#include <QVBoxLayout>
+#include <QWidget>
+
 #include "DeviceWidget.h"
 #include "Interface/DataModel.h"
+
 class BasePage;
 class ElaLineEdit;
-class ElaText;
-class ElaPushButton;
 class ElaListView;
+class ElaPushButton;
+class ElaText;
+
 class ShipItemWidget;
 
-class ShipWidget : public BasePage
-{
+class ShipWidget : public BasePage {
     Q_OBJECT
 
 public:
-    explicit ShipWidget(QWidget *parent = nullptr);
-    ~ShipWidget();
+    explicit ShipWidget(QWidget* parent = nullptr);
+    ~ShipWidget() override;
 
-private:
-    QVBoxLayout* _ShipListLayout;
+    void loadFromModel();
+    bool saveToModel(QString* errorMessage = nullptr);
+    void setReadOnly(bool readOnly);
+    void refreshEquipmentReferences();
+    bool isDirty() const { return _isDirty; }
 
-    ShipItemWidget* _shipItemWidget;
-    std::string _currentShipId;
-    
-    ElaPushButton* _AddShipBtn;
-    ElaPushButton* _SaveShipBtn;
+signals:
+    void dirtyStateChanged(bool isDirty);
+    void modelCommitted();
+
 private slots:
     void on_AddShipBtn_clicked();
     void on_SaveShipBtn_clicked();
-    // bool updateShipModelFromView();
     void on_RemoveShipItemRequested(ShipItemWidget* item);
+    void on_ItemEdited();
+
+private:
+    void setDirty(bool dirty);
+    void clearItems();
+
+    QVBoxLayout* _ShipListLayout{nullptr};
+    ShipItemWidget* _shipItemWidget{nullptr};
+    std::string _currentShipId;
+    ElaPushButton* _AddShipBtn{nullptr};
+    ElaPushButton* _SaveShipBtn{nullptr};
+    bool _isDirty{false};
+    bool _isLoading{false};
+    bool _isReadOnly{false};
 };
 
 class ShipItemWidget : public QWidget {
     Q_OBJECT
+
 public:
-    explicit ShipItemWidget(QWidget *parent = nullptr);
-    void setData(const ShipData &data);
+    explicit ShipItemWidget(QWidget* parent = nullptr);
+
+    void setData(const ShipData& data);
     ShipData getData() const;
     bool tryBuildData(ShipData& data, QString& errorMessage) const;
     QString getID() const { return _currentId; }
+    void refreshEquipmentOptions();
+    void setReadOnly(bool readOnly);
+
 signals:
-    void deleteMe(ShipItemWidget* widget); // 告知父容器删除本条目
+    void deleteMe(ShipItemWidget* widget);
+    void dataEdited();
+
 private slots:
     void on_SelfReductionBtn_clicked();
     void on_AddDeviceOnShipBtn_clicked();
-private:    
+
+private:
     QString _currentId;
-    ElaLineEdit* _X_offset;
-    ElaLineEdit* _Y_offset;
-    ElaLineEdit* _Z_offset;
-
-    ElaLineEdit* _ship_ID;
-    ElaLineEdit* _ship_Speed;
-    ElaLineEdit* _ship_Orienteation;
-
-    QVBoxLayout* _deviceOnShipLayout;
-    ElaPushButton* _AddDeviceOnShipBtn;
-
-    QVBoxLayout* _rightPannel;
-    QVBoxLayout* _leftPannel;
-    ElaPushButton* _ReductionShipBtn;
+    ElaLineEdit* _X_offset{nullptr};
+    ElaLineEdit* _Y_offset{nullptr};
+    ElaLineEdit* _Z_offset{nullptr};
+    ElaLineEdit* _ship_ID{nullptr};
+    ElaLineEdit* _ship_Speed{nullptr};
+    ElaLineEdit* _ship_Orienteation{nullptr};
+    QVBoxLayout* _deviceOnShipLayout{nullptr};
+    ElaPushButton* _AddDeviceOnShipBtn{nullptr};
+    QVBoxLayout* _rightPannel{nullptr};
+    QVBoxLayout* _leftPannel{nullptr};
+    ElaPushButton* _ReductionShipBtn{nullptr};
 };
