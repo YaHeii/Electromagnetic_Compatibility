@@ -9,10 +9,7 @@
 #include "ElaComboBox.h"
 #include "ElaLineEdit.h"
 #include "ElaPushButton.h"
-#include "ElaScrollArea.h"
-#include "ElaScrollPageArea.h"
 #include "ElaText.h"
-#include "ElaTheme.h"
 #include "Interface/SchemaConstants.h"
 #include "spdlog/spdlog.h"
 

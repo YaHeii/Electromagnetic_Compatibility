@@ -1,21 +1,15 @@
 #include "ui_mainwindow.h"
 #include "mainwindow.h"
 #include <QMessageBox>
-#include "spdlog/spdlog.h"
 #include <QMetaType> 
 #include "Simulation.h"
 #include "LogWidget.h"
 #include "ElaContentDialog.h"
 #include "ElaDockWidget.h"
 #include "ElaEventBus.h"
-#include "ElaLog.h"
 #include "ElaMenu.h"
 #include "ElaMenuBar.h"
-#include "ElaNavigationRouter.h"
-#include "ElaProgressBar.h"
-#include "ElaProgressRing.h"
 #include "ElaStatusBar.h"
-#include "ElaSuggestBox.h"
 #include "ElaText.h"
 #include "ElaTheme.h"
 #include "ElaToolBar.h"
@@ -24,19 +18,13 @@
 #include "Home.h"
 #include "About.h"
 #include "Setting.h"
-#include "TreeView.h"
 #include "ExamplePage/T_BaseComponents.h"
-#include "ExamplePage/T_Card.h"
-#include "ExamplePage/T_ListView.h"
 
-#include "ExamplePage/T_TableView.h"
 
 
 #include "ExamplePage/T_Icon.h"
 #include "LogWidget.h"
-#include "ExamplePage/T_Navigation.h"
 #include "ExamplePage/T_Popup.h"
-#include "ExamplePage/T_UpdateWidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : ElaWindow(parent),
@@ -75,7 +63,7 @@ std::shared_ptr<spdlog::sinks::sink> MainWindow::createGuiLogSink() {
 void MainWindow::initWindow() {
     setFocusPolicy(Qt::StrongFocus);
     //创建面板
-    //resize(1200, 740);
+    // resize(1200, 740);
     setWindowTitle("无人船舰队电磁预测系统");
     setUserInfoCardPixmap(QPixmap(":/Image/Cirno.jpg"));
     setUserInfoCardTitle("无人船舰队电磁预测系统");
@@ -179,53 +167,27 @@ void MainWindow::initEdgeLayout()
     toolBar->setIconSize(QSize(25, 25));
     // toolBar->setFloatable(false);
     // toolBar->setMovable(false);
+
+
+    //TODO: 使用这个按钮唤醒QFileDialog ,
+    // 1. 定义文件过滤器（支持标准 json  jsonc）     
+    // 2. 获取默认打开路径（例如：桌面或文档）
+    // 3. 唤醒原生对话框
+    // 4. 路径有效性校验
+    // 5. JsonLoader 进行解析 成功后需要反馈到ui界面,失败输出日志 
     ElaToolButton* toolButton1 = new ElaToolButton(this);
-    toolButton1->setElaIcon(ElaIconType::BadgeCheck);
+    toolButton1->setElaIcon(ElaIconType::Coins);
     toolBar->addWidget(toolButton1);
-    ElaToolButton* toolButton2 = new ElaToolButton(this);
-    toolButton2->setElaIcon(ElaIconType::ChartUser);
-    toolBar->addWidget(toolButton2);
     toolBar->addSeparator();
-    ElaToolButton* toolButton3 = new ElaToolButton(this);
-    toolButton3->setElaIcon(ElaIconType::Bluetooth);
-    toolButton3->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    toolButton3->setText("Bluetooth");
-    toolBar->addWidget(toolButton3);
-    ElaToolButton* toolButton4 = new ElaToolButton(this);
-    toolButton4->setElaIcon(ElaIconType::BringFront);
-    toolBar->addWidget(toolButton4);
-    toolBar->addSeparator();
-    ElaToolButton* toolButton5 = new ElaToolButton(this);
-    toolButton5->setElaIcon(ElaIconType::ChartSimple);
-    toolBar->addWidget(toolButton5);
-    ElaToolButton* toolButton6 = new ElaToolButton(this);
-    toolButton6->setElaIcon(ElaIconType::FaceClouds);
-    toolBar->addWidget(toolButton6);
-    ElaToolButton* toolButton8 = new ElaToolButton(this);
-    toolButton8->setElaIcon(ElaIconType::Aperture);
-    toolBar->addWidget(toolButton8);
-    ElaToolButton* toolButton9 = new ElaToolButton(this);
-    toolButton9->setElaIcon(ElaIconType::ChartMixed);
-    toolBar->addWidget(toolButton9);
-    ElaToolButton* toolButton10 = new ElaToolButton(this);
-    toolButton10->setElaIcon(ElaIconType::Coins);
-    toolBar->addWidget(toolButton10);
-    ElaToolButton* toolButton11 = new ElaToolButton(this);
-    toolButton11->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    toolButton11->setElaIcon(ElaIconType::AlarmPlus);
-    toolButton11->setText("AlarmPlus");
-    toolBar->addWidget(toolButton11);
-    ElaToolButton* toolButton12 = new ElaToolButton(this);
-    toolButton12->setElaIcon(ElaIconType::Crown);
-    toolBar->addWidget(toolButton12);
+   
     QAction* test = new QAction(this);
     test->setMenu(new QMenu(this));
 
-    ElaProgressBar* progressBar = new ElaProgressBar(this);
-    progressBar->setMinimum(0);
-    progressBar->setMaximum(0);
-    progressBar->setFixedWidth(350);
-    toolBar->addWidget(progressBar);
+    // ElaProgressBar* progressBar = new ElaProgressBar(this);
+    // progressBar->setMinimum(0);
+    // progressBar->setMaximum(0);
+    // progressBar->setFixedWidth(350);
+    // toolBar->addWidget(progressBar);
 
     this->addToolBar(Qt::TopToolBarArea, toolBar);
 
@@ -287,6 +249,11 @@ void MainWindow::initContent()
     //_windowSuggestBox->addSuggestion(getNavigationSuggestDataList());
     qDebug() << "已注册的事件列表" << ElaEventBus::getInstance()->getRegisteredEventsName();
 }
+
+void on_toolButton10_clicked(){
+    
+}
+
 
 void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 {

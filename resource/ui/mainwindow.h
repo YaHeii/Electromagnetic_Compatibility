@@ -3,14 +3,10 @@
 #include <QMainWindow>
 #include <QObject>
 #include <QRect>
-#include <iostream>
-#include <memory>
-#include <future>   
-#include <thread>   
 #include "ElaWindow.h"
-#include "Utils/QtSpdlogSink.h" 
 #include "shipwidget.h"
 #include "DeviceWidget.h"
+#include <spdlog/spdlog.h>
 
 namespace Ui {
     class MainWindow;

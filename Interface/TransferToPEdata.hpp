@@ -1,14 +1,10 @@
 ﻿#pragma once
 #include <vector>
 #include <string>
-#include "Simulation/PEModel.h"
 #include <omp.h>
 #include "Models/Equipment.h"
 #include "Models/fleet.h"
-#include "DataModel.h"
-#include <stdexcept>
 #include <spdlog/spdlog.h>
-#include <fstream>
 #include "Utils/PaintImage.hpp"
 
 struct InterferenceResult {

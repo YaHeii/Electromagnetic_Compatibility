@@ -1,13 +1,11 @@
 #pragma once
 #include "Utils/PaintImage.hpp"
 #include "Simulation/EMC_Engine.h"
-#include "spdlog/spdlog.h"
 #include <QWidget>
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include "qcustomplot.h"
 #include <ElaPushButton.h>
-#include <future>
 #include "BasePage.h"
 
 class Simulation : public BasePage {

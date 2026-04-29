@@ -3,14 +3,10 @@
 #include <QFrame>
 #include <QLayout>
 
-#include "ElaComboBox.h"
 #include "ElaLineEdit.h"
-#include "ElaListView.h"
 #include "ElaPushButton.h"
 #include "ElaScrollArea.h"
-#include "ElaScrollPageArea.h"
 #include "ElaText.h"
-#include "ElaTheme.h"
 #include "deviceonship.h"
 #include "spdlog/spdlog.h"
 

@@ -36,3 +36,4 @@ vcpkg_installed
 logs/
 out/
 third_party/
+.clangd.yml

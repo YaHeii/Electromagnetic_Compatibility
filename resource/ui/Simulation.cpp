@@ -3,7 +3,6 @@
 #include "Interface/TransferToEngin.h"
 #include <QMessageBox>
 #include <thread>
-#include <future>
 Simulation::Simulation(QWidget* parent)
 	: BasePage(parent), _emcEngine(nullptr) {
 

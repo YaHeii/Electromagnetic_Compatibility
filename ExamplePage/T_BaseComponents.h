@@ -22,7 +22,7 @@ public:
     ~T_BaseComponents() override;
 
 protected:
-    virtual void mouseReleaseEvent(QMouseEvent* event);
+    virtual void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
     ElaToggleSwitch* _toggleSwitch{nullptr};

@@ -7,7 +7,6 @@
 #include <QLineEdit>
 #include "Interface/DataModel.h"
 #include "BasePage.h"
-#include "ElaScrollPageArea.h"
 
 // 前向声明自定义控件
 class ElaPushButton;

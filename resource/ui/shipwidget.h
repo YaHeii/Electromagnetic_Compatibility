@@ -1,11 +1,9 @@
 #pragma once
-#include "spdlog/spdlog.h"
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QScrollArea>
 #include "DeviceWidget.h"
-#include "deviceonship.h"
 #include "Interface/DataModel.h"
 class BasePage;
 class ElaLineEdit;

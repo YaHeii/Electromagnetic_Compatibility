@@ -7,16 +7,8 @@
 #include <QPainter>
 #include <QVBoxLayout>
 
-#include "ElaAcrylicUrlCard.h"
-#include "ElaFlowLayout.h"
-#include "ElaImageCard.h"
 #include "ElaMenu.h"
 #include "ElaMessageBar.h"
-#include "ElaNavigationRouter.h"
-#include "ElaPopularCard.h"
-#include "ElaScrollArea.h"
-#include "ElaText.h"
-#include "ElaToolTip.h"
 #include "TreeView.h"
 
 Home::Home(QWidget* parent)

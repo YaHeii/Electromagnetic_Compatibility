@@ -3,7 +3,6 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
-#include "ElaMenu.h"
 #include "ElaText.h"
 #include "ElaTheme.h"
 #include "ElaToolButton.h"
