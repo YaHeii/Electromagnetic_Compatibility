@@ -33,3 +33,6 @@ PE_validation/.conda/
 PE_validation/**/*.png
 vcpkg_installed
 .VSCodeCounter/
+logs/
+out/
+third_party/
