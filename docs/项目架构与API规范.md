@@ -11,9 +11,9 @@
 | 领域对象层 | `Models/` | 表达船只、设备、天线、编队对象 | 已实现 |
 | 仿真调度层 | `Simulation/` | 负责环境建模、PE 求解、EMC 调度 | 已实现 |
 | 结果展示层 | `Resource/ui/`、导出逻辑 | 展示二维结果与日志 | 已实现基础能力 |
-| 验证侧资产层 | `PE_validation/` 子模块 | notebook、实验设计、图表、论文式结论 | 验证侧已有，主程序未直接依赖 |
+| 验证侧资产层 | `PE_validation/` 子模块 | notebook、实验设计、图表、验证结论 | 验证侧已有，主程序不直接依赖 |
 
-主程序真正的运行主链路是：
+主程序的实际运行主链路是：
 
 ```text
 JSONC / UI
@@ -23,40 +23,40 @@ JSONC / UI
   -> GridMap / UI 展示
 ```
 
-`PE_validation` 不参与主程序构建，也不参与当前运行时接口解析。它的价值在于定义验证口径与后续功能迁移目标。
+`PE_validation` 不参与主程序构建，也不参与当前运行时接口解析。它的价值在于定义验证口径与后续能力迁移目标。
 
 ## 2. 主程序运行链路
 
-当前一次典型仿真流程如下：
+当前一条典型仿真流程如下：
 
-1. `Resource/ui/Simulation.cpp` 在 `Simulation::on_StartSimulate_clicked()` 中触发一次仿真。
-2. 该入口当前直接调用 `JsonLoader::LoadFile()` 读取 `Tests/Test.jsonc`，但文件路径仍为硬编码绝对路径。
-3. `Utils/JsonLoader.hpp` 读取 JSONC 文本，移除单行 `//` 注释，按新 schema 严格解析。
-4. 解析结果写入 `DataModel::instance()`，包含：
-   - `allShips`
-   - `allEquipments`
-   - `environmentConfig`
-5. `DataModel::createSnapshot()` 创建一次仿真快照，供后续线程安全读取。
-6. `TransferToEngine::convertDataModelToFleet()` 将 DTO 转换为 `Fleet` 及其内部 `ship / Equipment / Antenna` 对象。
-7. `EMC_Engine::do_PE_computing()` 调度所有发射机，调用 `Propagation_Engine::PEmodel_computing2D()` 计算二维传播结果。
-8. 结果以 `GridMap` 形式回传 UI，并由 `QCustomPlot` 绘制。
+1. UI 或 JSON 输入整理为 `DataModel::DataSnapshot`
+2. 接口层执行基础校验：
+   - JSON 路径：`JsonLoader`
+   - UI 路径：各页面控件负责把文本整理成 DTO，并只做基础格式校验
+3. 核心语义校验统一收口到 `DataModel::validateSnapshot()`
+4. `TransferToEngine::convertDataModelToFleet()` 把快照转换为 `Fleet`
+5. `EMC_Engine::do_PE_computing()` 调度传播计算
+6. 结果以 `GridMap` 形式回传 UI 并绘制
 
-这条链路当前已经打通，但配置入口仍偏实验性质，不适合作为最终用户接口。
+当前需要注意：
+
+- `Simulation.cpp` 现在统一消费当前 `DataModel` 快照，JSON 与 UI 两条输入路径在运行前都会收敛到同一份 DTO
+- 当前仍缺少“选择外部 JSON 文件并加载”的显式 UI 入口；如需走 JSON 文件路径，仍需在入口处调用 `JsonLoader::LoadFile()`
 
 ## 3. 标准输入 schema
 
 ### 3.1 标准来源
 
-主程序输入标准当前由三处共同约束：
+主程序输入标准由三处共同约束：
 
 - `Interface/SchemaConstants.h`
   - 字段名、固定字符串、枚举值的单一来源
 - `Utils/JsonLoader.hpp`
-  - 当前运行时真实生效的解析与校验规则
+  - 当前运行时真实生效的解析与基础校验规则
 - `docs/schema/usv-environment.schema.json`
-  - 面向文档和自动校验工具的显式 schema
+  - 面向文档和工具的显式 schema
 
-如果三者冲突，应优先修正为一致，不能让文档长期偏离运行时代码。
+如三者冲突，应优先修正为一致，不能让文档长期偏离运行时代码。
 
 ### 3.2 顶层结构
 
@@ -83,20 +83,20 @@ JSONC / UI
 
 | schema 字段 | 内部字段 | 单位 | 说明 |
 | --- | --- | --- | --- |
-| `maxRange` | `max_range` | m | 最大传播距离 |
-| `ductHeight` | `duct_height` | m | 蒸发波导高度 |
-| `windSpeed` | `wind_speed` | m/s | 海面风速 |
+| `maxRange` | `maxRange` | m | 最大传播距离 |
+| `ductHeight` | `ductHeight` | m | 蒸发波导高度 |
+| `windSpeed` | `windSpeed` | m/s | 海面风速 |
 | `dx` | `dx` | m | 水平方向步进 |
 | `dz` | `dz` | m | 垂直分辨率 |
-| `nz` | `nz` | 无量纲 | 垂直网格数 |
-| `angleStepDeg` | `angle_step_deg` | deg | 2D 仿真角度步进 |
+| `nz` | `nz` | - | 垂直网格数 |
+| `angleStepDeg` | `angleStepDeg` | deg | 2D 仿真角度步进 |
 
 当前要求：
 
 - `maxRange`、`dx`、`dz` 必须大于 `0`
 - `ductHeight`、`windSpeed` 不能为负
 - `nz`、`angleStepDeg` 必须为正整数
-- `angleStepDeg` 取值范围为 `1` 到 `360`
+- `angleStepDeg` 范围为 `1` 到 `360`
 
 ### 3.4 USV 与设备接口
 
@@ -111,19 +111,20 @@ JSONC / UI
 | `shipOrientationDeg` | number | deg | 船在二维平面的朝向角，范围 `0~360` |
 | `transmitters` | array | - | 发射机列表 |
 | `receivers` | array | - | 接收机列表 |
+| `transceivers` | array | - | 收发一体机列表 |
 
 坐标与角度语义约定：
 
 - 世界坐标原点位于场景左下角
 - `x` 轴向右，`y` 轴向上，`z` 轴向上
-- 设备 `locationOffset` 表示相对于船体中心的偏移
-- `antennaPhiDeg` 表示相对于正 `z` 轴向下倾斜的角度，范围 `0~180`
+- 设备 `locationOffset` 表示相对船体中心的偏移
+- `antennaPhiDeg` 表示相对正 `z` 轴向下倾斜的角度，范围 `0~180`
 
 发射机字段如下：
 
 | 字段 | 单位 | 说明 |
 | --- | --- | --- |
-| `ID` | - | 设备唯一标识，当前要求全局唯一 |
+| `ID` | - | 设备唯一标识，当前按全局唯一处理 |
 | `type` | - | 固定为 `TRANSMITTER` |
 | `gainDbi` | dBi | 增益 |
 | `locationOffset` | m | 相对船体中心的三维偏移 |
@@ -139,7 +140,7 @@ JSONC / UI
 
 | 字段 | 单位 | 说明 |
 | --- | --- | --- |
-| `ID` | - | 设备唯一标识，当前要求全局唯一 |
+| `ID` | - | 设备唯一标识，当前按全局唯一处理 |
 | `type` | - | 固定为 `RECEIVER` |
 | `gainDbi` | dBi | 增益 |
 | `locationOffset` | m | 相对船体中心的三维偏移 |
@@ -149,6 +150,17 @@ JSONC / UI
 | `interferenceMarginDb` | dB | 干扰容限或等效带外抑制 |
 | `sinrMarginDb` | dB | SINR 裕量 |
 | `noiseFigureDb` | dB | 噪声系数 |
+
+收发一体机字段如下：
+
+| 字段 | 单位 | 说明 |
+| --- | --- | --- |
+| `ID` | - | 设备唯一标识，当前按全局唯一处理 |
+| `type` | - | 固定为 `TRANSCEIVER` |
+| `gainDbi` | dBi | 共用增益 |
+| `locationOffset` | m | 共用相对偏移 |
+| `transmitter` | object | - | 发射子对象，字段与发射机参数一致但不再重复 `ID/type/gainDbi/locationOffset` |
+| `receiver` | object | - | 接收子对象，字段与接收机参数一致但不再重复 `ID/type/gainDbi/locationOffset` |
 
 ### 3.5 样例文件状态
 
@@ -169,11 +181,12 @@ JSONC / UI
 - `std::vector<EquipmentData> allEquipments`
 - `EnvironmentData environmentConfig`
 
-注意：
+当前口径：
 
-- `DataModel` 内部成员命名仍保留大量历史字段名，例如 `CentralF_Reciever`、`ship_Orienteation`
-- 新 schema 字段会在 `JsonLoader` 中映射到这些旧成员
-- 这意味着“外部配置命名”与“内部 DTO 命名”目前不是同一套口径
+- DTO 字段名已与新 schema 对齐
+- `TRANSCEIVER` 已从“内部私有值”收敛为标准 schema 枚举
+- 核心语义校验统一收口到 `DataModel::validateSnapshot()`
+- `validateSnapshot()` 统一负责环境范围、至少一艘船、ID 唯一性与船载设备引用一致性
 
 ### 4.2 `JsonLoader::LoadFile`
 
@@ -183,26 +196,31 @@ JSONC / UI
 - 去除单行 `//` 注释
 - 校验顶层结构、环境字段、船只字段、设备字段
 - 拒绝未知字段
-- 保证船只 ID 与设备 ID 当前全局唯一
+- 调用 `DataModel::validateSnapshot()` 完成核心语义校验
 - 写回 `DataModel::instance()`
 
-当前边界：
+边界：
 
 - 只支持新 schema
 - 不保留旧格式兼容逻辑
-- 是主程序标准输入的唯一解析入口
+- 是主程序标准 JSON 输入的唯一解析入口
 
-### 4.3 `DataModel::createSnapshot`
+### 4.3 UI 输入页
 
 职责：
 
-- 将当前全局数据复制为一次仿真快照
-- 为仿真线程提供稳定输入边界
+- 保持中文界面文案
+- 把控件输入整理为统一 DTO
+- 只做基础格式校验，例如：
+  - 必填项是否为空
+  - 数值字段能否成功解析
+  - schema 枚举值是否来自受支持选项
 
-约定：
+约束：
 
-- 仿真链路不应在运行中反向修改 `DataModel`
-- 新增仿真任务接口时，应继续沿用快照边界，避免 UI 状态被后台线程直接读写
+- UI 不应复制 `DataModel` 的核心语义规则
+- 设备/船只保存时，应构造候选 `DataSnapshot`
+- 跨设备 ID、船只引用一致性、环境范围等核心规则统一交给 `DataModel::validateSnapshot()`
 
 ### 4.4 `TransferToEngine::convertDataModelToFleet`
 
@@ -211,11 +229,6 @@ JSONC / UI
 - 将 DTO 快照转换为 `Fleet`
 - 将 `ShipData`、`EquipmentData` 变为领域层对象
 - 为后续 `EMC_Engine` 与 `PEModel` 提供可计算输入
-
-注意：
-
-- 当前转换阶段仍需依赖旧 DTO 命名
-- 如果未来直接暴露主程序 API，建议新增面向 schema 的中间对象，减少转换期语义漂移
 
 ### 4.5 `EMC_Engine` 与 `Propagation_Engine`
 
@@ -227,31 +240,10 @@ JSONC / UI
 
 当前输出：
 
-- 主程序输出核心仍是二维 `GridMap`
-- EMC 指标、报告对象、结构化评估结果尚未成为主程序稳定 API
+- 主程序核心输出仍以二维 `GridMap` 为主
+- EMC 指标、报告对象、结构化评估结果尚未成为稳定 API
 
-## 5. 对外接口现状
-
-### 当前已实现
-
-- Qt UI 录入船只、设备和仿真启动操作
-- 新 JSONC schema 配置加载
-- 二维传播结果绘图与日志输出
-
-### 验证侧已有
-
-- `PE_validation` 子模块中的实验 notebook
-- 实验 1 到实验 3 的图表、设计说明和结论汇总
-- A/B 编队场景与 EMC 指标验证口径
-
-### 建议后续实现
-
-- 配置文件选择器或仓库相对路径入口
-- 结构化 EMC 指标 API
-- 阵型模板接口
-- 统一结果导出与报告生成接口
-
-## 6. 一致性维护要求
+## 5. 一致性维护要求
 
 后续只要修改输入字段、单位或枚举，必须同步更新以下位置：
 
@@ -260,6 +252,6 @@ JSONC / UI
 3. `Tests/Test.jsonc`
 4. `docs/schema/usv-environment.schema.json`
 5. `docs/schema/usv-environment.template.jsonc`
-6. 本文档与 `docs/风险与改进建议.md`
+6. 本文档
 
-当前最重要的架构纪律不是继续扩展 UI，而是保持“schema、运行时代码、验证结论”三者同口径。否则即使编译通过，也会在后续指标迁移和报告生成阶段反复出现语义分叉。
+当前最重要的架构纪律不是继续堆叠 UI，而是保持“schema、运行时代码、验证口径”三者同口径。

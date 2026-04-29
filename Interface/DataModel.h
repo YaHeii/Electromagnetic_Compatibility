@@ -1,233 +1,351 @@
 #pragma once
-#include <QString>
-#include <QList>
+
 #include <QObject>
-#include <vector> 
-#include <cmath>  
+#include <QString>
 
-const int X_MIN = -50000;
-const int X_MAX = 50000;
-const int Y_MIN = -50000;
-const int Y_MAX = 50000;
-const int Z_MIN = 0;
-const int Z_MAX = 50000;
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
+#include "Interface/SchemaConstants.h"
 
-/// <summary>
-/// 设备数据模型 (DTO)
-/// 包含发射机、接收机、天线的物理参数
-/// </summary>
+inline constexpr int X_MIN = -50000;
+inline constexpr int X_MAX = 50000;
+inline constexpr int Y_MIN = -50000;
+inline constexpr int Y_MAX = 50000;
+inline constexpr int Z_MIN = 0;
+inline constexpr int Z_MAX = 50000;
+
+namespace DataModelSchemaValues {
+
+inline QString transmitterType() {
+    return QString::fromLatin1(SchemaValues::Transmitter);
+}
+
+inline QString receiverType() {
+    return QString::fromLatin1(SchemaValues::Receiver);
+}
+
+inline QString transceiverType() {
+    return QString::fromLatin1(SchemaValues::Transceiver);
+}
+
+inline QString verticalPolarization() {
+    return QString::fromLatin1(SchemaValues::Vertical);
+}
+
+inline QString horizontalPolarization() {
+    return QString::fromLatin1(SchemaValues::Horizontal);
+}
+
+inline QString omniAntennaType() {
+    return QString::fromLatin1(SchemaValues::Omni);
+}
+
+inline bool isPolarizationValue(const QString& value) {
+    return value == verticalPolarization() || value == horizontalPolarization();
+}
+
+inline bool isAntennaTypeValue(const QString& value) {
+    return value == QString::fromLatin1(SchemaValues::Omni) ||
+           value == QString::fromLatin1(SchemaValues::Directional) ||
+           value == QString::fromLatin1(SchemaValues::Horn) ||
+           value == QString::fromLatin1(SchemaValues::ShapedBeam) ||
+           value == QString::fromLatin1(SchemaValues::Reflector);
+}
+
+}  // namespace DataModelSchemaValues
+
 struct EquipmentData {
-    // --- 基础标识与位置 ---
-    QString equipmentID = "";
-    QString equipmentType = " "; // 发射机/接收机/收发一体机/天线
-    double Gain = 0.0;              // 单位: dBi/dBm
+    QString equipmentId;
+    QString equipmentType;
+    double gainDbi = 0.0;
 
-    // 相对坐标 (相对于载体中心)
-    double X_offset = 0.0;
-    double Y_offset = 0.0;
-    double Z_offset = 0.0;
+    double offsetX = 0.0;
+    double offsetY = 0.0;
+    double offsetZ = 0.0;
 
-    // --- 接收机参数 ---
-    double CentralF_Reciever = 0.0;     // MHz
-    double Bandwidth_Reciever = 0.0;    // MHz/KHz (需统一单位，建议 MHz)
-    //TODO:设计场景：队内通信、岸基控制、应急通信、定位接受
-    double Sensitive_reciever = -100.0; // dBm (默认给一个较低的灵敏度)
-    // TODO: 根据接收机类型
-    // - UHF/VHF接收机：    -20dBm 到 0dBm
-    // - GNSS接收机：      -30dBm 到 -15dBm  
-    // - 4G/5G接收机：      -25dBm 到 -10dBm
-    // - WiFi接收机：      -20dBm 到 0dBm
-    double interferenceMargin = 0.0;    // dB
-    //DEPRECATED：目前不考虑通信性能
-    double SINRMargin = 0.0;            // dB
-    // TODO:根据波段
-    //MINNF typNF MAXNF
-    // {"VHF (30-300MHz)",  0.8, 1.5, 3.0},
-    // {"UHF (300-1000MHz)", 1.0, 2.0, 4.0},
-    // {"L波段 (1-2GHz)",    1.2, 2.5, 5.0},
-    // {"S波段 (2-4GHz)",    1.5, 3.0, 6.0},
-    // {"C波段 (4-8GHz)",    2.0, 4.0, 8.0}
-    double noiseFigure = 3.0;           // dB (典型噪声系数)
+    double receiverCenterFrequencyGHz = 0.0;
+    double receiverBandwidthMHz = 0.0;
+    double receiverSensitivityDbm = -100.0;
+    double receiverInterferenceMarginDb = 0.0;
+    double receiverSinrMarginDb = 0.0;
+    double receiverNoiseFigureDb = 3.0;
 
-    // --- 发射机参数 ---
-    double CentralF_Transmitter = 0.0;   // GHz
-    double Bandwidth_Transmitter = 0.0;  // MHz
-    //REVIEW: 发射机是否要保留增益参数
-    double Power_Transmitter = 0.0;      // dBm
-    double antennaPhi_Transmitter = 0.0; // 指向角 (Azimuth)
-    double Beamwidth_Transmitter = 0.0;  // 波束宽度 (度)
-    QString PolarizationMethod_Transmitter = "垂直极化";
-    QString antennaType_Transmitter = "全向天线";
+    double transmitterCenterFrequencyGHz = 0.0;
+    double transmitterBandwidthMHz = 0.0;
+    double transmitterPowerDbm = 0.0;
+    double transmitterAntennaPhiDeg = 0.0;
+    double transmitterBeamWidthDeg = 0.0;
+    QString transmitterPolarization = DataModelSchemaValues::verticalPolarization();
+    QString transmitterAntennaType = DataModelSchemaValues::omniAntennaType();
 
-    // --- 天线参数 ---
-    double CentralF_Antenna = 0.0;
-    double Bandwidth_Antenna = 0.0;
-    double Power_Antenna = 0.0;
-    double antennaPhi_Antenna = 0.0;
-    double Beamwidth_Antenna = 0.0;
-    QString PolarizationMethod_Antenna = "垂直极化";
-    QString antennaType_Antenna = "全向天线";
+    double antennaCenterFrequencyGHz = 0.0;
+    double antennaBandwidthMHz = 0.0;
+    double antennaPowerDbm = 0.0;
+    double antennaPhiDeg = 0.0;
+    double antennaBeamWidthDeg = 0.0;
+    QString antennaPolarization = DataModelSchemaValues::verticalPolarization();
+    QString antennaType = DataModelSchemaValues::omniAntennaType();
 
-    // --- 数据合法性校验 ---
-    // 返回 pair: first=是否合法, second=错误信息
-
-    std::pair<bool,QString> validate_EquipmentBaseInfo() const {
-        if (equipmentID.isEmpty()) return { false, "设备ID不能为空" };
-        //if(equipmentID.toStdString().find('_')){
-        //    return {false, "设备名称不应含有‘_’"};
-        //}
-        if(Gain < 0){
-            return {false, "不支持增益为负"};
+    std::pair<bool, QString> validateEquipmentBaseInfo() const {
+        if (equipmentId.trimmed().isEmpty()) {
+            return {false, QStringLiteral("设备 ID 不能为空")};
         }
 
-        auto inRange = [](int val, int min, int max) { return val >= min && val <= max; };
+        const auto inRange = [](double value, double minValue, double maxValue) {
+            return value >= minValue && value <= maxValue;
+        };
 
-        if (!inRange(X_offset, X_MIN, X_MAX) ||
-            !inRange(Y_offset, Y_MIN, Y_MAX) ||
-            !inRange(Z_offset, Z_MIN, Z_MAX)) {
-            return {false, "超出地图范围,50<x<50,50<y<50,0<z<50"};
+        if (!inRange(offsetX, X_MIN, X_MAX) ||
+            !inRange(offsetY, Y_MIN, Y_MAX) ||
+            !inRange(offsetZ, Z_MIN, Z_MAX)) {
+            return {false, QStringLiteral("设备相对坐标超出当前场景边界")};
         }
-        return {true, ""};
+
+        return {true, QString()};
     }
 
-    std::pair<bool, QString> validate_reciever() const {
-        auto baseResult = validate_EquipmentBaseInfo();
-        if (!baseResult.first) return baseResult;
-        if (CentralF_Reciever <= 0) return { false, "接收机中心频率必须大于 0" };
-        if (Bandwidth_Reciever <= 0) return { false, "接收机带宽必须大于 0" };
-        if (Sensitive_reciever > -90) return {false, "灵敏度不足,编队内通信最低灵敏度为-90dBm"};
-        if (interferenceMargin >= 0) return {false, "干扰阈值应小于0dBm"};
-        if (noiseFigure <= 0.8) return {false, "噪声系数不应小于0.8"};
-        return {true, ""};
+    std::pair<bool, QString> validateReceiver() const {
+        const auto baseResult = validateEquipmentBaseInfo();
+        if (!baseResult.first) {
+            return baseResult;
+        }
+
+        if (receiverCenterFrequencyGHz <= 0.0) {
+            return {false, QStringLiteral("接收机中心频率必须大于 0 GHz")};
+        }
+        if (receiverBandwidthMHz <= 0.0) {
+            return {false, QStringLiteral("接收机带宽必须大于 0 MHz")};
+        }
+        if (receiverSensitivityDbm >= 0.0) {
+            return {false, QStringLiteral("接收机灵敏度必须为负值 dBm")};
+        }
+        if (receiverNoiseFigureDb < 0.0) {
+            return {false, QStringLiteral("接收机噪声系数不能为负值")};
+        }
+
+        return {true, QString()};
     }
 
-    std::pair<bool, QString> valiate_Transmitter() const {
-        auto baseResult = validate_EquipmentBaseInfo();
-        if (!baseResult.first) return baseResult;
-        if (CentralF_Transmitter <= 0) return { false, "发射机中心频率必须大于 0" };
-        if (Bandwidth_Transmitter <= 0) return { false, "接收机带宽必须大于 0" };
-        if (Power_Transmitter < 0) return {false, "发射机增益不应小于0"};
-        if (antennaPhi_Transmitter < 0 || antennaPhi_Transmitter > 180) return {false, "天线仰角必须在 [0, 180] 范围内"};
-        if (Beamwidth_Transmitter < 0 || Beamwidth_Transmitter > 360) return {false, "天线波束宽度必须在 [0, 360] 范围内"};
-        return {true, ""};
-    } 
+    std::pair<bool, QString> validateTransmitter() const {
+        const auto baseResult = validateEquipmentBaseInfo();
+        if (!baseResult.first) {
+            return baseResult;
+        }
 
-    std::pair<bool,QString> validate() const{
-        if(equipmentType == "接收机") return validate_reciever();
-        else if(equipmentType == "发射机") return valiate_Transmitter();
-        else return {false,"未知部件"};
-        //TODO:收发一体
+        if (transmitterCenterFrequencyGHz <= 0.0) {
+            return {false, QStringLiteral("发射机中心频率必须大于 0 GHz")};
+        }
+        if (transmitterBandwidthMHz <= 0.0) {
+            return {false, QStringLiteral("发射机带宽必须大于 0 MHz")};
+        }
+        if (transmitterAntennaPhiDeg < 0.0 || transmitterAntennaPhiDeg > 180.0) {
+            return {false, QStringLiteral("发射机下倾角必须位于 [0, 180]")};
+        }
+        if (transmitterBeamWidthDeg < 0.0 || transmitterBeamWidthDeg > 360.0) {
+            return {false, QStringLiteral("发射机波束宽度必须位于 [0, 360]")};
+        }
+        if (!DataModelSchemaValues::isPolarizationValue(transmitterPolarization)) {
+            return {false, QStringLiteral("发射机极化方式必须为 schema 定义枚举")};
+        }
+        if (!DataModelSchemaValues::isAntennaTypeValue(transmitterAntennaType)) {
+            return {false, QStringLiteral("发射机天线类型必须为 schema 定义枚举")};
+        }
+
+        return {true, QString()};
+    }
+
+    std::pair<bool, QString> validate() const {
+        if (equipmentType == DataModelSchemaValues::receiverType()) {
+            return validateReceiver();
+        }
+        if (equipmentType == DataModelSchemaValues::transmitterType()) {
+            return validateTransmitter();
+        }
+        if (equipmentType == DataModelSchemaValues::transceiverType()) {
+            const auto transmitterResult = validateTransmitter();
+            if (!transmitterResult.first) {
+                return transmitterResult;
+            }
+            return validateReceiver();
+        }
+
+        return {false, QStringLiteral("未知设备类型")};
     }
 };
 
-
-/// <summary>
-/// 船上挂载设备引用
-/// </summary>
 struct EquipmentOnShip {
-    QString equipmentID;
-    // 动态开启/关闭状态
+    QString equipmentId;
     bool isEnabled = true;
 };
 
-/// <summary>
-/// 舰船数据模型
-/// </summary>
 struct ShipData {
-    std::string shipID = "未命名";
-    //QString shipName = "未命名船只";
-     //DEPRECATED: 没有Type接口
-    QString shipType = "驱逐舰";
+    std::string shipId;
+    double worldX = 0.0;
+    double worldY = 0.0;
+    double worldZ = 0.0;
+    double shipOrientationDeg = 0.0;
+    double shipSpeedMps = 0.0;
+    std::vector<EquipmentOnShip> equipmentRefs;
 
-    // 初始位置与姿态
-    // TODO: 修改变量为WorldX
-    double X_offset = 0.0; 
-    double Y_offset = 0.0;
-    double Z_offset = 0.0;
-
-    double ship_Orienteation = 0.0; // 航向角 0-360
-    double ship_Speed = 0.0;        // 节 (knots) 或 m/s
-
-    // 船上挂载的设备列表
-    std::vector<EquipmentOnShip> Equipments;
-
-    // 校验逻辑
-    std::pair<bool, QString> validate_Ship() const {
-        if (ship_Speed < 0) return { false, "航速不能为负数" };
-
-        auto inRange = [](int val, int min, int max) { return val >= min && val <= max; };
-
-        if (!inRange(X_offset, X_MIN, X_MAX) ||
-            !inRange(Y_offset, Y_MIN, Y_MAX) ||
-            !inRange(Z_offset, Z_MIN, Z_MAX)) {
-            return {false, "超出地图范围,50<x<50,50<y<50,0<z<50"};
+    std::pair<bool, QString> validateShip() const {
+        if (shipId.empty()) {
+            return {false, QStringLiteral("船只 ID 不能为空")};
+        }
+        if (shipSpeedMps < 0.0) {
+            return {false, QStringLiteral("船速不能为负值")};
         }
 
-        if(ship_Orienteation<0 || ship_Orienteation>360){
-            return {false, "船向范围应在[0,360]"};
+        const auto inRange = [](double value, double minValue, double maxValue) {
+            return value >= minValue && value <= maxValue;
+        };
+
+        if (!inRange(worldX, X_MIN, X_MAX) ||
+            !inRange(worldY, Y_MIN, Y_MAX) ||
+            !inRange(worldZ, Z_MIN, Z_MAX)) {
+            return {false, QStringLiteral("船只世界坐标超出当前场景边界")};
         }
-        return { true, "" };
+
+        if (shipOrientationDeg < 0.0 || shipOrientationDeg > 360.0) {
+            return {false, QStringLiteral("船只朝向角必须位于 [0, 360]")};
+        }
+
+        return {true, QString()};
     }
 };
 
 struct EnvironmentData {
-    double max_range = 2000.0;// 2 km
-    double duct_height = 20.0; // 蒸发波导高度 H0 (m)
-    double wind_speed = 7.0;   // 风速 (m/s)，用于计算 Miller-Brown 粗糙度
-    double dx = 5.0;          // 步进 50m
-    double dz = 0.1;           // 垂直分辨率 0.2m (越高越好，建议 <= lambda/2)
-    int nz = 2048;             // 物理高度网格 (总高度 ~400m)
-    int angle_step_deg = 5; // 角度步进 5度 (用于2D仿真)
-    std::pair<bool,QString> validate_EnvironmentConfig() const {
-        if (max_range < 0 || duct_height < 0 || wind_speed < 0 || dx < 0 || dz < 0 || nz < 0 || angle_step_deg < 0 ) {
-            return { false, "环境参数应大于0" };
+    // 作为空模型或 UI 初始态的回退值，正式输入应来自 JSON 或环境配置界面。
+    double maxRange = 2000.0;
+    double ductHeight = 20.0;
+    double windSpeed = 7.0;
+    double dx = 5.0;
+    double dz = 0.1;
+    int nz = 2048;
+    int angleStepDeg = 5;
+
+    std::pair<bool, QString> validateEnvironmentConfig() const {
+        if (maxRange <= 0.0) {
+            return {false, QStringLiteral("最大传播距离必须大于 0")};
         }
+        if (ductHeight < 0.0) {
+            return {false, QStringLiteral("蒸发波导高度不能为负值")};
+        }
+        if (windSpeed < 0.0) {
+            return {false, QStringLiteral("风速不能为负值")};
+        }
+        if (dx <= 0.0) {
+            return {false, QStringLiteral("水平步进必须大于 0")};
+        }
+        if (dz <= 0.0) {
+            return {false, QStringLiteral("垂直分辨率必须大于 0")};
+        }
+        if (nz <= 0) {
+            return {false, QStringLiteral("垂直网格数量必须为正整数")};
+        }
+        if (angleStepDeg <= 0 || angleStepDeg > 360) {
+            return {false, QStringLiteral("角度步进必须位于 [1, 360]")};
+        }
+
+        return {true, QString()};
     }
 };
 
-/// <summary>
-/// 全局数据模型 (单例管理的数据容器)
-/// </summary>
 class DataModel : public QObject {
     Q_OBJECT
+
 public:
-    // 定义一个可拷贝的数据快照结构体
+ // 定义一个可拷贝的数据快照结构体
     struct DataSnapshot {
         std::vector<EquipmentData> allEquipments;
         std::vector<ShipData> allShips;
-		EnvironmentData environmentConfig;
+        EnvironmentData environmentConfig;
     };
 
     static DataModel* instance() {
-        static DataModel _instance;
-        return &_instance;
+        static DataModel instance;
+        return &instance;
     }
 
-    // 创建数据快照的成员函数
+    static std::pair<bool, QString> validateSnapshot(const DataSnapshot& snapshot) {
+        const auto environmentResult = snapshot.environmentConfig.validateEnvironmentConfig();
+        if (!environmentResult.first) {
+            return environmentResult;
+        }
+
+        if (snapshot.allShips.empty()) {
+            return {false, QStringLiteral("至少需要一艘船只")};
+        }
+
+        std::unordered_set<std::string> equipmentIds;
+        for (const auto& equipment : snapshot.allEquipments) {
+            const auto equipmentResult = equipment.validate();
+            if (!equipmentResult.first) {
+                return equipmentResult;
+            }
+
+            const std::string equipmentId = equipment.equipmentId.toStdString();
+            if (!equipmentIds.insert(equipmentId).second) {
+                return {false, QStringLiteral("设备 ID 重复: %1").arg(equipment.equipmentId)};
+            }
+        }
+
+        std::unordered_set<std::string> shipIds;
+        for (const auto& ship : snapshot.allShips) {
+            const auto shipResult = ship.validateShip();
+            if (!shipResult.first) {
+                return shipResult;
+            }
+
+            if (!shipIds.insert(ship.shipId).second) {
+                return {false, QStringLiteral("船只 ID 重复: %1").arg(QString::fromStdString(ship.shipId))};
+            }
+
+            std::unordered_set<std::string> shipEquipmentRefs;
+            for (const auto& equipmentRef : ship.equipmentRefs) {
+                if (equipmentRef.equipmentId.trimmed().isEmpty()) {
+                    return {false, QStringLiteral("船只挂载设备引用不能为空")};
+                }
+
+                const std::string equipmentId = equipmentRef.equipmentId.toStdString();
+                if (equipmentIds.find(equipmentId) == equipmentIds.end()) {
+                    return {false, QStringLiteral("船只引用了不存在的设备 ID: %1").arg(equipmentRef.equipmentId)};
+                }
+                if (!shipEquipmentRefs.insert(equipmentId).second) {
+                    return {false, QStringLiteral("同一船只内重复引用设备 ID: %1").arg(equipmentRef.equipmentId)};
+                }
+            }
+        }
+
+        return {true, QString()};
+    }
+
     DataSnapshot createSnapshot() const {
-        // 这里可以加锁（如果需要的话），保证创建快照时的原子性
-        // std::lock_guard<std::mutex> lock(m_mutex);
-        return { allEquipments, allShips, environmentConfig };
+        return {allEquipments, allShips, environmentConfig};
     }
 
-    // 全局数据存储
-    std::vector<EquipmentData> allEquipments; // 设备库
-    std::vector<ShipData> allShips;           // 部署的船只
-    EnvironmentData environmentConfig;
+    std::pair<bool, QString> validateCurrentModel() const {
+        return validateSnapshot(createSnapshot());
+    }
 
-    // 根据ID查找设备的辅助函数
     const EquipmentData* findEquipmentByID(const QString& id) const {
-        for (const auto& eq : allEquipments) {
-            if (eq.equipmentID == id) return &eq;
+        for (const auto& equipment : allEquipments) {
+            if (equipment.equipmentId == id) {
+                return &equipment;
+            }
         }
         return nullptr;
     }
 
+    std::vector<EquipmentData> allEquipments;
+    std::vector<ShipData> allShips;
+    EnvironmentData environmentConfig;
+
 private:
     DataModel() = default;
-    ~DataModel() = default;
+    ~DataModel() override = default;
     DataModel(const DataModel&) = delete;
     DataModel& operator=(const DataModel&) = delete;
 };
-

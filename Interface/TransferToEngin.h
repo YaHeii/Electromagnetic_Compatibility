@@ -7,6 +7,7 @@
 #include "Models/Antenna.h"
 #include "Interface/DataModel.h"
 #include <memory>
+#include <unordered_map>
 
 /**
     * @brief 数据转换类，用于将前端UI数据模型转换为后端核心算法所需的数据结构

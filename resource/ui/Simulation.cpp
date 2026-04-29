@@ -4,7 +4,6 @@
 #include <QMessageBox>
 #include <thread>
 #include <future>
-#include "Utils/JsonLoader.hpp"
 Simulation::Simulation(QWidget* parent)
 	: BasePage(parent), _emcEngine(nullptr) {
 
@@ -46,12 +45,14 @@ void Simulation::on_StartSimulate_clicked() {
         _workerThread.join();
     }
 
-    if (!JsonLoader::LoadFile("D:/code/Electromagnetic_compatibility/Tests/Test.jsonc")) {
-        spdlog::error("加载测试配置失败，已取消仿真。");
-        QMessageBox::warning(this, "配置加载失败", "无法读取新的 schema 测试配置文件。");
+    auto* model = DataModel::instance();
+    const auto validationResult = model->validateCurrentModel();
+    if (!validationResult.first) {
+        spdlog::error("当前输入快照未通过核心校验: {}", validationResult.second.toStdString());
+        QMessageBox::warning(this, "输入校验失败", validationResult.second);
         return;
     }
-    auto dataSnapshot = DataModel::instance()->createSnapshot();
+    const auto dataSnapshot = model->createSnapshot();
     
     StartSimulate->setEnabled(false); // 禁用按钮防止重复点击
     PEmodel2Dplot->clearPlottables();

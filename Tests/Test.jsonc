@@ -2,7 +2,6 @@
   // 主程序标准输入样例
   "schemaVersion": "1.0.0",
 
-  // EnvironmentData 配置，替代主程序默认硬编码输入
   "environment": {
     "maxRange": 2000.0,
     "ductHeight": 20.0,
@@ -13,7 +12,6 @@
     "angleStepDeg": 5
   },
 
-  // USV 编队配置
   "usvs": [
     {
       "ID": "USV1",
@@ -51,7 +49,8 @@
           "sinrMarginDb": 0,
           "noiseFigureDb": 3
         }
-      ]
+      ],
+      "transceivers": []
     },
     {
       "ID": "USV2",
@@ -89,7 +88,8 @@
           "sinrMarginDb": 0,
           "noiseFigureDb": 3
         }
-      ]
+      ],
+      "transceivers": []
     },
     {
       "ID": "USV3",
@@ -127,7 +127,8 @@
           "sinrMarginDb": 0,
           "noiseFigureDb": 3
         }
-      ]
+      ],
+      "transceivers": []
     },
     {
       "ID": "USV4",
@@ -165,7 +166,8 @@
           "sinrMarginDb": 0,
           "noiseFigureDb": 3
         }
-      ]
+      ],
+      "transceivers": []
     },
     {
       "ID": "USV5",
@@ -203,7 +205,8 @@
           "sinrMarginDb": 0,
           "noiseFigureDb": 3
         }
-      ]
+      ],
+      "transceivers": []
     },
     {
       "ID": "USV6",
@@ -241,7 +244,8 @@
           "sinrMarginDb": 0,
           "noiseFigureDb": 3
         }
-      ]
+      ],
+      "transceivers": []
     },
     {
       "ID": "USV7",
@@ -279,7 +283,8 @@
           "sinrMarginDb": 0,
           "noiseFigureDb": 3
         }
-      ]
+      ],
+      "transceivers": []
     }
   ]
 }

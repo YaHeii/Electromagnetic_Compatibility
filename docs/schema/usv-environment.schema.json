@@ -113,6 +113,106 @@
         }
       }
     },
+    "transmitterConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "centerFrequencyGHz",
+        "bandwidthMHz",
+        "powerDbm",
+        "antennaPhiDeg",
+        "beamWidthDeg",
+        "polarization",
+        "antennaType"
+      ],
+      "properties": {
+        "centerFrequencyGHz": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "中心频率，单位 GHz"
+        },
+        "bandwidthMHz": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "带宽，单位 MHz"
+        },
+        "powerDbm": {
+          "type": "number",
+          "description": "发射功率，单位 dBm"
+        },
+        "antennaPhiDeg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180,
+          "description": "相对正 z 轴向下倾斜的角度，单位 deg"
+        },
+        "beamWidthDeg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360,
+          "description": "波束宽度，单位 deg"
+        },
+        "polarization": {
+          "type": "string",
+          "enum": [
+            "VERTICAL",
+            "HORIZONTAL"
+          ]
+        },
+        "antennaType": {
+          "type": "string",
+          "enum": [
+            "OMNI",
+            "DIRECTIONAL",
+            "HORN",
+            "SHAPED_BEAM",
+            "REFLECTOR"
+          ]
+        }
+      }
+    },
+    "receiverConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "centerFrequencyGHz",
+        "bandwidthMHz",
+        "sensitivityDbm",
+        "interferenceMarginDb",
+        "sinrMarginDb",
+        "noiseFigureDb"
+      ],
+      "properties": {
+        "centerFrequencyGHz": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "中心频率，单位 GHz"
+        },
+        "bandwidthMHz": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "带宽，单位 MHz"
+        },
+        "sensitivityDbm": {
+          "type": "number",
+          "exclusiveMaximum": 0,
+          "description": "接收机灵敏度，单位 dBm，必须为负值"
+        },
+        "interferenceMarginDb": {
+          "type": "number",
+          "description": "干扰容限或等效带外抑制，单位 dB"
+        },
+        "sinrMarginDb": {
+          "type": "number",
+          "description": "SINR 裕量，单位 dB"
+        },
+        "noiseFigureDb": {
+          "type": "number",
+          "minimum": 0,
+          "description": "噪声系数，单位 dB"
+        }
+      }
+    },
     "transmitter": {
       "type": "object",
       "additionalProperties": false,
@@ -251,6 +351,41 @@
         }
       }
     },
+    "transceiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ID",
+        "type",
+        "gainDbi",
+        "locationOffset",
+        "transmitter",
+        "receiver"
+      ],
+      "properties": {
+        "ID": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "const": "TRANSCEIVER"
+        },
+        "gainDbi": {
+          "type": "number",
+          "description": "设备或天线增益，单位 dBi"
+        },
+        "locationOffset": {
+          "$ref": "#/$defs/vector3"
+        },
+        "transmitter": {
+          "$ref": "#/$defs/transmitterConfig"
+        },
+        "receiver": {
+          "$ref": "#/$defs/receiverConfig"
+        }
+      }
+    },
     "usv": {
       "type": "object",
       "additionalProperties": false,
@@ -260,7 +395,8 @@
         "speed",
         "shipOrientationDeg",
         "transmitters",
-        "receivers"
+        "receivers",
+        "transceivers"
       ],
       "properties": {
         "ID": {
@@ -291,6 +427,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/receiver"
+          }
+        },
+        "transceivers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/transceiver"
           }
         }
       }

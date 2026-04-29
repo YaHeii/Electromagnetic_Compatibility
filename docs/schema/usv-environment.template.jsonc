@@ -4,40 +4,35 @@
 
   // 环境参数，对应 Interface/DataModel.h 中的 EnvironmentData
   "environment": {
-    "maxRange": 2000.0,      // 最大传播距离，单位 m
-    "ductHeight": 20.0,      // 蒸发波导高度，单位 m
-    "windSpeed": 7.0,        // 风速，单位 m/s
-    "dx": 5.0,               // 水平步进，单位 m
-    "dz": 0.1,               // 垂直分辨率，单位 m
-    "nz": 2048,              // 垂直网格数量
-    "angleStepDeg": 5        // 2D 仿真角度步进，单位 deg
+    "maxRange": 2000.0,
+    "ductHeight": 20.0,
+    "windSpeed": 7.0,
+    "dx": 5.0,
+    "dz": 0.1,
+    "nz": 2048,
+    "angleStepDeg": 5
   },
 
-  // 船只数组
   "usvs": [
     {
       "ID": "USV1",
-
-      // 船只世界坐标
-      // 原点位于场景左下角，x 轴向右，y 轴向上，z 轴向上
       "location": {
         "type": "Point3D",
         "coordinates": [720.0, 0.0, 0.0]
       },
-
-      "speed": 15.0,               // 船速，单位 m/s
-      "shipOrientationDeg": 0.0,   // 二维平面朝向角，范围 0~360
+      "speed": 15.0,
+      "shipOrientationDeg": 0.0,
 
       "transmitters": [
         {
           "ID": "USV1_TX1",
           "type": "TRANSMITTER",
           "gainDbi": 20.0,
-          "locationOffset": [1.0, 0.0, 2.0],  // 相对船体中心偏移，单位 m
+          "locationOffset": [1.0, 0.0, 2.0],
           "centerFrequencyGHz": 1.0,
           "bandwidthMHz": 100.0,
           "powerDbm": 43.0,
-          "antennaPhiDeg": 125.0,              // 相对正 z 轴向下倾斜角，范围 0~180
+          "antennaPhiDeg": 125.0,
           "beamWidthDeg": 20.0,
           "polarization": "VERTICAL",
           "antennaType": "HORN"
@@ -49,13 +44,40 @@
           "ID": "USV1_RX1",
           "type": "RECEIVER",
           "gainDbi": 20.0,
-          "locationOffset": [-1.0, 0.0, 2.0], // 相对船体中心偏移，单位 m
+          "locationOffset": [-1.0, 0.0, 2.0],
           "centerFrequencyGHz": 1.0,
           "bandwidthMHz": 100.0,
-          "sensitivityDbm": -85.0,            // 灵敏度固定使用负值
+          "sensitivityDbm": -85.0,
           "interferenceMarginDb": 0.0,
           "sinrMarginDb": 0.0,
           "noiseFigureDb": 3.0
+        }
+      ],
+
+      // 收发一体机使用嵌套 transmitter / receiver 子对象，避免收发参数冲突
+      "transceivers": [
+        {
+          "ID": "USV1_TRX1",
+          "type": "TRANSCEIVER",
+          "gainDbi": 18.0,
+          "locationOffset": [0.0, 0.0, 2.5],
+          "transmitter": {
+            "centerFrequencyGHz": 5.8,
+            "bandwidthMHz": 40.0,
+            "powerDbm": 30.0,
+            "antennaPhiDeg": 10.0,
+            "beamWidthDeg": 45.0,
+            "polarization": "VERTICAL",
+            "antennaType": "DIRECTIONAL"
+          },
+          "receiver": {
+            "centerFrequencyGHz": 5.8,
+            "bandwidthMHz": 40.0,
+            "sensitivityDbm": -82.0,
+            "interferenceMarginDb": 3.0,
+            "sinrMarginDb": 6.0,
+            "noiseFigureDb": 2.5
+          }
         }
       ]
     }

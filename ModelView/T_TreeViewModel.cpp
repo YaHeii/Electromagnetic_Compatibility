@@ -168,7 +168,10 @@ void T_TreeViewModel::clear()
 
 void T_TreeViewModel::addShip(const ShipData& ship)
 {
-    T_TreeItem* fleetItem = static_cast<T_TreeItem*>(_rootItem->getChildrenItems().first());
+    T_TreeItem* fleetItem = nullptr;
+    if (!_rootItem->getChildrenItems().isEmpty()) {
+        fleetItem = static_cast<T_TreeItem*>(_rootItem->getChildrenItems().first());
+    }
     if (!fleetItem || fleetItem->getItemType() != T_TreeItem::Fleet) {
         // 创建舰队根节点
         fleetItem = new T_TreeItem("舰船编队", T_TreeItem::Fleet, _rootItem);
@@ -177,14 +180,14 @@ void T_TreeViewModel::addShip(const ShipData& ship)
         endInsertRows();
     }
 
-    T_TreeItem* shipItem = new T_TreeItem(QString::fromStdString(ship.shipID), T_TreeItem::Ship, fleetItem);
+    T_TreeItem* shipItem = new T_TreeItem(QString::fromStdString(ship.shipId), T_TreeItem::Ship, fleetItem);
 
     beginInsertRows(createIndex(fleetItem->getRow(), 0, fleetItem), fleetItem->getChildrenItems().count(), fleetItem->getChildrenItems().count());
     fleetItem->appendChildItem(shipItem);
 
     // 添加配置的设备
-    for (const auto& equipment : ship.Equipments) {
-        T_TreeItem* deviceItem = new T_TreeItem(equipment.equipmentID, T_TreeItem::Device, shipItem);
+    for (const auto& equipment : ship.equipmentRefs) {
+        T_TreeItem* deviceItem = new T_TreeItem(equipment.equipmentId, T_TreeItem::Device, shipItem);
         shipItem->appendChildItem(deviceItem);
     }
 
@@ -211,7 +214,7 @@ void T_TreeViewModel::addDevice(const EquipmentData& device)
         endInsertRows();
     }
 
-    T_TreeItem* deviceItem = new T_TreeItem(device.equipmentID, T_TreeItem::Device, devicesRoot);
+    T_TreeItem* deviceItem = new T_TreeItem(device.equipmentId, T_TreeItem::Device, devicesRoot);
 
     beginInsertRows(createIndex(devicesRoot->getRow(), 0, devicesRoot), devicesRoot->getChildrenItems().count(), devicesRoot->getChildrenItems().count());
     devicesRoot->appendChildItem(deviceItem);

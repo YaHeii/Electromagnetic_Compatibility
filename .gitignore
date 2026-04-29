@@ -31,3 +31,5 @@ CLAUDE.md
 PE_validation/.vscode/
 PE_validation/.conda/
 PE_validation/**/*.png
+vcpkg_installed
+.VSCodeCounter/

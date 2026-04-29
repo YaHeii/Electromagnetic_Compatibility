@@ -17,6 +17,9 @@ inline constexpr char Speed[] = "speed";
 inline constexpr char ShipOrientationDeg[] = "shipOrientationDeg";
 inline constexpr char Transmitters[] = "transmitters";
 inline constexpr char Receivers[] = "receivers";
+inline constexpr char Transceivers[] = "transceivers";
+inline constexpr char TransmitterConfig[] = "transmitter";
+inline constexpr char ReceiverConfig[] = "receiver";
 
 inline constexpr char MaxRange[] = "maxRange";
 inline constexpr char DuctHeight[] = "ductHeight";
@@ -50,6 +53,7 @@ inline constexpr char Point3D[] = "Point3D";
 
 inline constexpr char Transmitter[] = "TRANSMITTER";
 inline constexpr char Receiver[] = "RECEIVER";
+inline constexpr char Transceiver[] = "TRANSCEIVER";
 
 inline constexpr char Vertical[] = "VERTICAL";
 inline constexpr char Horizontal[] = "HORIZONTAL";
@@ -64,7 +68,8 @@ inline constexpr char Reflector[] = "REFLECTOR";
 
 enum class SchemaDeviceType {
     Transmitter,
-    Receiver
+    Receiver,
+    Transceiver
 };
 
 enum class SchemaPolarization {

@@ -42,6 +42,7 @@ public:
     explicit DeviceItemWidget(QWidget *parent = nullptr);
     void setData(const EquipmentData &data);
     EquipmentData getData() const;
+    bool tryBuildData(EquipmentData& data, QString& errorMessage) const;
     QString getID() const { return _currentId; }
 
 signals:

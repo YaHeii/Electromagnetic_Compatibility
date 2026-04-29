@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QDebug>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -9,8 +8,7 @@
 #include <QStringList>
 
 #include <cmath>
-#include <unordered_set>
-#include <vector>
+#include <limits>
 
 #include "Interface/DataModel.h"
 #include "Interface/SchemaConstants.h"
@@ -21,44 +19,45 @@ public:
     static bool LoadFile(const QString& filePath) {
         QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            spdlog::error("cannot open file: {}, {}", filePath.toStdString(), file.errorString().toStdString());
+            spdlog::error("无法打开配置文件: {}, {}", filePath.toStdString(), file.errorString().toStdString());
             return false;
         }
 
         QString jsonString = QString::fromUtf8(file.readAll());
         file.close();
-
         stripSingleLineComments(jsonString);
 
-        QJsonParseError error;
-        const QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8(), &error);
-        if (error.error != QJsonParseError::NoError) {
-            spdlog::error("JSON 解析错误: {}", error.errorString().toStdString());
+        QJsonParseError parseError;
+        const QJsonDocument document = QJsonDocument::fromJson(jsonString.toUtf8(), &parseError);
+        if (parseError.error != QJsonParseError::NoError) {
+            spdlog::error("JSON 解析失败: {}", parseError.errorString().toStdString());
+            return false;
+        }
+        if (!document.isObject()) {
+            spdlog::error("JSON 根节点必须是 object");
             return false;
         }
 
-        if (!doc.isObject()) {
-            spdlog::error("JSON 格式错误: 根节点必须是对象");
-            return false;
-        }
-
-        EnvironmentData environmentConfig;
-        std::vector<ShipData> allShips;
-        std::vector<EquipmentData> allEquipments;
+        DataModel::DataSnapshot snapshot;
         QString errorMessage;
+        if (!parseRootObject(document.object(), snapshot, errorMessage)) {
+            spdlog::error("Schema 基础校验失败: {}", errorMessage.toStdString());
+            return false;
+        }
 
-        if (!parseRootObject(doc.object(), environmentConfig, allShips, allEquipments, errorMessage)) {
-            spdlog::error("Schema 校验失败: {}", errorMessage.toStdString());
+        const auto validationResult = DataModel::validateSnapshot(snapshot);
+        if (!validationResult.first) {
+            spdlog::error("DataModel 核心校验失败: {}", validationResult.second.toStdString());
             return false;
         }
 
         DataModel* model = DataModel::instance();
-        model->allShips = std::move(allShips);
-        model->allEquipments = std::move(allEquipments);
-        model->environmentConfig = environmentConfig;
+        model->allEquipments = std::move(snapshot.allEquipments);
+        model->allShips = std::move(snapshot.allShips);
+        model->environmentConfig = snapshot.environmentConfig;
 
         spdlog::info(
-            "成功加载新 schema 配置: {}, 船只数量: {}, 设备数量: {}",
+            "成功加载 schema 配置: {}, 船只数量: {}, 设备数量: {}",
             filePath.toStdString(),
             model->allShips.size(),
             model->allEquipments.size());
@@ -67,24 +66,22 @@ public:
 
 private:
     static void stripSingleLineComments(QString& jsonString) {
-        const QRegularExpression commentPattern("//[^\\n\\r]*");
-        jsonString.replace(commentPattern, "");
+        const QRegularExpression commentPattern(QStringLiteral("//[^\\n\\r]*"));
+        jsonString.replace(commentPattern, QString());
     }
 
     static bool parseRootObject(
         const QJsonObject& rootObject,
-        EnvironmentData& environmentConfig,
-        std::vector<ShipData>& allShips,
-        std::vector<EquipmentData>& allEquipments,
+        DataModel::DataSnapshot& snapshot,
         QString& errorMessage) {
         if (!validateAllowedKeys(
                 rootObject,
                 {
-                    SchemaKeys::SchemaVersion,
-                    SchemaKeys::Environment,
-                    SchemaKeys::Usvs,
+                    QString::fromLatin1(SchemaKeys::SchemaVersion),
+                    QString::fromLatin1(SchemaKeys::Environment),
+                    QString::fromLatin1(SchemaKeys::Usvs),
                 },
-                QStringLiteral("根对象"),
+                QStringLiteral("root"),
                 errorMessage)) {
             return false;
         }
@@ -103,7 +100,7 @@ private:
         if (!readRequiredObject(rootObject, SchemaKeys::Environment, environmentObject, errorMessage)) {
             return false;
         }
-        if (!parseEnvironment(environmentObject, environmentConfig, errorMessage)) {
+        if (!parseEnvironment(environmentObject, snapshot.environmentConfig, errorMessage)) {
             return false;
         }
 
@@ -111,17 +108,10 @@ private:
         if (!readRequiredArray(rootObject, SchemaKeys::Usvs, usvArray, errorMessage)) {
             return false;
         }
-        if (usvArray.isEmpty()) {
-            errorMessage = QStringLiteral("usvs 数组不能为空");
-            return false;
-        }
-
-        std::unordered_set<std::string> shipIds;
-        std::unordered_set<std::string> equipmentIds;
 
         for (int index = 0; index < usvArray.size(); ++index) {
             if (!usvArray.at(index).isObject()) {
-                errorMessage = QStringLiteral("usvs[%1] 必须是对象").arg(index);
+                errorMessage = QStringLiteral("usvs[%1] 必须是 object").arg(index);
                 return false;
             }
 
@@ -130,13 +120,11 @@ private:
                     usvArray.at(index).toObject(),
                     index,
                     shipData,
-                    allEquipments,
-                    shipIds,
-                    equipmentIds,
+                    snapshot.allEquipments,
                     errorMessage)) {
                 return false;
             }
-            allShips.push_back(std::move(shipData));
+            snapshot.allShips.push_back(std::move(shipData));
         }
 
         return true;
@@ -149,45 +137,26 @@ private:
         if (!validateAllowedKeys(
                 environmentObject,
                 {
-                    SchemaKeys::MaxRange,
-                    SchemaKeys::DuctHeight,
-                    SchemaKeys::WindSpeed,
-                    SchemaKeys::Dx,
-                    SchemaKeys::Dz,
-                    SchemaKeys::Nz,
-                    SchemaKeys::AngleStepDeg,
+                    QString::fromLatin1(SchemaKeys::MaxRange),
+                    QString::fromLatin1(SchemaKeys::DuctHeight),
+                    QString::fromLatin1(SchemaKeys::WindSpeed),
+                    QString::fromLatin1(SchemaKeys::Dx),
+                    QString::fromLatin1(SchemaKeys::Dz),
+                    QString::fromLatin1(SchemaKeys::Nz),
+                    QString::fromLatin1(SchemaKeys::AngleStepDeg),
                 },
                 QStringLiteral("environment"),
                 errorMessage)) {
             return false;
         }
 
-        if (!readRequiredPositiveNumber(environmentObject, SchemaKeys::MaxRange, environmentConfig.max_range, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredNonNegativeNumber(environmentObject, SchemaKeys::DuctHeight, environmentConfig.duct_height, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredNonNegativeNumber(environmentObject, SchemaKeys::WindSpeed, environmentConfig.wind_speed, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredPositiveNumber(environmentObject, SchemaKeys::Dx, environmentConfig.dx, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredPositiveNumber(environmentObject, SchemaKeys::Dz, environmentConfig.dz, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredPositiveInteger(environmentObject, SchemaKeys::Nz, environmentConfig.nz, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredPositiveInteger(environmentObject, SchemaKeys::AngleStepDeg, environmentConfig.angle_step_deg, errorMessage)) {
-            return false;
-        }
-        if (environmentConfig.angle_step_deg > 360) {
-            errorMessage = QStringLiteral("angleStepDeg 必须位于 [1, 360] 范围内");
-            return false;
-        }
-        return true;
+        return readRequiredNumber(environmentObject, SchemaKeys::MaxRange, environmentConfig.maxRange, errorMessage) &&
+               readRequiredNumber(environmentObject, SchemaKeys::DuctHeight, environmentConfig.ductHeight, errorMessage) &&
+               readRequiredNumber(environmentObject, SchemaKeys::WindSpeed, environmentConfig.windSpeed, errorMessage) &&
+               readRequiredNumber(environmentObject, SchemaKeys::Dx, environmentConfig.dx, errorMessage) &&
+               readRequiredNumber(environmentObject, SchemaKeys::Dz, environmentConfig.dz, errorMessage) &&
+               readRequiredInteger(environmentObject, SchemaKeys::Nz, environmentConfig.nz, errorMessage) &&
+               readRequiredInteger(environmentObject, SchemaKeys::AngleStepDeg, environmentConfig.angleStepDeg, errorMessage);
     }
 
     static bool parseShip(
@@ -195,20 +164,19 @@ private:
         int shipIndex,
         ShipData& shipData,
         std::vector<EquipmentData>& allEquipments,
-        std::unordered_set<std::string>& shipIds,
-        std::unordered_set<std::string>& equipmentIds,
         QString& errorMessage) {
         const QString shipContext = QStringLiteral("usvs[%1]").arg(shipIndex);
 
         if (!validateAllowedKeys(
                 shipObject,
                 {
-                    SchemaKeys::ID,
-                    SchemaKeys::Location,
-                    SchemaKeys::Speed,
-                    SchemaKeys::ShipOrientationDeg,
-                    SchemaKeys::Transmitters,
-                    SchemaKeys::Receivers,
+                    QString::fromLatin1(SchemaKeys::ID),
+                    QString::fromLatin1(SchemaKeys::Location),
+                    QString::fromLatin1(SchemaKeys::Speed),
+                    QString::fromLatin1(SchemaKeys::ShipOrientationDeg),
+                    QString::fromLatin1(SchemaKeys::Transmitters),
+                    QString::fromLatin1(SchemaKeys::Receivers),
+                    QString::fromLatin1(SchemaKeys::Transceivers),
                 },
                 shipContext,
                 errorMessage)) {
@@ -219,32 +187,26 @@ private:
         if (!readRequiredString(shipObject, SchemaKeys::ID, shipId, errorMessage)) {
             return false;
         }
-
-        const std::string shipIdStd = shipId.toStdString();
-        if (!shipIds.insert(shipIdStd).second) {
-            errorMessage = QStringLiteral("船只 ID 重复: %1").arg(shipId);
-            return false;
-        }
-
-        shipData.shipID = shipIdStd;
+        shipData.shipId = shipId.toStdString();
 
         QJsonObject locationObject;
         if (!readRequiredObject(shipObject, SchemaKeys::Location, locationObject, errorMessage)) {
             return false;
         }
-        if (!parsePoint3D(locationObject, shipData.X_offset, shipData.Y_offset, shipData.Z_offset, shipContext + ".location", errorMessage)) {
+        if (!parsePoint3D(
+                locationObject,
+                shipData.worldX,
+                shipData.worldY,
+                shipData.worldZ,
+                shipContext + QStringLiteral(".location"),
+                errorMessage)) {
             return false;
         }
 
-        if (!readRequiredNonNegativeNumber(shipObject, SchemaKeys::Speed, shipData.ship_Speed, errorMessage)) {
+        if (!readRequiredNumber(shipObject, SchemaKeys::Speed, shipData.shipSpeedMps, errorMessage)) {
             return false;
         }
-        if (!readRequiredNumber(shipObject, SchemaKeys::ShipOrientationDeg, shipData.ship_Orienteation, errorMessage)) {
-            return false;
-        }
-        if (shipData.ship_Orienteation < 0.0 || shipData.ship_Orienteation > 360.0) {
-            errorMessage = QStringLiteral("%1 必须位于 [0, 360] 范围内")
-                               .arg(QString::fromLatin1(SchemaKeys::ShipOrientationDeg));
+        if (!readRequiredNumber(shipObject, SchemaKeys::ShipOrientationDeg, shipData.shipOrientationDeg, errorMessage)) {
             return false;
         }
 
@@ -254,12 +216,10 @@ private:
         }
         if (!parseDeviceArray(
                 transmitterArray,
-                shipId,
                 SchemaDeviceType::Transmitter,
-                shipContext + ".transmitters",
+                shipContext + QStringLiteral(".transmitters"),
                 shipData,
                 allEquipments,
-                equipmentIds,
                 errorMessage)) {
             return false;
         }
@@ -270,12 +230,24 @@ private:
         }
         if (!parseDeviceArray(
                 receiverArray,
-                shipId,
                 SchemaDeviceType::Receiver,
-                shipContext + ".receivers",
+                shipContext + QStringLiteral(".receivers"),
                 shipData,
                 allEquipments,
-                equipmentIds,
+                errorMessage)) {
+            return false;
+        }
+
+        QJsonArray transceiverArray;
+        if (!readRequiredArray(shipObject, SchemaKeys::Transceivers, transceiverArray, errorMessage)) {
+            return false;
+        }
+        if (!parseDeviceArray(
+                transceiverArray,
+                SchemaDeviceType::Transceiver,
+                shipContext + QStringLiteral(".transceivers"),
+                shipData,
+                allEquipments,
                 errorMessage)) {
             return false;
         }
@@ -285,43 +257,143 @@ private:
 
     static bool parseDeviceArray(
         const QJsonArray& deviceArray,
-        const QString& shipId,
         SchemaDeviceType deviceType,
         const QString& context,
         ShipData& shipData,
         std::vector<EquipmentData>& allEquipments,
-        std::unordered_set<std::string>& equipmentIds,
         QString& errorMessage) {
         for (int index = 0; index < deviceArray.size(); ++index) {
             if (!deviceArray.at(index).isObject()) {
-                errorMessage = QStringLiteral("%1[%2] 必须是对象").arg(context).arg(index);
+                errorMessage = QStringLiteral("%1[%2] 必须是 object").arg(context).arg(index);
                 return false;
             }
 
             EquipmentData equipmentData;
             QString equipmentId;
             const QString deviceContext = QStringLiteral("%1[%2]").arg(context).arg(index);
-            const bool parsed = (deviceType == SchemaDeviceType::Transmitter)
-                                    ? parseTransmitter(deviceArray.at(index).toObject(), equipmentData, equipmentId, deviceContext, errorMessage)
-                                    : parseReceiver(deviceArray.at(index).toObject(), equipmentData, equipmentId, deviceContext, errorMessage);
+            bool parsed = false;
+            if (deviceType == SchemaDeviceType::Transmitter) {
+                parsed = parseTransmitter(deviceArray.at(index).toObject(), equipmentData, equipmentId, deviceContext, errorMessage);
+            } else if (deviceType == SchemaDeviceType::Receiver) {
+                parsed = parseReceiver(deviceArray.at(index).toObject(), equipmentData, equipmentId, deviceContext, errorMessage);
+            } else {
+                parsed = parseTransceiver(deviceArray.at(index).toObject(), equipmentData, equipmentId, deviceContext, errorMessage);
+            }
             if (!parsed) {
                 return false;
             }
 
-            const std::string equipmentIdStd = equipmentId.toStdString();
-            if (!equipmentIds.insert(equipmentIdStd).second) {
-                errorMessage = QStringLiteral("设备 ID 重复: %1。当前解析到船只 %2").arg(equipmentId, shipId);
-                return false;
-            }
-
-            EquipmentOnShip equipmentOnShip;
-            equipmentOnShip.equipmentID = equipmentId;
-            equipmentOnShip.isEnabled = true;
-            shipData.Equipments.push_back(equipmentOnShip);
-
+            shipData.equipmentRefs.push_back(EquipmentOnShip{equipmentId, true});
             allEquipments.push_back(std::move(equipmentData));
         }
+
         return true;
+    }
+
+    static bool parseSharedDeviceFields(
+        const QJsonObject& deviceObject,
+        EquipmentData& equipmentData,
+        QString& errorMessage) {
+        return readRequiredNumber(deviceObject, SchemaKeys::GainDbi, equipmentData.gainDbi, errorMessage) &&
+               readRequiredVector3(
+                   deviceObject,
+                   SchemaKeys::LocationOffset,
+                   equipmentData.offsetX,
+                   equipmentData.offsetY,
+                   equipmentData.offsetZ,
+                   errorMessage);
+    }
+
+    static bool parseTransmitterConfig(
+        const QJsonObject& transmitterObject,
+        EquipmentData& equipmentData,
+        const QString& context,
+        QString& errorMessage) {
+        if (!validateAllowedKeys(
+                transmitterObject,
+                {
+                    QString::fromLatin1(SchemaKeys::CenterFrequencyGHz),
+                    QString::fromLatin1(SchemaKeys::BandwidthMHz),
+                    QString::fromLatin1(SchemaKeys::PowerDbm),
+                    QString::fromLatin1(SchemaKeys::AntennaPhiDeg),
+                    QString::fromLatin1(SchemaKeys::BeamWidthDeg),
+                    QString::fromLatin1(SchemaKeys::Polarization),
+                    QString::fromLatin1(SchemaKeys::AntennaType),
+                },
+                context,
+                errorMessage)) {
+            return false;
+        }
+
+        QString polarization;
+        if (!readRequiredString(transmitterObject, SchemaKeys::Polarization, polarization, errorMessage)) {
+            return false;
+        }
+        if (!validateEnumValue(
+                polarization,
+                {
+                    QString::fromLatin1(SchemaValues::Vertical),
+                    QString::fromLatin1(SchemaValues::Horizontal),
+                },
+                context + QStringLiteral(".polarization"),
+                errorMessage)) {
+            return false;
+        }
+
+        QString antennaType;
+        if (!readRequiredString(transmitterObject, SchemaKeys::AntennaType, antennaType, errorMessage)) {
+            return false;
+        }
+        if (!validateEnumValue(
+                antennaType,
+                {
+                    QString::fromLatin1(SchemaValues::Omni),
+                    QString::fromLatin1(SchemaValues::Directional),
+                    QString::fromLatin1(SchemaValues::Horn),
+                    QString::fromLatin1(SchemaValues::ShapedBeam),
+                    QString::fromLatin1(SchemaValues::Reflector),
+                },
+                context + QStringLiteral(".antennaType"),
+                errorMessage)) {
+            return false;
+        }
+
+        equipmentData.transmitterPolarization = polarization;
+        equipmentData.transmitterAntennaType = antennaType;
+
+        return readRequiredNumber(transmitterObject, SchemaKeys::CenterFrequencyGHz, equipmentData.transmitterCenterFrequencyGHz, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::BandwidthMHz, equipmentData.transmitterBandwidthMHz, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::PowerDbm, equipmentData.transmitterPowerDbm, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::AntennaPhiDeg, equipmentData.transmitterAntennaPhiDeg, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::BeamWidthDeg, equipmentData.transmitterBeamWidthDeg, errorMessage);
+    }
+
+    static bool parseReceiverConfig(
+        const QJsonObject& receiverObject,
+        EquipmentData& equipmentData,
+        const QString& context,
+        QString& errorMessage) {
+        if (!validateAllowedKeys(
+                receiverObject,
+                {
+                    QString::fromLatin1(SchemaKeys::CenterFrequencyGHz),
+                    QString::fromLatin1(SchemaKeys::BandwidthMHz),
+                    QString::fromLatin1(SchemaKeys::SensitivityDbm),
+                    QString::fromLatin1(SchemaKeys::InterferenceMarginDb),
+                    QString::fromLatin1(SchemaKeys::SinrMarginDb),
+                    QString::fromLatin1(SchemaKeys::NoiseFigureDb),
+                },
+                context,
+                errorMessage)) {
+            return false;
+        }
+
+        return readRequiredNumber(receiverObject, SchemaKeys::CenterFrequencyGHz, equipmentData.receiverCenterFrequencyGHz, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::BandwidthMHz, equipmentData.receiverBandwidthMHz, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::SensitivityDbm, equipmentData.receiverSensitivityDbm, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::InterferenceMarginDb, equipmentData.receiverInterferenceMarginDb, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::SinrMarginDb, equipmentData.receiverSinrMarginDb, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::NoiseFigureDb, equipmentData.receiverNoiseFigureDb, errorMessage);
     }
 
     static bool parseTransmitter(
@@ -333,17 +405,17 @@ private:
         if (!validateAllowedKeys(
                 transmitterObject,
                 {
-                    SchemaKeys::ID,
-                    SchemaKeys::Type,
-                    SchemaKeys::GainDbi,
-                    SchemaKeys::LocationOffset,
-                    SchemaKeys::CenterFrequencyGHz,
-                    SchemaKeys::BandwidthMHz,
-                    SchemaKeys::PowerDbm,
-                    SchemaKeys::AntennaPhiDeg,
-                    SchemaKeys::BeamWidthDeg,
-                    SchemaKeys::Polarization,
-                    SchemaKeys::AntennaType,
+                    QString::fromLatin1(SchemaKeys::ID),
+                    QString::fromLatin1(SchemaKeys::Type),
+                    QString::fromLatin1(SchemaKeys::GainDbi),
+                    QString::fromLatin1(SchemaKeys::LocationOffset),
+                    QString::fromLatin1(SchemaKeys::CenterFrequencyGHz),
+                    QString::fromLatin1(SchemaKeys::BandwidthMHz),
+                    QString::fromLatin1(SchemaKeys::PowerDbm),
+                    QString::fromLatin1(SchemaKeys::AntennaPhiDeg),
+                    QString::fromLatin1(SchemaKeys::BeamWidthDeg),
+                    QString::fromLatin1(SchemaKeys::Polarization),
+                    QString::fromLatin1(SchemaKeys::AntennaType),
                 },
                 context,
                 errorMessage)) {
@@ -364,47 +436,6 @@ private:
             return false;
         }
 
-        equipmentData.equipmentID = equipmentId;
-        equipmentData.equipmentType = QStringLiteral("发射机");
-
-        if (!readRequiredNumber(transmitterObject, SchemaKeys::GainDbi, equipmentData.Gain, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredVector3(
-                transmitterObject,
-                SchemaKeys::LocationOffset,
-                equipmentData.X_offset,
-                equipmentData.Y_offset,
-                equipmentData.Z_offset,
-                errorMessage)) {
-            return false;
-        }
-        if (!readRequiredPositiveNumber(transmitterObject, SchemaKeys::CenterFrequencyGHz, equipmentData.CentralF_Transmitter, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredPositiveNumber(transmitterObject, SchemaKeys::BandwidthMHz, equipmentData.Bandwidth_Transmitter, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredNumber(transmitterObject, SchemaKeys::PowerDbm, equipmentData.Power_Transmitter, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredNumber(transmitterObject, SchemaKeys::AntennaPhiDeg, equipmentData.antennaPhi_Transmitter, errorMessage)) {
-            return false;
-        }
-        if (equipmentData.antennaPhi_Transmitter < 0.0 || equipmentData.antennaPhi_Transmitter > 180.0) {
-            errorMessage = QStringLiteral("%1.%2 必须位于 [0, 180] 范围内")
-                               .arg(context, QString::fromLatin1(SchemaKeys::AntennaPhiDeg));
-            return false;
-        }
-        if (!readRequiredNumber(transmitterObject, SchemaKeys::BeamWidthDeg, equipmentData.Beamwidth_Transmitter, errorMessage)) {
-            return false;
-        }
-        if (equipmentData.Beamwidth_Transmitter < 0.0 || equipmentData.Beamwidth_Transmitter > 360.0) {
-            errorMessage = QStringLiteral("%1.%2 必须位于 [0, 360] 范围内")
-                               .arg(context, QString::fromLatin1(SchemaKeys::BeamWidthDeg));
-            return false;
-        }
-
         QString polarization;
         if (!readRequiredString(transmitterObject, SchemaKeys::Polarization, polarization, errorMessage)) {
             return false;
@@ -412,14 +443,13 @@ private:
         if (!validateEnumValue(
                 polarization,
                 {
-                    SchemaValues::Vertical,
-                    SchemaValues::Horizontal,
+                    QString::fromLatin1(SchemaValues::Vertical),
+                    QString::fromLatin1(SchemaValues::Horizontal),
                 },
-                context + ".polarization",
+                context + QStringLiteral(".polarization"),
                 errorMessage)) {
             return false;
         }
-        equipmentData.PolarizationMethod_Transmitter = mapPolarizationToInternalValue(polarization);
 
         QString antennaType;
         if (!readRequiredString(transmitterObject, SchemaKeys::AntennaType, antennaType, errorMessage)) {
@@ -428,18 +458,28 @@ private:
         if (!validateEnumValue(
                 antennaType,
                 {
-                    SchemaValues::Omni,
-                    SchemaValues::Directional,
-                    SchemaValues::Horn,
-                    SchemaValues::ShapedBeam,
-                    SchemaValues::Reflector,
+                    QString::fromLatin1(SchemaValues::Omni),
+                    QString::fromLatin1(SchemaValues::Directional),
+                    QString::fromLatin1(SchemaValues::Horn),
+                    QString::fromLatin1(SchemaValues::ShapedBeam),
+                    QString::fromLatin1(SchemaValues::Reflector),
                 },
-                context + ".antennaType",
+                context + QStringLiteral(".antennaType"),
                 errorMessage)) {
             return false;
         }
-        equipmentData.antennaType_Transmitter = mapAntennaTypeToInternalValue(antennaType);
-        return true;
+
+        equipmentData.equipmentId = equipmentId;
+        equipmentData.equipmentType = QString::fromLatin1(SchemaValues::Transmitter);
+        equipmentData.transmitterPolarization = polarization;
+        equipmentData.transmitterAntennaType = antennaType;
+
+        return parseSharedDeviceFields(transmitterObject, equipmentData, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::CenterFrequencyGHz, equipmentData.transmitterCenterFrequencyGHz, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::BandwidthMHz, equipmentData.transmitterBandwidthMHz, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::PowerDbm, equipmentData.transmitterPowerDbm, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::AntennaPhiDeg, equipmentData.transmitterAntennaPhiDeg, errorMessage) &&
+               readRequiredNumber(transmitterObject, SchemaKeys::BeamWidthDeg, equipmentData.transmitterBeamWidthDeg, errorMessage);
     }
 
     static bool parseReceiver(
@@ -451,16 +491,16 @@ private:
         if (!validateAllowedKeys(
                 receiverObject,
                 {
-                    SchemaKeys::ID,
-                    SchemaKeys::Type,
-                    SchemaKeys::GainDbi,
-                    SchemaKeys::LocationOffset,
-                    SchemaKeys::CenterFrequencyGHz,
-                    SchemaKeys::BandwidthMHz,
-                    SchemaKeys::SensitivityDbm,
-                    SchemaKeys::InterferenceMarginDb,
-                    SchemaKeys::SinrMarginDb,
-                    SchemaKeys::NoiseFigureDb,
+                    QString::fromLatin1(SchemaKeys::ID),
+                    QString::fromLatin1(SchemaKeys::Type),
+                    QString::fromLatin1(SchemaKeys::GainDbi),
+                    QString::fromLatin1(SchemaKeys::LocationOffset),
+                    QString::fromLatin1(SchemaKeys::CenterFrequencyGHz),
+                    QString::fromLatin1(SchemaKeys::BandwidthMHz),
+                    QString::fromLatin1(SchemaKeys::SensitivityDbm),
+                    QString::fromLatin1(SchemaKeys::InterferenceMarginDb),
+                    QString::fromLatin1(SchemaKeys::SinrMarginDb),
+                    QString::fromLatin1(SchemaKeys::NoiseFigureDb),
                 },
                 context,
                 errorMessage)) {
@@ -481,45 +521,77 @@ private:
             return false;
         }
 
-        equipmentData.equipmentID = equipmentId;
-        equipmentData.equipmentType = QStringLiteral("接收机");
+        equipmentData.equipmentId = equipmentId;
+        equipmentData.equipmentType = QString::fromLatin1(SchemaValues::Receiver);
 
-        if (!readRequiredNumber(receiverObject, SchemaKeys::GainDbi, equipmentData.Gain, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredVector3(
-                receiverObject,
-                SchemaKeys::LocationOffset,
-                equipmentData.X_offset,
-                equipmentData.Y_offset,
-                equipmentData.Z_offset,
+        return parseSharedDeviceFields(receiverObject, equipmentData, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::CenterFrequencyGHz, equipmentData.receiverCenterFrequencyGHz, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::BandwidthMHz, equipmentData.receiverBandwidthMHz, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::SensitivityDbm, equipmentData.receiverSensitivityDbm, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::InterferenceMarginDb, equipmentData.receiverInterferenceMarginDb, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::SinrMarginDb, equipmentData.receiverSinrMarginDb, errorMessage) &&
+               readRequiredNumber(receiverObject, SchemaKeys::NoiseFigureDb, equipmentData.receiverNoiseFigureDb, errorMessage);
+    }
+
+    static bool parseTransceiver(
+        const QJsonObject& transceiverObject,
+        EquipmentData& equipmentData,
+        QString& equipmentId,
+        const QString& context,
+        QString& errorMessage) {
+        if (!validateAllowedKeys(
+                transceiverObject,
+                {
+                    QString::fromLatin1(SchemaKeys::ID),
+                    QString::fromLatin1(SchemaKeys::Type),
+                    QString::fromLatin1(SchemaKeys::GainDbi),
+                    QString::fromLatin1(SchemaKeys::LocationOffset),
+                    QString::fromLatin1(SchemaKeys::TransmitterConfig),
+                    QString::fromLatin1(SchemaKeys::ReceiverConfig),
+                },
+                context,
                 errorMessage)) {
             return false;
         }
-        if (!readRequiredPositiveNumber(receiverObject, SchemaKeys::CenterFrequencyGHz, equipmentData.CentralF_Reciever, errorMessage)) {
+
+        if (!readRequiredString(transceiverObject, SchemaKeys::ID, equipmentId, errorMessage)) {
             return false;
         }
-        if (!readRequiredPositiveNumber(receiverObject, SchemaKeys::BandwidthMHz, equipmentData.Bandwidth_Reciever, errorMessage)) {
+
+        QString type;
+        if (!readRequiredString(transceiverObject, SchemaKeys::Type, type, errorMessage)) {
             return false;
         }
-        if (!readRequiredNumber(receiverObject, SchemaKeys::SensitivityDbm, equipmentData.Sensitive_reciever, errorMessage)) {
+        if (type != QString::fromLatin1(SchemaValues::Transceiver)) {
+            errorMessage = QStringLiteral("%1.type 必须为 %2")
+                               .arg(context, QString::fromLatin1(SchemaValues::Transceiver));
             return false;
         }
-        if (equipmentData.Sensitive_reciever >= 0.0) {
-            errorMessage = QStringLiteral("%1.%2 必须为负值")
-                               .arg(context, QString::fromLatin1(SchemaKeys::SensitivityDbm));
+
+        QJsonObject transmitterConfig;
+        if (!readRequiredObject(transceiverObject, SchemaKeys::TransmitterConfig, transmitterConfig, errorMessage)) {
             return false;
         }
-        if (!readRequiredNumber(receiverObject, SchemaKeys::InterferenceMarginDb, equipmentData.interferenceMargin, errorMessage)) {
+
+        QJsonObject receiverConfig;
+        if (!readRequiredObject(transceiverObject, SchemaKeys::ReceiverConfig, receiverConfig, errorMessage)) {
             return false;
         }
-        if (!readRequiredNumber(receiverObject, SchemaKeys::SinrMarginDb, equipmentData.SINRMargin, errorMessage)) {
-            return false;
-        }
-        if (!readRequiredNonNegativeNumber(receiverObject, SchemaKeys::NoiseFigureDb, equipmentData.noiseFigure, errorMessage)) {
-            return false;
-        }
-        return true;
+
+        equipmentData.equipmentId = equipmentId;
+        equipmentData.equipmentType = QString::fromLatin1(SchemaValues::Transceiver);
+
+        return parseSharedDeviceFields(transceiverObject, equipmentData, errorMessage) &&
+               parseTransmitterConfig(
+                   transmitterConfig,
+                   equipmentData,
+                   context + QStringLiteral(".") + QString::fromLatin1(SchemaKeys::TransmitterConfig),
+                   errorMessage) &&
+               parseReceiverConfig(
+                   receiverConfig,
+                   equipmentData,
+                   context + QStringLiteral(".") + QString::fromLatin1(SchemaKeys::ReceiverConfig),
+                   errorMessage);
     }
 
     static bool parsePoint3D(
@@ -532,8 +604,8 @@ private:
         if (!validateAllowedKeys(
                 pointObject,
                 {
-                    SchemaKeys::Type,
-                    SchemaKeys::Coordinates,
+                    QString::fromLatin1(SchemaKeys::Type),
+                    QString::fromLatin1(SchemaKeys::Coordinates),
                 },
                 context,
                 errorMessage)) {
@@ -560,7 +632,7 @@ private:
         QString& errorMessage) {
         for (auto it = object.begin(); it != object.end(); ++it) {
             if (!allowedKeys.contains(it.key())) {
-                errorMessage = QStringLiteral("%1 包含未定义字段: %2").arg(context, it.key());
+                errorMessage = QStringLiteral("%1 包含未定义字段 %2").arg(context, it.key());
                 return false;
             }
         }
@@ -573,7 +645,7 @@ private:
         const QString& context,
         QString& errorMessage) {
         if (!allowedValues.contains(value)) {
-            errorMessage = QStringLiteral("%1 的取值非法: %2").arg(context, value);
+            errorMessage = QStringLiteral("%1 的枚举值非法: %2").arg(context, value);
             return false;
         }
         return true;
@@ -617,6 +689,7 @@ private:
             errorMessage = QStringLiteral("%1 必须存在且类型为 string").arg(keyString);
             return false;
         }
+
         result = object.value(keyString).toString().trimmed();
         if (result.isEmpty()) {
             errorMessage = QStringLiteral("%1 不能为空字符串").arg(keyString);
@@ -635,41 +708,12 @@ private:
             errorMessage = QStringLiteral("%1 必须存在且类型为 number").arg(keyString);
             return false;
         }
+
         result = object.value(keyString).toDouble();
         return true;
     }
 
-    static bool readRequiredPositiveNumber(
-        const QJsonObject& object,
-        const char* key,
-        double& result,
-        QString& errorMessage) {
-        if (!readRequiredNumber(object, key, result, errorMessage)) {
-            return false;
-        }
-        if (result <= 0.0) {
-            errorMessage = QStringLiteral("%1 必须大于 0").arg(QString::fromLatin1(key));
-            return false;
-        }
-        return true;
-    }
-
-    static bool readRequiredNonNegativeNumber(
-        const QJsonObject& object,
-        const char* key,
-        double& result,
-        QString& errorMessage) {
-        if (!readRequiredNumber(object, key, result, errorMessage)) {
-            return false;
-        }
-        if (result < 0.0) {
-            errorMessage = QStringLiteral("%1 不能为负值").arg(QString::fromLatin1(key));
-            return false;
-        }
-        return true;
-    }
-
-    static bool readRequiredPositiveInteger(
+    static bool readRequiredInteger(
         const QJsonObject& object,
         const char* key,
         int& result,
@@ -678,10 +722,17 @@ private:
         if (!readRequiredNumber(object, key, rawValue, errorMessage)) {
             return false;
         }
-        if (rawValue <= 0.0 || std::floor(rawValue) != rawValue) {
-            errorMessage = QStringLiteral("%1 必须为正整数").arg(QString::fromLatin1(key));
+
+        if (std::floor(rawValue) != rawValue) {
+            errorMessage = QStringLiteral("%1 必须为整数").arg(QString::fromLatin1(key));
             return false;
         }
+        if (rawValue < static_cast<double>(std::numeric_limits<int>::min()) ||
+            rawValue > static_cast<double>(std::numeric_limits<int>::max())) {
+            errorMessage = QStringLiteral("%1 超出 int 范围").arg(QString::fromLatin1(key));
+            return false;
+        }
+
         result = static_cast<int>(rawValue);
         return true;
     }
@@ -705,32 +756,11 @@ private:
             errorMessage = QStringLiteral("%1 的三个元素都必须是 number").arg(QString::fromLatin1(key));
             return false;
         }
+
         x = array.at(0).toDouble();
         y = array.at(1).toDouble();
         z = array.at(2).toDouble();
         return true;
     }
 
-    static QString mapPolarizationToInternalValue(const QString& polarization) {
-        if (polarization == QString::fromLatin1(SchemaValues::Horizontal)) {
-            return QStringLiteral("水平极化");
-        }
-        return QStringLiteral("垂直极化");
-    }
-
-    static QString mapAntennaTypeToInternalValue(const QString& antennaType) {
-        if (antennaType == QString::fromLatin1(SchemaValues::Directional)) {
-            return QStringLiteral("定向天线");
-        }
-        if (antennaType == QString::fromLatin1(SchemaValues::Horn)) {
-            return QStringLiteral("喇叭天线");
-        }
-        if (antennaType == QString::fromLatin1(SchemaValues::ShapedBeam)) {
-            return QStringLiteral("赋形波束天线");
-        }
-        if (antennaType == QString::fromLatin1(SchemaValues::Reflector)) {
-            return QStringLiteral("抛物面天线");
-        }
-        return QStringLiteral("全向天线");
-    }
 };

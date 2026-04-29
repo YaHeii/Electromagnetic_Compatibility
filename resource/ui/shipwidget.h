@@ -43,6 +43,7 @@ public:
     explicit ShipItemWidget(QWidget *parent = nullptr);
     void setData(const ShipData &data);
     ShipData getData() const;
+    bool tryBuildData(ShipData& data, QString& errorMessage) const;
     QString getID() const { return _currentId; }
 signals:
     void deleteMe(ShipItemWidget* widget); // 告知父容器删除本条目

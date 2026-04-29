@@ -16,7 +16,7 @@
 | 文件 | 作用 |
 | --- | --- |
 | `Interface/SchemaConstants.h` | 字段名、固定字符串、枚举值来源 |
-| `Utils/JsonLoader.hpp` | 当前运行时真实生效的解析与校验规则 |
+| `Utils/JsonLoader.hpp` | 当前运行时真实生效的解析与基础校验规则 |
 | `docs/schema/usv-environment.schema.json` | 供工具校验与文档引用的显式 schema |
 
 其中：
@@ -30,14 +30,14 @@
 | 文件 | 说明 |
 | --- | --- |
 | `usv-environment.schema.json` | 正式 JSON Schema 文档 |
-| `usv-environment.template.jsonc` | 人类可读、带中文注释的模板样例 |
+| `usv-environment.template.jsonc` | 带中文注释的模板样例 |
 | `README.md` | 本说明文件 |
 
-主程序当前的活动样例文件为：
+主程序当前活动样例文件为：
 
 - `Tests/Test.jsonc`
 
-以下文件只作为历史或业务参考，不再视为主程序标准输入：
+以下文件仅作历史或业务参考，不再视为主程序标准输入：
 
 - `Tests/Test_A.jsonc`
 - `Tests/Test_B.jsonc`
@@ -57,22 +57,22 @@
 
 基本原则如下：
 
-1. 所有物理量统一使用 JSON `number`。
-2. 船只集合使用 `usvs` 数组，不再使用 `USV1`、`USV2` 这类动态键名。
-3. 发射机和接收机分别使用 `transmitters`、`receivers` 数组。
-4. `location.type` 固定为 `Point3D`。
-5. 顶层、环境、船只、设备的未知字段会被主程序拒绝。
+1. 所有物理量统一使用 JSON `number`
+2. 船只集合使用 `usvs` 数组
+3. 设备集合拆分为 `transmitters`、`receivers`、`transceivers` 三个数组
+4. `location.type` 固定为 `Point3D`
+5. 顶层、环境、船只、设备中的未知字段会被主程序拒绝
 
 ## 5. 关键语义约定
 
 ### 5.1 坐标与角度
 
-- 世界坐标原点位于场景左下角。
-- `x` 轴向右，`y` 轴向上，`z` 轴向上。
-- 船只 `location.coordinates` 为世界坐标。
-- 设备 `locationOffset` 为相对船体中心的偏移。
-- `shipOrientationDeg` 为船在二维平面的朝向角，范围 `0~360`。
-- `antennaPhiDeg` 为相对正 `z` 轴向下倾斜的角度，范围 `0~180`。
+- 世界坐标原点位于场景左下角
+- `x` 轴向右，`y` 轴向上，`z` 轴向上
+- 船只 `location.coordinates` 为世界坐标
+- 设备 `locationOffset` 为相对船体中心的偏移
+- `shipOrientationDeg` 为船在二维平面的朝向角，范围 `0~360`
+- `antennaPhiDeg` 为相对正 `z` 轴向下倾斜的角度，范围 `0~180`
 
 ### 5.2 单位与类型
 
@@ -83,11 +83,20 @@
 - `interferenceMarginDb`、`sinrMarginDb`、`noiseFigureDb` 使用 `dB`
 - `sensitivityDbm` 当前标准固定为负值
 
-### 5.3 ID 规则
+### 5.3 收发一体机
+
+- `transceivers` 是新增的标准数组
+- `type` 固定为 `TRANSCEIVER`
+- 为避免收发字段冲突，收发一体机使用嵌套子对象：
+  - `transmitter`
+  - `receiver`
+- UI 可以继续使用中文文案，但写入 DTO 的值必须使用 schema 英文枚举
+
+### 5.4 ID 规则
 
 - 船只 `ID` 当前要求唯一
-- 设备 `ID` 当前也按全局唯一处理
-- 推荐使用 `USV1_TX1`、`USV3_RX1` 这类可追踪命名
+- 设备 `ID` 当前按全局唯一处理
+- 推荐使用 `USV1_TX1`、`USV3_RX1`、`USV2_TRX1` 这类可追踪命名
 
 ## 6. 解析器当前行为
 
@@ -99,7 +108,7 @@
 - 对未知字段直接报错
 - 对 `schemaVersion`、`type`、枚举值做严格检查
 
-这意味着文档、模板和真实输入文件必须与 `SchemaConstants.h` 同步，否则主程序不会“自动帮你兜底”。
+这意味着文档、模板和真实输入文件必须与 `SchemaConstants.h` 同步，否则主程序不会自动兜底。
 
 ## 7. 历史字段映射参考
 
@@ -129,7 +138,5 @@
 3. `Tests/Test.jsonc`
 4. `docs/schema/usv-environment.schema.json`
 5. `docs/schema/usv-environment.template.jsonc`
-6. `docs/项目架构与API规范.md`
-7. `docs/风险与改进建议.md`
 
-如果将来需要恢复旧格式兼容，应作为单独需求处理，而不是继续把历史字段混入当前标准文档。
+如果未来需要恢复旧格式兼容，应作为单独需求处理，而不是继续把历史字段混入当前标准文档。
