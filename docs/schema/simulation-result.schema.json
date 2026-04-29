@@ -93,7 +93,9 @@
       "type": "string",
       "enum": [
         "AggregatedPowerDbm",
-        "PathLossDb"
+        "PathLossDb",
+        "NoiseElevationDb",
+        "DesenseDb"
       ]
     },
     "scalarField2D": {
@@ -228,6 +230,144 @@
         }
       }
     },
+    "series1D": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seriesId",
+        "displayName",
+        "xUnit",
+        "yUnit",
+        "xValues",
+        "yValues"
+      ],
+      "properties": {
+        "seriesId": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "xUnit": { "type": "string", "minLength": 1 },
+        "yUnit": { "type": "string", "minLength": 1 },
+        "xValues": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number" }
+        },
+        "yValues": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number" }
+        }
+      }
+    },
+    "labeledMatrix2D": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matrixId",
+        "displayName",
+        "valueUnit",
+        "rows",
+        "cols",
+        "rowLabels",
+        "colLabels",
+        "values"
+      ],
+      "properties": {
+        "matrixId": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "valueUnit": { "type": "string", "minLength": 1 },
+        "rows": { "type": "integer", "minimum": 1 },
+        "cols": { "type": "integer", "minimum": 1 },
+        "rowLabels": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "colLabels": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number" }
+        }
+      }
+    },
+    "scfMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scalarDb",
+        "thermalNoiseFloorDbm",
+        "linkCount",
+        "couplingMatrix"
+      ],
+      "properties": {
+        "scalarDb": { "type": "number" },
+        "thermalNoiseFloorDbm": { "type": "number" },
+        "linkCount": { "type": "integer", "minimum": 1 },
+        "couplingMatrix": { "$ref": "#/$defs/labeledMatrix2D" }
+      }
+    },
+    "s3iMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scalarDb",
+        "referenceTransmitterId",
+        "referenceReceiverId",
+        "baselineWindSpeedMps",
+        "currentWindSpeedMps",
+        "calmCurve",
+        "currentCurve"
+      ],
+      "properties": {
+        "scalarDb": { "type": "number" },
+        "referenceTransmitterId": { "type": "string", "minLength": 1 },
+        "referenceReceiverId": { "type": "string", "minLength": 1 },
+        "baselineWindSpeedMps": { "type": "number", "minimum": 0 },
+        "currentWindSpeedMps": { "type": "number", "minimum": 0 },
+        "calmCurve": { "$ref": "#/$defs/series1D" },
+        "currentCurve": { "$ref": "#/$defs/series1D" }
+      }
+    },
+    "tElevMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "maxDb",
+        "meanDb"
+      ],
+      "properties": {
+        "field": { "$ref": "#/$defs/scalarField2D" },
+        "maxDb": { "type": "number" },
+        "meanDb": { "type": "number" }
+      }
+    },
+    "dDesenseMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "victimReceiverId",
+        "peakDb",
+        "coveragePercent",
+        "adiDbPerSquareMeter"
+      ],
+      "properties": {
+        "field": { "$ref": "#/$defs/scalarField2D" },
+        "victimReceiverId": { "type": "string", "minLength": 1 },
+        "peakDb": { "type": "number" },
+        "coveragePercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "adiDbPerSquareMeter": { "type": "number" }
+      }
+    },
     "derivedMetrics": {
       "type": "object",
       "additionalProperties": false,
@@ -238,13 +378,38 @@
         "available": {
           "type": "boolean"
         },
-        "metricsSchemaVersion": {
-          "type": "string"
+        "scf": {
+          "$ref": "#/$defs/scfMetric"
         },
-        "note": {
-          "type": "string"
+        "s3i": {
+          "$ref": "#/$defs/s3iMetric"
+        },
+        "tElev": {
+          "$ref": "#/$defs/tElevMetric"
+        },
+        "dDesense": {
+          "$ref": "#/$defs/dDesenseMetric"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "available": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "scf",
+              "s3i",
+              "tElev",
+              "dDesense"
+            ]
+          }
+        }
+      ]
     },
     "equipmentOnShip": {
       "type": "object",
@@ -385,13 +550,30 @@
         "angleStepDeg": { "type": "integer", "minimum": 1, "maximum": 360 }
       }
     },
+    "emcAnalysisConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fieldPlaneHeightM",
+        "referenceTransmitterId",
+        "referenceReceiverId",
+        "s3iBaselineWindSpeedMps"
+      ],
+      "properties": {
+        "fieldPlaneHeightM": { "type": "number", "exclusiveMinimum": 0 },
+        "referenceTransmitterId": { "type": "string", "minLength": 1 },
+        "referenceReceiverId": { "type": "string", "minLength": 1 },
+        "s3iBaselineWindSpeedMps": { "type": "number", "minimum": 0 }
+      }
+    },
     "dataSnapshot": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "allEquipments",
         "allShips",
-        "environmentConfig"
+        "environmentConfig",
+        "emcAnalysisConfig"
       ],
       "properties": {
         "allEquipments": {
@@ -408,6 +590,9 @@
         },
         "environmentConfig": {
           "$ref": "#/$defs/environmentConfig"
+        },
+        "emcAnalysisConfig": {
+          "$ref": "#/$defs/emcAnalysisConfig"
         }
       }
     }

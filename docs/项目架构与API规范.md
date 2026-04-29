@@ -1,330 +1,350 @@
-# 项目架构与 API 规范
-**注意: 不需要修改验证测代码,不需要处理验证测与主项目的兼容性,验证侧仅用于上下文参考**
-## 1. 架构总览
+# 项目架构与API规范
+**注意: 不需要修改验证侧代码, 不需要处理验证侧与主项目的兼容性, 验证侧仅用于上下文参考**
 
-当前仓库可以拆成六层，其中前五层属于主程序链路，第六层属于验证侧子模块：
+## 1. 架构概览
 
-| 层级 | 主要目录 | 作用 | 当前状态 |
-| --- | --- | --- | --- |
-| 输入层 | `Tests/`、`Resource/ui/` | 提供 JSONC 配置与界面输入 | 主程序已接入新 schema |
-| 数据建模层 | `Interface/` | 保存 `DataModel`、快照、schema 常量 | 已实现 |
-| 领域对象层 | `Models/` | 表达船只、设备、天线、编队对象 | 已实现 |
-| 仿真调度层 | `Simulation/` | 负责环境建模、PE 求解、EMC 调度 | 已实现 |
-| 结果展示层 | `Resource/ui/`、导出逻辑 | 展示二维结果与日志 | 已实现基础能力 |
-| 验证侧资产层 | `PE_validation/` 子模块 | notebook、实验设计、图表、验证结论 | 验证侧已有，主程序不直接依赖 |
+当前仓库可以按主程序运行链路拆成六层：
 
-主程序的实际运行主链路是：
+| 层级 | 主要目录 | 职责 |
+| --- | --- | --- |
+| 输入层 | `Tests/`、`Resource/ui/` | 提供 JSONC 样例与 Qt 编辑界面 |
+| DTO / schema 层 | `Interface/` | 维护 `DataModel`、快照结构、schema 常量与转换接口 |
+| 领域对象层 | `Models/` | 表达船只、设备、天线、编队等领域对象 |
+| 仿真求解层 | `Simulation/` | 负责传播求解、总场聚合、派生指标计算与任务调度 |
+| 展示层 | `Resource/ui/` | 消费结构化结果对象，展示场图与任务状态 |
+| 验证侧资产层 | `PE_validation/` | 保存 notebook、实验设计、图表和验证结论 |
 
-```text
-JSONC / UI
-  -> DataModel
-  -> TransferToEngine / TransferToPEdata
-  -> EMC_Engine / Propagation_Engine / PEModel
-  -> GridMap / UI 展示
-```
-
-`PE_validation` 不参与主程序构建，也不参与当前运行时接口解析。它的价值在于定义验证口径与后续能力迁移目标。
+`PE_validation/` 不参与主程序构建，也不是运行时依赖。它的作用是提供验证口径和后续迁移的上下文参考。
 
 ## 2. 主程序运行链路
 
-当前一条典型仿真流程如下：
+当前主程序的主链路为：
 
-1. UI 或 JSON 输入整理为 `DataModel::DataSnapshot`
-2. 接口层执行基础校验：
-   - JSON 路径：`JsonLoader`
-   - UI 路径：各页面控件负责把文本整理成 DTO，并只做基础格式校验
-3. 核心语义校验统一收口到 `DataModel::validateSnapshot()`
-4. `TransferToEngine::convertDataModelToFleet()` 把快照转换为 `Fleet`
-5. `EMC_Engine::do_PE_computing()` 调度传播计算
-6. 结果以 `GridMap` 形式回传 UI 并绘制
+```text
+JSONC / UI
+  -> DataModel::DataSnapshot
+  -> DataModel::validateSnapshot()
+  -> TransferToEngine::convertDataModelToFleet()
+  -> EMC_Engine
+  -> PEPropagationSolver / PEModel
+  -> EMCComputationResult
+  -> EMCMetricsCalculator
+  -> SimulationTaskResult
+  -> UI / 后续报告 / 后续导出
+```
 
-当前需要注意：
+关键说明：
 
-- `Simulation.cpp` 现在统一消费当前 `DataModel` 快照，JSON 与 UI 两条输入路径在运行前都会收敛到同一份 DTO。
-- 主窗口工具栏已提供 `JSON/JSONC` 导入入口；导入成功时先写入 `DataModel`，再回填环境页、设备页、船只页；导入失败时不改写当前 `DataModel`。
-- `Home/TreeView` 对当前 `DataModel` 提供只读投影，便于浏览环境、船只和设备信息，但它不进入主编辑链路。
+- JSON 导入和 UI 编辑都会先收敛到同一份 `DataModel::DataSnapshot`
+- 语义校验统一收口到 `DataModel::validateSnapshot()`
+- `EMC_Engine` 只负责多发射机传播与总场聚合，不承接四个派生指标业务逻辑
+- `EMCMetricsCalculator` 在成功仿真后统一计算 `SCF / S3I / T_elev / D_desense`
+- UI 已不再直接消费裸 `GridMap`，而是消费 `SimulationTaskResult`
 
 ## 3. 标准输入 schema
 
-### 3.1 标准来源
+### 3.1 统一来源
 
-主程序输入标准由三处共同约束：
-- `Interface/SchemaConstants.h`
-  - 字段名、固定字符串、枚举值的单一来源
-- `Utils/JsonLoader.hpp`
-  - 当前运行时真实生效的解析与基础校验规则
-- `docs/schema/usv-environment.schema.json`
-  - 面向文档和工具的显式 schema
+主程序输入标准由以下位置共同约束：
 
-如三者冲突，应优先修正为一致，不能让文档长期偏离运行时代码。
+1. `Interface/SchemaConstants.h`
+2. `Utils/JsonLoader.hpp`
+3. `docs/schema/usv-environment.schema.json`
+4. `docs/schema/usv-environment.template.jsonc`
+
+其中：
+
+- 字段名、固定值和枚举值以 `SchemaConstants.h` 为准
+- 运行时解析与基础格式校验以 `JsonLoader.hpp` 为准
+- 文档 schema 与模板必须与运行时代码保持同步
+
 ### 3.2 顶层结构
 
-当前主程序只支持如下顶层结构：
+当前标准输入顶层结构固定为：
+
 ```json
 {
   "schemaVersion": "1.0.0",
   "environment": {},
+  "emcAnalysisConfig": {},
   "usvs": []
 }
 ```
 
 约束如下：
-- `schemaVersion` 必须为 `"1.0.0"`
-- `environment` 必须存在
-- `usvs` 必须存在且至少包含一艘船
-- 未声明字段会被 `JsonLoader` 直接判定为非法
-### 3.3 环境参数接口
 
-`environment` 节点与 `EnvironmentData` 对应关系如下：
+- `schemaVersion` 必须为 `"1.0.0"`
+- `environment` 为必填
+- `emcAnalysisConfig` 为必填
+- `usvs` 为必填，且必须至少包含一艘船
+- 未声明字段会被 `JsonLoader` 直接判定为非法
+
+### 3.3 环境参数
+
+`environment` 对应 `EnvironmentData`：
+
 | schema 字段 | 内部字段 | 单位 | 说明 |
 | --- | --- | --- | --- |
 | `maxRange` | `maxRange` | m | 最大传播距离 |
 | `ductHeight` | `ductHeight` | m | 蒸发波导高度 |
-| `windSpeed` | `windSpeed` | m/s | 海面风速 |
-| `dx` | `dx` | m | 水平方向步进 |
+| `windSpeed` | `windSpeed` | m/s | 当前海况风速 |
+| `dx` | `dx` | m | 水平步进 |
 | `dz` | `dz` | m | 垂直分辨率 |
 | `nz` | `nz` | - | 垂直网格数 |
-| `angleStepDeg` | `angleStepDeg` | deg | 2D 仿真角度步进 |
+| `angleStepDeg` | `angleStepDeg` | deg | 2D 方位角步进 |
 
-当前要求：
+运行时约束：
+
 - `maxRange`、`dx`、`dz` 必须大于 `0`
 - `ductHeight`、`windSpeed` 不能为负
-- `nz`、`angleStepDeg` 必须为正整数
-- `angleStepDeg` 范围为 `1` 到 `360`
+- `nz` 必须为正整数
+- `angleStepDeg` 必须位于 `[1, 360]`
 
-### 3.4 USV 与设备接口
-`usvs` 为数组，每个元素代表一艘船，字段如下：
+### 3.4 EMC 分析配置
 
-| 字段 | 类型 | 单位 | 说明 |
+`emcAnalysisConfig` 对应 `EMCAnalysisConfig`：
+
+| schema 字段 | 内部字段 | 单位 | 说明 |
 | --- | --- | --- | --- |
-| `ID` | string | - | 船只唯一标识 |
-| `location.type` | string | - | 固定为 `Point3D` |
-| `location.coordinates` | number[3] | m | 船只世界坐标 `[x, y, z]` |
-| `speed` | number | m/s | 船速 |
-| `shipOrientationDeg` | number | deg | 船在二维平面的朝向角，范围 `0~360` |
-| `transmitters` | array | - | 发射机列表 |
-| `receivers` | array | - | 接收机列表 |
-| `transceivers` | array | - | 收发一体机列表 |
+| `fieldPlaneHeightM` | `fieldPlaneHeightM` | m | 主结果平面高度 |
+| `referenceTransmitterId` | `referenceTransmitterId` | - | 参考发射机 ID |
+| `referenceReceiverId` | `referenceReceiverId` | - | 参考接收机 ID |
+| `s3iBaselineWindSpeedMps` | `s3iBaselineWindSpeedMps` | m/s | S3I 基准海况风速 |
 
-坐标与角度语义约定：
+运行时约束：
 
-- 世界坐标原点位于场景左下角
-- `x` 轴向右，`y` 轴向上，`z` 轴向上
-- 设备 `locationOffset` 表示相对船体中心的偏移
-- `antennaPhiDeg` 表示相对正 `z` 轴向下倾斜的角度，范围 `0~180`
+- `fieldPlaneHeightM > 0`
+- `fieldPlaneHeightM` 不能超过 `environment.dz * (environment.nz - 1)`
+- `referenceTransmitterId` 必须解析到启用的发射机或收发一体机发射端
+- `referenceReceiverId` 必须解析到启用的接收机或收发一体机接收端
+- `referenceTransmitterId -> referenceReceiverId` 必须是跨平台链路
+- `s3iBaselineWindSpeedMps >= 0`
 
-发射机字段如下：
+### 3.5 USV 与设备输入
 
-| 字段 | 单位 | 说明 |
-| --- | --- | --- |
-| `ID` | - | 设备唯一标识，当前按全局唯一处理 |
-| `type` | - | 固定为 `TRANSMITTER` |
-| `gainDbi` | dBi | 增益 |
-| `locationOffset` | m | 相对船体中心的三维偏移 |
-| `centerFrequencyGHz` | GHz | 中心频率 |
-| `bandwidthMHz` | MHz | 带宽 |
-| `powerDbm` | dBm | 发射功率 |
-| `antennaPhiDeg` | deg | 下倾角 |
-| `beamWidthDeg` | deg | 波束宽度，范围 `0~360` |
-| `polarization` | - | `VERTICAL` 或 `HORIZONTAL` |
-| `antennaType` | - | `OMNI`、`DIRECTIONAL`、`HORN`、`SHAPED_BEAM`、`REFLECTOR` |
+`usvs` 数组中的每个元素表示一艘船，主要字段为：
 
-接收机字段如下：
+- `ID`
+- `location`
+- `speed`
+- `shipOrientationDeg`
+- `transmitters`
+- `receivers`
+- `transceivers`
 
-| 字段 | 单位 | 说明 |
-| --- | --- | --- |
-| `ID` | - | 设备唯一标识，当前按全局唯一处理 |
-| `type` | - | 固定为 `RECEIVER` |
-| `gainDbi` | dBi | 增益 |
-| `locationOffset` | m | 相对船体中心的三维偏移 |
-| `centerFrequencyGHz` | GHz | 中心频率 |
-| `bandwidthMHz` | MHz | 带宽 |
-| `sensitivityDbm` | dBm | 灵敏度，当前标准固定为负值 |
-| `interferenceMarginDb` | dB | 干扰容限或等效带外抑制 |
-| `sinrMarginDb` | dB | SINR 裕量 |
-| `noiseFigureDb` | dB | 噪声系数 |
+设备侧统一使用：
 
-收发一体机字段如下：
-| 字段 | 单位 | 说明 |
-| --- | --- | --- |
-| `ID` | - | 设备唯一标识，当前按全局唯一处理 |
-| `type` | - | 固定为 `TRANSCEIVER` |
-| `gainDbi` | dBi | 共用增益 |
-| `locationOffset` | m | 共用相对偏移 |
-| `transmitter` | object | - | 发射子对象，字段与发射机参数一致但不再重复 `ID/type/gainDbi/locationOffset` |
-| `receiver` | object | - | 接收子对象，字段与接收机参数一致但不再重复 `ID/type/gainDbi/locationOffset` |
+- `TRANSMITTER`
+- `RECEIVER`
+- `TRANSCEIVER`
 
-### 3.5 样例文件状态
-| 文件 | 用途 | 状态 |
-| --- | --- | --- |
-| `Tests/Test.jsonc` | 主程序当前标准样例 | 当前已实现 |
-| `Tests/Test_A.jsonc` | 历史场景样例 | 历史参考，不是主程序标准输入 |
-| `Tests/Test_B.jsonc` | 历史场景样例 | 历史参考，不是主程序标准输入 |
-| `PE_validation/` 内相关样例 | 验证侧实验资产 | 验证侧已有，主程序不直接解析 |
+收发一体机采用嵌套 `transmitter / receiver` 子对象，避免把发射参数与接收参数摊平到同一层。
 
-## 4. 内部数据模型与 API 边界
+## 4. 核心对象与职责
 
 ### 4.1 `DataModel`
 
-`DataModel` 是主程序当前的全局数据容器，内部包含：
+`DataModel` 是主程序的全局 DTO 容器，当前核心成员包括：
 
-- `std::vector<ShipData> allShips`
 - `std::vector<EquipmentData> allEquipments`
+- `std::vector<ShipData> allShips`
 - `EnvironmentData environmentConfig`
+- `EMCAnalysisConfig emcAnalysisConfig`
 
-当前口径：
-- DTO 字段名已与新 schema 对齐
-- `TRANSCEIVER` 已从“内部私有值”收敛为标准 schema 枚举
-- 核心语义校验统一收口到 `DataModel::validateSnapshot()`
-- `validateSnapshot()` 统一负责环境范围、至少一艘船、ID 唯一性与船载设备引用一致性
+`DataModel::DataSnapshot` 是仿真任务冻结输入的标准结构。
+`DataModel::validateSnapshot()` 统一负责：
+
+- 环境参数值域校验
+- `emcAnalysisConfig` 联合校验
+- 设备与船只 ID 唯一性
+- 船载设备引用一致性
+- 参考发射机 / 接收机解析
+- 跨平台参考链路约束
+
 ### 4.2 `JsonLoader::LoadFile`
 
 职责：
+
 - 读取 JSONC 文本
-- 去除单行 `//` 注释
-- 校验顶层结构、环境字段、船只字段、设备字段
+- 去除单行注释
 - 拒绝未知字段
-- 调用 `DataModel::validateSnapshot()` 完成核心语义校验
-- 写回 `DataModel::instance()`
+- 解析顶层对象、环境参数、分析配置、船只与设备
+- 调用 `DataModel::validateSnapshot()` 做核心语义校验
+- 成功后回写 `DataModel::instance()`
 
 边界：
-- 只支持新 schema
+
+- 当前只支持新 schema
 - 不保留旧格式兼容逻辑
-- 是主程序标准 JSON 输入的唯一解析入口
 
-### 4.3 UI 输入页
-职责：
-- 保持中文界面文案
-- 把控件输入整理为统一 DTO
-- 只做基础格式校验，例如：
-  - 必填项是否为空
-  - 数值字段能否成功解析
-  - schema 枚举值是否来自受支持选项
-- 编辑页统一提供 `loadFromModel()`、`saveToModel()`、`setReadOnly(bool)` 与 dirty 状态切换能力
+### 4.3 UI 编辑页
 
-约束：
-- UI 不应复制 `DataModel` 的核心语义规则
-- 环境页、设备页、船只页保存时，都应构造候选 `DataSnapshot`
-- 跨设备 ID、船只引用一致性、环境范围等核心规则统一交给 `DataModel::validateSnapshot()`
-- 设备保存成功后，只刷新船只页挂载设备可选项，不强制覆盖船只页当前草稿
+当前环境页、设备页、船只页统一遵循：
 
-### 4.4 `TreeView` 与 `T_TreeViewModel`
+- `loadFromModel()`
+- `saveToModel()`
+- `setReadOnly(bool)`
+- `dirty` 状态
+
+分层约束：
+
+- UI 只做基础格式校验和 DTO 组装
+- 核心语义校验统一交给 `DataModel::validateSnapshot()`
+- 导入成功后统一回写 `DataModel`，再回填页面草稿
+
+### 4.4 `TreeView` / `T_TreeViewModel`
 
 职责：
-- `T_TreeViewModel::reloadFromDataModel()`：从当前 `DataModel::instance()` 全量重建只读树
-- `T_TreeViewModel::findItemIndex(const QString& keyword)`：按节点标题执行大小写不敏感的包含匹配，返回首个命中项
-- `TreeView::syncViewWithModel()`：刷新页面视图与树模型同步
-- `TreeView::expandAll()` / `collapseAll()`：控制树展开状态
-- `TreeView::findAndSelect(const QString& keyword)`：展开祖先节点、滚动并选中首个匹配项
 
-展示约定：
-- 一级节点固定为 `环境参数`、`船只列表`、`设备库`
-- 环境节点展示 `EnvironmentData` 关键字段
-- 船只节点展示位置、速度、朝向和挂载设备引用
-- 设备节点展示类型、增益、相对坐标及按类型区分的关键参数
+- 从 `DataModel` 生成只读总览树
+- 展示环境参数、分析配置、船只和设备信息
+- 提供刷新、展开、折叠和关键字查找
 
 边界：
-- `TreeView` 只承担只读总览，不支持编辑、勾选、删除或页面跳转
-- 它是 `DataModel` 的只读投影，不参与主编辑链路的保存与校验
+
+- 当前只承担只读投影
+- 不支持编辑、删除、跳转或导航编排
 
 ### 4.5 `TransferToEngine::convertDataModelToFleet`
 
 职责：
-- 将 DTO 快照转换为 `Fleet`
-- 将 `ShipData`、`EquipmentData` 变为领域层对象
-- 为后续 `EMC_Engine` 与 `PEModel` 提供可计算输入
-### 4.6 `EMC_Engine` 与 `Propagation_Engine`
+
+- 把 `DataSnapshot` 转换为 `Fleet`
+- 把 `ShipData / EquipmentData` 转为领域对象
+- 为仿真引擎提供可计算输入
+
+### 4.6 `PEPropagationSolver`
 
 职责：
-- `EMC_Engine::do_PE_computing()`：调度所有发射机仿真并汇总结果
-- `Propagation_Engine::PEmodel_computing2D()`：计算单发射机二维传播结果
-- `PEModel`：负责传播步进、表面模型和路径损耗求解
 
-当前输出：
-- 主程序核心输出仍以二维 `GridMap` 为主
-- EMC 指标、报告对象、结构化评估结果尚未成为稳定 API
+- 单发射机 1D / 2D PE 求解
+- 支持显式传入接收高度 / 结果平面高度
+- 返回路径损耗场或路径损耗曲线
 
-## 5. 一致性维护要求
+边界：
 
-后续只要修改输入字段、单位或枚举，必须同步更新以下位置：
+- 不关心任务状态、结果对象和派生指标
+
+### 4.7 `EMC_Engine`
+
+职责：
+
+- 持有冻结后的 `Fleet` 和 `DataSnapshot`
+- 调度全部发射机的传播求解
+- 聚合总场
+- 输出 `EMCComputationResult`
+
+边界：
+
+- 不直接计算 `SCF / S3I / T_elev / D_desense`
+- 主结果平面高度通过 `inputSnapshot.emcAnalysisConfig.fieldPlaneHeightM` 输入
+
+### 4.8 `EMCMetricsCalculator`
+
+职责：
+
+- 消费 `DataSnapshot + EMCComputationResult`
+- 统一计算四个派生指标
+- 输出完整 `DerivedMetrics`
+
+边界：
+
+- 不负责传播求解
+- 不读取全局 `DataModel`
+- 只消费冻结快照与原始结果
+
+### 4.9 `simSchedulerCtx`
+
+职责：
+
+- 冻结任务输入
+- 构建 `Fleet`
+- 驱动 `EMC_Engine`
+- 在成功仿真后调用 `EMCMetricsCalculator`
+- 组装 `SimulationTaskResult`
+
+## 5. 结果对象 API
+
+### 5.1 `SimulationTaskResult`
+
+任务级根结果对象，主要字段包括：
+
+- 任务元数据：`taskId`、`modelType`、`status`
+- 输入来源：`formationSource`、`presetFormationId`
+- 时间信息：`startedAtUtcMs`、`finishedAtUtcMs`、`durationMs`
+- 结果说明：`errorMessage`、`summaryText`
+- 冻结输入：`inputSnapshot`
+- 主场图：`aggregatedField`
+- 单发射机结果：`emitterResults`
+- 派生指标：`derivedMetrics`
+
+### 5.2 `ScalarField2D`
+
+通用二维标量场类型，当前正式承载：
+
+- `AggregatedPowerDbm`
+- `PathLossDb`
+- `NoiseElevationDb`
+- `DesenseDb`
+
+### 5.3 `EmitterResult`
+
+单发射机结果对象，承载：
+
+- 发射机与船只 ID
+- 发射机参数摘要
+- `field2D`
+- 失败时的 `errorMessage`
+
+### 5.4 `DerivedMetrics`
+
+当前已正式承载四类指标：
+
+- `scf`
+  - `scalarDb`
+  - `thermalNoiseFloorDbm`
+  - `linkCount`
+  - `couplingMatrix`
+- `s3i`
+  - `scalarDb`
+  - `referenceTransmitterId`
+  - `referenceReceiverId`
+  - `baselineWindSpeedMps`
+  - `currentWindSpeedMps`
+  - `calmCurve`
+  - `currentCurve`
+- `tElev`
+  - `field`
+  - `maxDb`
+  - `meanDb`
+- `dDesense`
+  - `field`
+  - `victimReceiverId`
+  - `peakDb`
+  - `coveragePercent`
+  - `adiDbPerSquareMeter`
+
+约束说明：
+
+- `DerivedMetrics` 不再单独维护 `metricsSchemaVersion`
+- `DerivedMetrics` 跟随 `resultSchemaVersion` 演进
+- `inputSnapshot` 中已经保留 `emcAnalysisConfig`，结果侧不再重复保存同一份配置
+
+## 6. 一致性维护要求
+
+只要修改以下任一内容，就必须同步更新文档和样例：
 
 1. `Interface/SchemaConstants.h`
 2. `Utils/JsonLoader.hpp`
 3. `Tests/Test.jsonc`
 4. `docs/schema/usv-environment.schema.json`
 5. `docs/schema/usv-environment.template.jsonc`
-6. 本文档
+6. `docs/schema/simulation-result.schema.json`
+7. `docs/schema/simulation-result.template.jsonc`
+8. 本文档
 
-当前最重要的架构纪律不是继续堆叠 UI，而是保持“schema、运行时代码、验证口径”三者同口径。
-## 6. 2026-04-29 仿真结果边界更新
-### 6.1 当前已实现
+当前最重要的纪律不是继续堆叠页面，而是保持以下三者长期同口径：
 
-主程序仿真主链路已从：
-
-```text
-DataModel / Fleet
-  -> EMC_Engine
-  -> GridMap
-  -> Simulation.cpp / PaintImage
-```
-
-收敛为：
-
-```text
-DataModel::DataSnapshot
-  -> simSchedulerCtx
-  -> TransferToEngine
-  -> EMC_Engine
-  -> PEPropagationSolver / PEModel
-  -> EMCComputationResult
-  -> SimulationTaskResult
-  -> UI / 后续指标 / 后续报告
-```
-
-职责边界如下：
-
-- `PEPropagationSolver`
-  - 单发射机 1D/2D PE 求解
-  - 不关心任务状态、UI 和报告
-- `EMC_Engine`
-  - 持有冻结后的 `Fleet` 与 `DataSnapshot`
-  - 调度多发射机计算
-  - 聚合总场
-  - 产出 `EMCComputationResult`
-- `simSchedulerCtx`
-  - 持有任务级输入快照与取消状态
-  - 统一构建 `Fleet`
-  - 调用 `EMC_Engine`
-  - 组装 `SimulationTaskResult`
-- `Resource/ui/Simulation.cpp`
-  - 仅消费 `SimulationTaskResult`
-  - 主图绘制读取 `aggregatedField`
-  - 旧输入提示读取 `inputSnapshot`
-
-### 6.2 结果对象接口约定
-
-新增稳定结果边界：
-
-- `SimulationTaskResult`
-  - 任务根对象
-  - 保留 `formationSource + optional<int> presetFormationId`
-  - 保留 `inputSnapshot`
-- `ScalarField2D`
-  - 行主序二维标量场
-  - 当前承接 `AggregatedPowerDbm` 与 `PathLossDb`
-- `EmitterResult`
-  - 单发射机结果与最小元数据
-- `DerivedMetrics`
-  - 第一版仅作为派生指标容器壳结构
-
-结果侧校验策略：
-
-- C++ 运行时校验：各结构体内置 `validate()`
-- 文档化 schema：`docs/schema/simulation-result.schema.json`
-- 当前不提供结果 JSON 导入链路
-
-### 6.3 与输入 schema 的关系
-
-- 输入侧标准仍以 `Interface/SchemaConstants.h + Utils/JsonLoader.hpp + docs/schema/usv-environment.*` 为准。
-- 结果侧 schema 只描述仿真输出对象，不改变输入 schema 语义。
-- `SimulationTaskResult::inputSnapshot` 保存的是 `DataModel::DataSnapshot` 内部形态，不是外部 JSON 根结构。
+1. schema 文档
+2. 主程序运行时代码
+3. `PE_validation` 的验证结论

@@ -17,6 +17,7 @@ struct ScopedDataModelState {
         model->allEquipments = snapshot.allEquipments;
         model->allShips = snapshot.allShips;
         model->environmentConfig = snapshot.environmentConfig;
+        model->emcAnalysisConfig = snapshot.emcAnalysisConfig;
     }
 };
 
@@ -42,10 +43,27 @@ EquipmentData makeTreeTransmitter(const QString& equipmentId) {
     return equipment;
 }
 
-ShipData makeTreeShip(const QString& equipmentId) {
+EquipmentData makeTreeReceiver(const QString& equipmentId) {
+    EquipmentData equipment;
+    equipment.equipmentId = equipmentId;
+    equipment.equipmentType = schemaValue(SchemaValues::Receiver);
+    equipment.gainDbi = 4.0;
+    equipment.offsetX = 1.0;
+    equipment.offsetY = 0.0;
+    equipment.offsetZ = 3.0;
+    equipment.receiverCenterFrequencyGHz = 1.5;
+    equipment.receiverBandwidthMHz = 20.0;
+    equipment.receiverSensitivityDbm = -85.0;
+    equipment.receiverInterferenceMarginDb = -10.0;
+    equipment.receiverSinrMarginDb = 0.0;
+    equipment.receiverNoiseFigureDb = 3.0;
+    return equipment;
+}
+
+ShipData makeTreeShip(const std::string& shipId, double worldX, const QString& equipmentId) {
     ShipData ship;
-    ship.shipId = "USV_TREE_01";
-    ship.worldX = 120.0;
+    ship.shipId = shipId;
+    ship.worldX = worldX;
     ship.worldY = 240.0;
     ship.worldZ = 3.0;
     ship.shipSpeedMps = 8.0;
@@ -75,10 +93,19 @@ TEST_CASE("T_TreeViewModel reloads DataModel into three readonly top-level group
     model->environmentConfig.dz = 0.2;
     model->environmentConfig.nz = 512;
     model->environmentConfig.angleStepDeg = 10;
+    model->emcAnalysisConfig.fieldPlaneHeightM = 12.0;
+    model->emcAnalysisConfig.referenceTransmitterId = QStringLiteral("EQ_TREE_TX_01");
+    model->emcAnalysisConfig.referenceReceiverId = QStringLiteral("EQ_TREE_RX_01");
+    model->emcAnalysisConfig.s3iBaselineWindSpeedMps = 0.5;
 
-    const QString equipmentId = QStringLiteral("EQ_TREE_TX_01");
-    model->allEquipments = {makeTreeTransmitter(equipmentId)};
-    model->allShips = {makeTreeShip(equipmentId)};
+    model->allEquipments = {
+        makeTreeTransmitter(QStringLiteral("EQ_TREE_TX_01")),
+        makeTreeReceiver(QStringLiteral("EQ_TREE_RX_01")),
+    };
+    model->allShips = {
+        makeTreeShip("USV_TREE_01", 120.0, QStringLiteral("EQ_TREE_TX_01")),
+        makeTreeShip("USV_TREE_02", 240.0, QStringLiteral("EQ_TREE_RX_01")),
+    };
 
     T_TreeViewModel treeModel;
     treeModel.reloadFromDataModel();
@@ -94,14 +121,18 @@ TEST_CASE("T_TreeViewModel reloads DataModel into three readonly top-level group
     REQUIRE(displayText(treeModel, shipsRoot) == QStringLiteral("船只列表"));
     REQUIRE(displayText(treeModel, equipmentsRoot) == QStringLiteral("设备库"));
 
-    REQUIRE(treeModel.rowCount(environmentRoot) == 7);
-    REQUIRE(treeModel.rowCount(shipsRoot) == 1);
-    REQUIRE(treeModel.rowCount(equipmentsRoot) == 1);
+    REQUIRE(treeModel.rowCount(environmentRoot) == 8);
+    REQUIRE(treeModel.rowCount(shipsRoot) == 2);
+    REQUIRE(treeModel.rowCount(equipmentsRoot) == 2);
 
     const QModelIndex shipIndex = firstChild(treeModel, shipsRoot);
     const QModelIndex equipmentIndex = firstChild(treeModel, equipmentsRoot);
     REQUIRE(displayText(treeModel, shipIndex) == QStringLiteral("USV_TREE_01"));
     REQUIRE(displayText(treeModel, equipmentIndex) == QStringLiteral("EQ_TREE_TX_01"));
+
+    const QModelIndex analysisGroup = firstChild(treeModel, environmentRoot, 7);
+    REQUIRE(displayText(treeModel, analysisGroup) == QStringLiteral("EMC 分析配置"));
+    REQUIRE(treeModel.rowCount(analysisGroup) == 4);
 
     REQUIRE(treeModel.getItemCount() > 3);
 }
@@ -111,19 +142,25 @@ TEST_CASE("T_TreeViewModel findItemIndex matches environment names ship ids and 
 
     DataModel* model = DataModel::instance();
     model->environmentConfig.maxRange = 1234.0;
-
-    const QString equipmentId = QStringLiteral("EQ_TREE_FIND_01");
-    model->allEquipments = {makeTreeTransmitter(equipmentId)};
-
-    ShipData ship = makeTreeShip(equipmentId);
-    ship.shipId = "USV_TREE_FIND_01";
-    model->allShips = {ship};
+    model->emcAnalysisConfig.fieldPlaneHeightM = 14.0;
+    model->emcAnalysisConfig.referenceTransmitterId = QStringLiteral("EQ_TREE_FIND_01");
+    model->emcAnalysisConfig.referenceReceiverId = QStringLiteral("EQ_TREE_FIND_RX");
+    model->emcAnalysisConfig.s3iBaselineWindSpeedMps = 0.5;
+    model->allEquipments = {
+        makeTreeTransmitter(QStringLiteral("EQ_TREE_FIND_01")),
+        makeTreeReceiver(QStringLiteral("EQ_TREE_FIND_RX")),
+    };
+    model->allShips = {
+        makeTreeShip("USV_TREE_FIND_01", 120.0, QStringLiteral("EQ_TREE_FIND_01")),
+        makeTreeShip("USV_TREE_FIND_02", 180.0, QStringLiteral("EQ_TREE_FIND_RX")),
+    };
 
     T_TreeViewModel treeModel;
     treeModel.reloadFromDataModel();
 
     REQUIRE(treeModel.findItemIndex(QStringLiteral("maxrange")).isValid());
     REQUIRE(treeModel.findItemIndex(QStringLiteral("tree_find_01")).isValid());
+    REQUIRE(treeModel.findItemIndex(QStringLiteral("referenceTransmitterId")).isValid());
     REQUIRE(treeModel.findItemIndex(QStringLiteral("USV_TREE_FIND_01")).isValid());
-    REQUIRE(treeModel.findItemIndex(QStringLiteral("missing_keyword")).isValid() == false);
+    REQUIRE_FALSE(treeModel.findItemIndex(QStringLiteral("missing_keyword")).isValid());
 }

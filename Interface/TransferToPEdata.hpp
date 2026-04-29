@@ -30,7 +30,7 @@ struct Transmitter_PE_data {
 	double Z_offset = 0.0;  //Z绝对坐标
     AntennaType antennaType = AntennaType::OMNI; // 天线类型
     double power_dbm = 0.0; // 发射功率 (dBm)
-    double antenna_height = 25.0; // 天线高度 (m)(设备高度+天线高度)
+    double antenna_height = 0.0; // 天线高度 (m)(设备高度+天线高度)
     double beamWidth_deg = 2.0;     // 波束宽度 (度)
     double antennaPhi_deg = 2.0;     // 天线仰角 (度)
     double centralF_Ghz = 9.4e9;       // 9.4 GHz (X-band)

@@ -12,7 +12,7 @@
   "errorMessage": "",
   "summaryText": "仿真完成",
 
-  // 这里保存的是 DataModel::DataSnapshot 内部形态
+  // 这里保存的是 DataModel::DataSnapshot 内部快照，而不是原始输入根对象
   "inputSnapshot": {
     "allEquipments": [
       {
@@ -31,10 +31,38 @@
         "transmitterCenterFrequencyGHz": 1.0,
         "transmitterBandwidthMHz": 100.0,
         "transmitterPowerDbm": 30.0,
-        "transmitterAntennaPhiDeg": 0.0,
+        "transmitterAntennaPhiDeg": 10.0,
         "transmitterBeamWidthDeg": 20.0,
         "transmitterPolarization": "VERTICAL",
         "transmitterAntennaType": "HORN",
+        "antennaCenterFrequencyGHz": 0.0,
+        "antennaBandwidthMHz": 0.0,
+        "antennaPowerDbm": 0.0,
+        "antennaPhiDeg": 0.0,
+        "antennaBeamWidthDeg": 0.0,
+        "antennaPolarization": "VERTICAL",
+        "antennaType": "OMNI"
+      },
+      {
+        "equipmentId": "USV2_RX1",
+        "equipmentType": "RECEIVER",
+        "gainDbi": 18.0,
+        "offsetX": 0.0,
+        "offsetY": 0.0,
+        "offsetZ": 2.0,
+        "receiverCenterFrequencyGHz": 1.0,
+        "receiverBandwidthMHz": 100.0,
+        "receiverSensitivityDbm": -88.0,
+        "receiverInterferenceMarginDb": -6.0,
+        "receiverSinrMarginDb": 0.0,
+        "receiverNoiseFigureDb": 3.0,
+        "transmitterCenterFrequencyGHz": 0.0,
+        "transmitterBandwidthMHz": 0.0,
+        "transmitterPowerDbm": 0.0,
+        "transmitterAntennaPhiDeg": 0.0,
+        "transmitterBeamWidthDeg": 0.0,
+        "transmitterPolarization": "VERTICAL",
+        "transmitterAntennaType": "OMNI",
         "antennaCenterFrequencyGHz": 0.0,
         "antennaBandwidthMHz": 0.0,
         "antennaPowerDbm": 0.0,
@@ -58,6 +86,20 @@
             "isEnabled": true
           }
         ]
+      },
+      {
+        "shipId": "USV2",
+        "worldX": 1200.0,
+        "worldY": 0.0,
+        "worldZ": 0.0,
+        "shipOrientationDeg": 180.0,
+        "shipSpeedMps": 4.0,
+        "equipmentRefs": [
+          {
+            "equipmentId": "USV2_RX1",
+            "isEnabled": true
+          }
+        ]
       }
     ],
     "environmentConfig": {
@@ -68,12 +110,18 @@
       "dz": 0.1,
       "nz": 2048,
       "angleStepDeg": 5
+    },
+    "emcAnalysisConfig": {
+      "fieldPlaneHeightM": 25.0,
+      "referenceTransmitterId": "USV1_TX1",
+      "referenceReceiverId": "USV2_RX1",
+      "s3iBaselineWindSpeedMps": 0.5
     }
   },
 
   "aggregatedField": {
     "fieldId": "aggregated-power",
-    "displayName": "Aggregated Power Field",
+    "displayName": "总功率场",
     "quantity": "AggregatedPowerDbm",
     "valueUnit": "dBm",
     "axisXUnit": "m",
@@ -106,7 +154,7 @@
       "errorMessage": "",
       "field2D": {
         "fieldId": "path-loss-USV1_TX1",
-        "displayName": "Path Loss Field",
+        "displayName": "路径损耗场",
         "quantity": "PathLossDb",
         "valueUnit": "dB",
         "axisXUnit": "m",
@@ -128,10 +176,119 @@
     }
   ],
 
-  // 第一版只保留指标容器，不强行放入实验 3 指标
   "derivedMetrics": {
-    "available": false,
-    "metricsSchemaVersion": "",
-    "note": "指标链路待后续实现"
+    "available": true,
+    "scf": {
+      "scalarDb": -7.5,
+      "thermalNoiseFloorDbm": -90.0,
+      "linkCount": 1,
+      "couplingMatrix": {
+        "matrixId": "scf-coupling",
+        "displayName": "SCF 耦合矩阵",
+        "valueUnit": "dB",
+        "rows": 1,
+        "cols": 1,
+        "rowLabels": [
+          "USV1_TX1"
+        ],
+        "colLabels": [
+          "USV2_RX1"
+        ],
+        "values": [
+          -7.5
+        ]
+      }
+    },
+    "s3i": {
+      "scalarDb": 2.3,
+      "referenceTransmitterId": "USV1_TX1",
+      "referenceReceiverId": "USV2_RX1",
+      "baselineWindSpeedMps": 0.5,
+      "currentWindSpeedMps": 7.0,
+      "calmCurve": {
+        "seriesId": "s3i-calm",
+        "displayName": "S3I 基准海况曲线",
+        "xUnit": "m",
+        "yUnit": "dB",
+        "xValues": [
+          5.0,
+          10.0,
+          15.0
+        ],
+        "yValues": [
+          101.0,
+          99.0,
+          97.5
+        ]
+      },
+      "currentCurve": {
+        "seriesId": "s3i-current",
+        "displayName": "S3I 当前海况曲线",
+        "xUnit": "m",
+        "yUnit": "dB",
+        "xValues": [
+          5.0,
+          10.0,
+          15.0
+        ],
+        "yValues": [
+          103.3,
+          101.1,
+          99.8
+        ]
+      }
+    },
+    "tElev": {
+      "field": {
+        "fieldId": "noise-elevation",
+        "displayName": "噪声抬升场",
+        "quantity": "NoiseElevationDb",
+        "valueUnit": "dB",
+        "axisXUnit": "m",
+        "axisYUnit": "m",
+        "rows": 2,
+        "cols": 2,
+        "originX": 0.0,
+        "originY": 0.0,
+        "stepX": 5.0,
+        "stepY": 5.0,
+        "noDataValue": null,
+        "values": [
+          3.2,
+          3.0,
+          2.8,
+          2.5
+        ]
+      },
+      "maxDb": 3.2,
+      "meanDb": 2.875
+    },
+    "dDesense": {
+      "field": {
+        "fieldId": "desense",
+        "displayName": "灵敏度恶化场",
+        "quantity": "DesenseDb",
+        "valueUnit": "dB",
+        "axisXUnit": "m",
+        "axisYUnit": "m",
+        "rows": 2,
+        "cols": 2,
+        "originX": 0.0,
+        "originY": 0.0,
+        "stepX": 5.0,
+        "stepY": 5.0,
+        "noDataValue": null,
+        "values": [
+          1.8,
+          1.5,
+          1.1,
+          0.6
+        ]
+      },
+      "victimReceiverId": "USV2_RX1",
+      "peakDb": 1.8,
+      "coveragePercent": 50.0,
+      "adiDbPerSquareMeter": 0.25
+    }
   }
 }

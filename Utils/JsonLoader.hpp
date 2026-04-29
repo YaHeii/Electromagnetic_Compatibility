@@ -55,6 +55,7 @@ public:
         model->allEquipments = std::move(snapshot.allEquipments);
         model->allShips = std::move(snapshot.allShips);
         model->environmentConfig = snapshot.environmentConfig;
+        model->emcAnalysisConfig = snapshot.emcAnalysisConfig;
 
         spdlog::info(
             "成功加载 schema 配置: {}, 船只数量: {}, 设备数量: {}",
@@ -79,6 +80,7 @@ private:
                 {
                     QString::fromLatin1(SchemaKeys::SchemaVersion),
                     QString::fromLatin1(SchemaKeys::Environment),
+                    QString::fromLatin1(SchemaKeys::EMCAnalysisConfig),
                     QString::fromLatin1(SchemaKeys::Usvs),
                 },
                 QStringLiteral("root"),
@@ -101,6 +103,14 @@ private:
             return false;
         }
         if (!parseEnvironment(environmentObject, snapshot.environmentConfig, errorMessage)) {
+            return false;
+        }
+
+        QJsonObject analysisObject;
+        if (!readRequiredObject(rootObject, SchemaKeys::EMCAnalysisConfig, analysisObject, errorMessage)) {
+            return false;
+        }
+        if (!parseAnalysisConfig(analysisObject, snapshot.emcAnalysisConfig, errorMessage)) {
             return false;
         }
 
@@ -157,6 +167,45 @@ private:
                readRequiredNumber(environmentObject, SchemaKeys::Dz, environmentConfig.dz, errorMessage) &&
                readRequiredInteger(environmentObject, SchemaKeys::Nz, environmentConfig.nz, errorMessage) &&
                readRequiredInteger(environmentObject, SchemaKeys::AngleStepDeg, environmentConfig.angleStepDeg, errorMessage);
+    }
+
+    static bool parseAnalysisConfig(
+        const QJsonObject& analysisObject,
+        EMCAnalysisConfig& analysisConfig,
+        QString& errorMessage) {
+        if (!validateAllowedKeys(
+                analysisObject,
+                {
+                    QString::fromLatin1(SchemaKeys::FieldPlaneHeightM),
+                    QString::fromLatin1(SchemaKeys::ReferenceTransmitterId),
+                    QString::fromLatin1(SchemaKeys::ReferenceReceiverId),
+                    QString::fromLatin1(SchemaKeys::S3IBaselineWindSpeedMps),
+                },
+                QStringLiteral("emcAnalysisConfig"),
+                errorMessage)) {
+            return false;
+        }
+
+        return readRequiredNumber(
+                   analysisObject,
+                   SchemaKeys::FieldPlaneHeightM,
+                   analysisConfig.fieldPlaneHeightM,
+                   errorMessage) &&
+               readRequiredString(
+                   analysisObject,
+                   SchemaKeys::ReferenceTransmitterId,
+                   analysisConfig.referenceTransmitterId,
+                   errorMessage) &&
+               readRequiredString(
+                   analysisObject,
+                   SchemaKeys::ReferenceReceiverId,
+                   analysisConfig.referenceReceiverId,
+                   errorMessage) &&
+               readRequiredNumber(
+                   analysisObject,
+                   SchemaKeys::S3IBaselineWindSpeedMps,
+                   analysisConfig.s3iBaselineWindSpeedMps,
+                   errorMessage);
     }
 
     static bool parseShip(
@@ -632,7 +681,7 @@ private:
         QString& errorMessage) {
         for (auto it = object.begin(); it != object.end(); ++it) {
             if (!allowedKeys.contains(it.key())) {
-                errorMessage = QStringLiteral("%1 包含未定义字段 %2").arg(context, it.key());
+                errorMessage = QStringLiteral("%1 包含未定义字段: %2").arg(context, it.key());
                 return false;
             }
         }
@@ -762,5 +811,4 @@ private:
         z = array.at(2).toDouble();
         return true;
     }
-
 };

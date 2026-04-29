@@ -74,7 +74,7 @@ EmitterResult makeEmitterResult(
     result.worldZ = peData.Z_offset;
     result.field2D = matrixToField(
         QStringLiteral("path-loss-%1").arg(result.emitterId),
-        QStringLiteral("Path Loss Field"),
+        QStringLiteral("路径损耗场"),
         ScalarFieldQuantity::PathLossDb,
         QStringLiteral("dB"),
         pathLoss,
@@ -102,7 +102,11 @@ GridMap scalarFieldToGridMap(const ScalarField2D& field) {
 
 }  // namespace
 
-EMC_Engine::EMC_Engine(ModelType modelType, std::unique_ptr<Fleet> fleet, DataSnapshot dataSnapshot)
+EMC_Engine::EMC_Engine(
+    ModelType modelType,
+    std::unique_ptr<Fleet> fleet,
+    DataSnapshot dataSnapshot,
+    std::unique_ptr<PEPropagationSolver> propagationSolver)
     : _fleet(std::move(fleet)),
       _dataSnapshot(std::move(dataSnapshot)),
       _modelType(modelType) {
@@ -110,7 +114,11 @@ EMC_Engine::EMC_Engine(ModelType modelType, std::unique_ptr<Fleet> fleet, DataSn
         spdlog::error("EMC_Engine initialization failed: fleet is null");
     }
     _env = _dataSnapshot.environmentConfig;
-    _propagationSolver = std::make_unique<PEPropagationSolver>(_modelType, _fleet.get());
+    if (propagationSolver) {
+        _propagationSolver = std::move(propagationSolver);
+    } else {
+        _propagationSolver = std::make_unique<PEPropagationSolver>(_modelType, _fleet.get());
+    }
 }
 
 EMC_Engine::~EMC_Engine() = default;
@@ -156,11 +164,11 @@ void EMC_Engine::do_PE_computing() {
 
     const std::vector<Transmitter_PE_data> peDataList = EquipmentConvertToMatrix(_fleet.get());
     if (peDataList.empty()) {
-        markFailed(QStringLiteral("No transmitter data available in the frozen snapshot"));
+        markFailed(QStringLiteral("冻结快照中没有可用的发射机数据"));
         return;
     }
 
-    const double receiverHeight = 25.0;
+    const double receiverHeight = _dataSnapshot.emcAnalysisConfig.fieldPlaneHeightM;
     const Eigen::MatrixXd firstLoss = _propagationSolver->compute2D(peDataList.front(), _env, receiverHeight);
     if (isStopRequested) {
         markCancelled();
@@ -188,7 +196,7 @@ void EMC_Engine::do_PE_computing() {
 
     _computationResult.aggregatedField = matrixToField(
         QStringLiteral("aggregated-power"),
-        QStringLiteral("Aggregated Power Field"),
+        QStringLiteral("总功率场"),
         ScalarFieldQuantity::AggregatedPowerDbm,
         QStringLiteral("dBm"),
         finalTotalDbm,

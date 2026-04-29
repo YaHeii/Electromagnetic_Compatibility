@@ -6,9 +6,10 @@
 #include <QUuid>
 
 #include <spdlog/spdlog.h>
-
 #include "Interface/TransferToEngin.h"
 #include "Simulation/EMCComputationResult.h"
+#include "Simulation/EMCMetricsCalculator.h"
+#include "Simulation/PEPropagationSolver.h"
 #include "Simulation/EMC_Engine.h"
 
 simSchedulerCtx::simSchedulerCtx(
@@ -44,7 +45,7 @@ SimulationTaskResult simSchedulerCtx::run() {
 
     auto fleet = TransferToEngine::convertDataModelToFleet(_inputSnapshot);
     if (!fleet) {
-        failedComputation.errorMessage = QStringLiteral("无法从输入快照构建 Fleet");
+        failedComputation.errorMessage = QStringLiteral("无法从冻结快照构建 Fleet");
         return assembleResult(
             _inputSnapshot,
             _formationSource,
@@ -108,6 +109,19 @@ SimulationTaskResult simSchedulerCtx::assembleResult(
     result.aggregatedField = computationResult.aggregatedField;
     result.emitterResults = computationResult.emitterResults;
     result.derivedMetrics.available = false;
+
+    if (result.status == SimulationResultStatus::Succeeded) {
+        const auto metricsResult = EMCMetricsCalculator::compute(
+            modelType,
+            inputSnapshot,
+            computationResult);
+        if (!metricsResult.success) {
+            result.status = SimulationResultStatus::Failed;
+            result.errorMessage = metricsResult.errorMessage;
+        } else {
+            result.derivedMetrics = metricsResult.metrics;
+        }
+    }
 
     switch (result.status) {
     case SimulationResultStatus::Succeeded:

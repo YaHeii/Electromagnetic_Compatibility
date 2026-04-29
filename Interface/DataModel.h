@@ -55,6 +55,14 @@ inline bool isAntennaTypeValue(const QString& value) {
            value == QString::fromLatin1(SchemaValues::Reflector);
 }
 
+inline bool supportsTransmitterRole(const QString& value) {
+    return value == transmitterType() || value == transceiverType();
+}
+
+inline bool supportsReceiverRole(const QString& value) {
+    return value == receiverType() || value == transceiverType();
+}
+
 }  // namespace DataModelSchemaValues
 
 struct EquipmentData {
@@ -306,20 +314,52 @@ struct EnvironmentData {
     }
 };
 
+struct EMCAnalysisConfig {
+    double fieldPlaneHeightM = 25.0;
+    QString referenceTransmitterId;
+    QString referenceReceiverId;
+    double s3iBaselineWindSpeedMps = 0.5;
+
+    std::pair<bool, QString> validateBasic() const {
+        if (fieldPlaneHeightM <= 0.0) {
+            return {false, QStringLiteral("fieldPlaneHeightM 必须 > 0")};
+        }
+        if (referenceTransmitterId.trimmed().isEmpty()) {
+            return {false, QStringLiteral("referenceTransmitterId 不能为空")};
+        }
+        if (referenceReceiverId.trimmed().isEmpty()) {
+            return {false, QStringLiteral("referenceReceiverId 不能为空")};
+        }
+        if (s3iBaselineWindSpeedMps < 0.0) {
+            return {false, QStringLiteral("s3iBaselineWindSpeedMps 必须 >= 0")};
+        }
+
+        return {true, QString()};
+    }
+
+    bool operator==(const EMCAnalysisConfig& other) const {
+        return fieldPlaneHeightM == other.fieldPlaneHeightM &&
+               referenceTransmitterId == other.referenceTransmitterId &&
+               referenceReceiverId == other.referenceReceiverId &&
+               s3iBaselineWindSpeedMps == other.s3iBaselineWindSpeedMps;
+    }
+};
+
 class DataModel : public QObject {
     Q_OBJECT
 
 public:
- // 定义一个可拷贝的数据快照结构体
     struct DataSnapshot {
         std::vector<EquipmentData> allEquipments;
         std::vector<ShipData> allShips;
         EnvironmentData environmentConfig;
+        EMCAnalysisConfig emcAnalysisConfig;
 
         bool operator==(const DataSnapshot& other) const {
             return allEquipments == other.allEquipments &&
                    allShips == other.allShips &&
-                   environmentConfig == other.environmentConfig;
+                   environmentConfig == other.environmentConfig &&
+                   emcAnalysisConfig == other.emcAnalysisConfig;
         }
 
         bool operator!=(const DataSnapshot& other) const {
@@ -336,6 +376,20 @@ public:
         const auto environmentResult = snapshot.environmentConfig.validateEnvironmentConfig();
         if (!environmentResult.first) {
             return environmentResult;
+        }
+
+        const auto analysisResult = snapshot.emcAnalysisConfig.validateBasic();
+        if (!analysisResult.first) {
+            return analysisResult;
+        }
+
+        const double maxFieldHeightM =
+            snapshot.environmentConfig.dz * static_cast<double>(snapshot.environmentConfig.nz - 1);
+        if (snapshot.emcAnalysisConfig.fieldPlaneHeightM > maxFieldHeightM) {
+            return {
+                false,
+                QStringLiteral("fieldPlaneHeightM 超出当前垂直网格限制：%1")
+                    .arg(QString::number(maxFieldHeightM))};
         }
 
         if (snapshot.allShips.empty()) {
@@ -382,11 +436,57 @@ public:
             }
         }
 
+        struct ResolvedEquipmentRef {
+            const EquipmentData* equipment{nullptr};
+            const ShipData* ship{nullptr};
+        };
+
+        const auto resolveEnabledEquipment = [&](const QString& equipmentId) -> ResolvedEquipmentRef {
+            for (const auto& ship : snapshot.allShips) {
+                for (const auto& equipmentRef : ship.equipmentRefs) {
+                    if (equipmentRef.equipmentId != equipmentId || !equipmentRef.isEnabled) {
+                        continue;
+                    }
+
+                    for (const auto& equipment : snapshot.allEquipments) {
+                        if (equipment.equipmentId == equipmentId) {
+                            return {&equipment, &ship};
+                        }
+                    }
+                }
+            }
+            return {};
+        };
+
+        const ResolvedEquipmentRef referenceTransmitter =
+            resolveEnabledEquipment(snapshot.emcAnalysisConfig.referenceTransmitterId);
+        if (referenceTransmitter.equipment == nullptr) {
+            return {false, QStringLiteral("referenceTransmitterId 必须解析为已启用的设备")};
+        }
+        if (!DataModelSchemaValues::supportsTransmitterRole(referenceTransmitter.equipment->equipmentType)) {
+            return {false, QStringLiteral("referenceTransmitterId 必须指向发射器或收发器")};
+        }
+
+        const ResolvedEquipmentRef referenceReceiver =
+            resolveEnabledEquipment(snapshot.emcAnalysisConfig.referenceReceiverId);
+        if (referenceReceiver.equipment == nullptr) {
+            return {false, QStringLiteral("referenceReceiverId 必须解析为已启用的设备")};
+        }
+        if (!DataModelSchemaValues::supportsReceiverRole(referenceReceiver.equipment->equipmentType)) {
+            return {false, QStringLiteral("referenceReceiverId 必须指向接收器或收发器")};
+        }
+
+        if (referenceTransmitter.ship == nullptr ||
+            referenceReceiver.ship == nullptr ||
+            referenceTransmitter.ship->shipId == referenceReceiver.ship->shipId) {
+            return {false, QStringLiteral("参考链接必须是跨平台的")};
+        }
+
         return {true, QString()};
     }
 
     DataSnapshot createSnapshot() const {
-        return {allEquipments, allShips, environmentConfig};
+        return {allEquipments, allShips, environmentConfig, emcAnalysisConfig};
     }
 
     std::pair<bool, QString> validateCurrentModel() const {
@@ -405,6 +505,7 @@ public:
     std::vector<EquipmentData> allEquipments;
     std::vector<ShipData> allShips;
     EnvironmentData environmentConfig;
+    EMCAnalysisConfig emcAnalysisConfig;
 
 private:
     DataModel() = default;

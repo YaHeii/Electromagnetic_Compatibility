@@ -13,6 +13,14 @@
     "angleStepDeg": 5
   },
 
+  // EMC 分析配置，对应 Interface/DataModel.h 中的 EMCAnalysisConfig
+  "emcAnalysisConfig": {
+    "fieldPlaneHeightM": 25.0,
+    "referenceTransmitterId": "USV1_TX1",
+    "referenceReceiverId": "USV2_RX1",
+    "s3iBaselineWindSpeedMps": 0.5
+  },
+
   "usvs": [
     {
       "ID": "USV1",
@@ -80,6 +88,34 @@
           }
         }
       ]
+    },
+    {
+      "ID": "USV2",
+      "location": {
+        "type": "Point3D",
+        "coordinates": [1320.0, 0.0, 0.0]
+      },
+      "speed": 12.0,
+      "shipOrientationDeg": 180.0,
+
+      "transmitters": [],
+
+      "receivers": [
+        {
+          "ID": "USV2_RX1",
+          "type": "RECEIVER",
+          "gainDbi": 18.0,
+          "locationOffset": [0.0, 0.0, 2.0],
+          "centerFrequencyGHz": 1.0,
+          "bandwidthMHz": 100.0,
+          "sensitivityDbm": -88.0,
+          "interferenceMarginDb": -6.0,
+          "sinrMarginDb": 0.0,
+          "noiseFigureDb": 3.0
+        }
+      ],
+
+      "transceivers": []
     }
   ]
 }

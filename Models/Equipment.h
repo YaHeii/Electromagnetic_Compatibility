@@ -129,9 +129,9 @@ public:
     // N = k * T0 * B * NF_linear, k = 1.380649e-23 J/K (Boltzmann constant)
     // T0 = 290 K (standard temperature)
     // k*T0 in dBm/Hz = -173.97 dBm/Hz
-    static double calculateNoiseFloor(double bandwidth_khz, double nf_db) {
+    static double calculateNoiseFloor(double bandwidth_mhz, double nf_db) {
         // N = -174 + 10log(B_Hz) + NF
-        return -173.97 + 10.0 * std::log10(bandwidth_khz * 1000.0) + nf_db;
+        return -173.97 + 10.0 * std::log10(bandwidth_mhz * 1.0e6) + nf_db;
     }
 
     double getNoiseFloorDBm() const {

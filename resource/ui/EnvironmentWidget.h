@@ -21,6 +21,11 @@ public:
     void setData(const EnvironmentData& data);
     EnvironmentData getData() const;
     bool tryBuildData(EnvironmentData& data, QString& errorMessage) const;
+
+    void setAnalysisConfig(const EMCAnalysisConfig& config);
+    EMCAnalysisConfig getAnalysisConfig() const;
+    bool tryBuildAnalysisConfig(EMCAnalysisConfig& config, QString& errorMessage) const;
+
     void loadFromModel();
     bool saveToModel(QString* errorMessage = nullptr);
     void setReadOnly(bool readOnly);
@@ -44,6 +49,12 @@ private:
     ElaLineEdit* _dzEdit{nullptr};
     ElaLineEdit* _nzEdit{nullptr};
     ElaLineEdit* _angleStepEdit{nullptr};
+
+    ElaLineEdit* _fieldPlaneHeightEdit{nullptr};
+    ElaLineEdit* _referenceTransmitterIdEdit{nullptr};
+    ElaLineEdit* _referenceReceiverIdEdit{nullptr};
+    ElaLineEdit* _s3iBaselineWindSpeedEdit{nullptr};
+
     ElaPushButton* SaveEnvironmentConfigBtn{nullptr};
     bool _isDirty{false};
     bool _isLoading{false};

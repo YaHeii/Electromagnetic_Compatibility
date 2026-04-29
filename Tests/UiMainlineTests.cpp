@@ -29,6 +29,7 @@ struct ScopedDataModelState {
         model->allEquipments = snapshotToRestore.allEquipments;
         model->allShips = snapshotToRestore.allShips;
         model->environmentConfig = snapshotToRestore.environmentConfig;
+        model->emcAnalysisConfig = snapshotToRestore.emcAnalysisConfig;
     }
 };
 
@@ -167,6 +168,17 @@ EnvironmentData makeSchemaDrivenEnvironment() {
     environment.nz = 1024;
     environment.angleStepDeg = 15;
     return environment;
+}
+
+EMCAnalysisConfig makeAnalysisConfig(
+    const QString& transmitterId = QStringLiteral("EQ_TX_WIDGET"),
+    const QString& receiverId = QStringLiteral("EQ_RX_WIDGET")) {
+    EMCAnalysisConfig config;
+    config.fieldPlaneHeightM = 15.0;
+    config.referenceTransmitterId = transmitterId;
+    config.referenceReceiverId = receiverId;
+    config.s3iBaselineWindSpeedMps = 0.5;
+    return config;
 }
 
 void requireEquipmentBaseFieldsEqual(const EquipmentData& actual, const EquipmentData& expected) {
@@ -363,21 +375,37 @@ TEST_CASE("ShipItemWidget round-trips ship DTO fields and mounted equipment refs
     requireValid(actual.validateShip());
 }
 
-TEST_CASE("EnvironmentWidget round-trips environment data and saves it back into DataModel", "[schema][ui][environment]") {
+TEST_CASE("EnvironmentWidget round-trips environment data and EMC analysis config back into DataModel", "[schema][ui][environment]") {
     ensureApplication();
     const ScopedDataModelState dataModelStateGuard;
 
     const EnvironmentData expected = makeSchemaDrivenEnvironment();
+    const EMCAnalysisConfig expectedAnalysis = makeAnalysisConfig();
     DataModel* model = DataModel::instance();
-    ShipData shipWithoutEquipment;
-    shipWithoutEquipment.shipId = "ENVIRONMENT_ONLY_SHIP";
-    model->allShips = {shipWithoutEquipment};
+    EquipmentData transmitter = makeTransmitter();
+    transmitter.equipmentId = QStringLiteral("EQ_TX_WIDGET");
+    EquipmentData receiver = makeReceiver();
+    receiver.equipmentId = QStringLiteral("EQ_RX_WIDGET");
+    model->allEquipments = {transmitter, receiver};
+
+    ShipData txShip;
+    txShip.shipId = "ENVIRONMENT_TX_SHIP";
+    txShip.equipmentRefs.push_back(EquipmentOnShip{QStringLiteral("EQ_TX_WIDGET"), true});
+
+    ShipData rxShip;
+    rxShip.shipId = "ENVIRONMENT_RX_SHIP";
+    rxShip.worldX = 10.0;
+    rxShip.equipmentRefs.push_back(EquipmentOnShip{QStringLiteral("EQ_RX_WIDGET"), true});
+
+    model->allShips = {txShip, rxShip};
     model->environmentConfig = expected;
+    model->emcAnalysisConfig = expectedAnalysis;
 
     EnvironmentWidget widget;
     widget.loadFromModel();
 
     const EnvironmentData loaded = widget.getData();
+    const EMCAnalysisConfig loadedAnalysis = widget.getAnalysisConfig();
     requireApprox(loaded.maxRange, expected.maxRange);
     requireApprox(loaded.ductHeight, expected.ductHeight);
     requireApprox(loaded.windSpeed, expected.windSpeed);
@@ -385,9 +413,14 @@ TEST_CASE("EnvironmentWidget round-trips environment data and saves it back into
     requireApprox(loaded.dz, expected.dz);
     REQUIRE(loaded.nz == expected.nz);
     REQUIRE(loaded.angleStepDeg == expected.angleStepDeg);
+    requireApprox(loadedAnalysis.fieldPlaneHeightM, expectedAnalysis.fieldPlaneHeightM);
+    REQUIRE(loadedAnalysis.referenceTransmitterId == expectedAnalysis.referenceTransmitterId);
+    REQUIRE(loadedAnalysis.referenceReceiverId == expectedAnalysis.referenceReceiverId);
+    requireApprox(loadedAnalysis.s3iBaselineWindSpeedMps, expectedAnalysis.s3iBaselineWindSpeedMps);
     REQUIRE_FALSE(widget.isDirty());
 
     model->environmentConfig = makeEnvironment();
+    model->emcAnalysisConfig = EMCAnalysisConfig{};
     QString errorMessage;
     REQUIRE(widget.saveToModel(&errorMessage));
     requireApprox(model->environmentConfig.maxRange, expected.maxRange);
@@ -397,6 +430,10 @@ TEST_CASE("EnvironmentWidget round-trips environment data and saves it back into
     requireApprox(model->environmentConfig.dz, expected.dz);
     REQUIRE(model->environmentConfig.nz == expected.nz);
     REQUIRE(model->environmentConfig.angleStepDeg == expected.angleStepDeg);
+    requireApprox(model->emcAnalysisConfig.fieldPlaneHeightM, expectedAnalysis.fieldPlaneHeightM);
+    REQUIRE(model->emcAnalysisConfig.referenceTransmitterId == expectedAnalysis.referenceTransmitterId);
+    REQUIRE(model->emcAnalysisConfig.referenceReceiverId == expectedAnalysis.referenceReceiverId);
+    requireApprox(model->emcAnalysisConfig.s3iBaselineWindSpeedMps, expectedAnalysis.s3iBaselineWindSpeedMps);
     REQUIRE_FALSE(widget.isDirty());
 }
 
@@ -408,8 +445,14 @@ TEST_CASE("DeviceWidget can load existing model data and save without silently d
     const EquipmentData transmitter = makeTransmitter();
     const EquipmentData receiver = makeReceiver();
     model->allEquipments = {transmitter, receiver};
-    model->allShips = {makeShip(receiver.equipmentId)};
+    ShipData txShip = makeShip(transmitter.equipmentId);
+    txShip.shipId = "USV_DEVICE_TX";
+    ShipData rxShip = makeShip(receiver.equipmentId);
+    rxShip.shipId = "USV_DEVICE_RX";
+    rxShip.worldX = 200.0;
+    model->allShips = {txShip, rxShip};
     model->environmentConfig = makeEnvironment();
+    model->emcAnalysisConfig = makeAnalysisConfig(transmitter.equipmentId, receiver.equipmentId);
 
     DeviceWidget widget;
     widget.loadFromModel();
@@ -431,15 +474,21 @@ TEST_CASE("ShipWidget can load existing model data and save without silently dro
     DataModel* model = DataModel::instance();
     EquipmentData transmitter = makeTransmitter();
     transmitter.equipmentId = QStringLiteral("EQ_SHIP_TX");
-    model->allEquipments = {transmitter};
+    EquipmentData receiver = makeReceiver();
+    receiver.equipmentId = QStringLiteral("EQ_SHIP_RX");
+    model->allEquipments = {transmitter, receiver};
 
     ShipData expectedShip = makeShip(transmitter.equipmentId);
     expectedShip.shipId = "USV_SAVE_ROUNDTRIP";
     expectedShip.worldX = 321.0;
     expectedShip.worldY = 654.0;
     expectedShip.shipOrientationDeg = 210.0;
-    model->allShips = {expectedShip};
+    ShipData referenceReceiverShip = makeShip(receiver.equipmentId);
+    referenceReceiverShip.shipId = "USV_SAVE_REFERENCE_RX";
+    referenceReceiverShip.worldX = 800.0;
+    model->allShips = {expectedShip, referenceReceiverShip};
     model->environmentConfig = makeEnvironment();
+    model->emcAnalysisConfig = makeAnalysisConfig(transmitter.equipmentId, receiver.equipmentId);
 
     ShipWidget widget;
     widget.loadFromModel();
@@ -448,9 +497,10 @@ TEST_CASE("ShipWidget can load existing model data and save without silently dro
     model->allShips.clear();
     QString errorMessage;
     REQUIRE(widget.saveToModel(&errorMessage));
-    REQUIRE(model->allShips.size() == 1);
+    REQUIRE(model->allShips.size() == 2);
     requireShipBaseFieldsEqual(model->allShips.front(), expectedShip);
     REQUIRE(model->allShips.front().equipmentRefs.size() == 1);
     REQUIRE(model->allShips.front().equipmentRefs.front().equipmentId == transmitter.equipmentId);
+    REQUIRE(model->allShips.back().equipmentRefs.front().equipmentId == receiver.equipmentId);
     REQUIRE_FALSE(widget.isDirty());
 }

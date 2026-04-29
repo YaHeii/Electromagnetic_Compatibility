@@ -10,7 +10,7 @@
 #include "Interface/SchemaConstants.h"
 #include "Simulation/EMC_Engine.h"
 #include "Utils/JsonLoader.hpp"
-
+#include "Simulation/PEPropagationSolver.h"
 namespace {
 
 struct ScopedDataModelState {
@@ -28,6 +28,7 @@ struct ScopedDataModelState {
         model->allEquipments = snapshotToRestore.allEquipments;
         model->allShips = snapshotToRestore.allShips;
         model->environmentConfig = snapshotToRestore.environmentConfig;
+        model->emcAnalysisConfig = snapshotToRestore.emcAnalysisConfig;
     }
 };
 
@@ -68,99 +69,14 @@ QJsonObject makePoint3D(double x, double y, double z) {
     return object;
 }
 
-EquipmentData makeReceiver() {
-    EquipmentData equipment;
-    equipment.equipmentId = "EQ_RX_1";
-    equipment.equipmentType = schemaValue(SchemaValues::Receiver);
-    equipment.gainDbi = -3.0;
-    equipment.offsetX = 0.0;
-    equipment.offsetY = 0.0;
-    equipment.offsetZ = 1.0;
-    equipment.receiverCenterFrequencyGHz = 1.0;
-    equipment.receiverBandwidthMHz = 100.0;
-    equipment.receiverSensitivityDbm = -75.0;
-    equipment.receiverInterferenceMarginDb = 0.0;
-    equipment.receiverSinrMarginDb = 0.0;
-    equipment.receiverNoiseFigureDb = 3.0;
-    return equipment;
-}
-
-EquipmentData makeTransmitter() {
-    EquipmentData equipment;
-    equipment.equipmentId = "EQ_TX_1";
-    equipment.equipmentType = schemaValue(SchemaValues::Transmitter);
-    equipment.gainDbi = 8.0;
-    equipment.offsetX = 0.0;
-    equipment.offsetY = 0.0;
-    equipment.offsetZ = 1.0;
-    equipment.transmitterCenterFrequencyGHz = 1.0;
-    equipment.transmitterBandwidthMHz = 100.0;
-    equipment.transmitterPowerDbm = -10.0;
-    equipment.transmitterAntennaPhiDeg = 30.0;
-    equipment.transmitterBeamWidthDeg = 20.0;
-    equipment.transmitterPolarization = schemaValue(SchemaValues::Vertical);
-    equipment.transmitterAntennaType = schemaValue(SchemaValues::Horn);
-    return equipment;
-}
-
-EquipmentData makeTransceiver() {
-    EquipmentData equipment;
-    equipment.equipmentId = "EQ_TRX_1";
-    equipment.equipmentType = schemaValue(SchemaValues::Transceiver);
-    equipment.gainDbi = 5.0;
-    equipment.offsetX = 0.0;
-    equipment.offsetY = 0.0;
-    equipment.offsetZ = 2.0;
-
-    equipment.transmitterCenterFrequencyGHz = 5.8;
-    equipment.transmitterBandwidthMHz = 40.0;
-    equipment.transmitterPowerDbm = 20.0;
-    equipment.transmitterAntennaPhiDeg = 15.0;
-    equipment.transmitterBeamWidthDeg = 45.0;
-    equipment.transmitterPolarization = schemaValue(SchemaValues::Vertical);
-    equipment.transmitterAntennaType = schemaValue(SchemaValues::Directional);
-
-    equipment.receiverCenterFrequencyGHz = 5.8;
-    equipment.receiverBandwidthMHz = 40.0;
-    equipment.receiverSensitivityDbm = -82.0;
-    equipment.receiverInterferenceMarginDb = 3.0;
-    equipment.receiverSinrMarginDb = 6.0;
-    equipment.receiverNoiseFigureDb = 2.5;
-    return equipment;
-}
-
-ShipData makeShip(const QString& equipmentId) {
-    ShipData ship;
-    ship.shipId = "USV1";
-    ship.worldX = 100.0;
-    ship.worldY = 200.0;
-    ship.worldZ = 0.0;
-    ship.shipSpeedMps = 6.0;
-    ship.shipOrientationDeg = 90.0;
-    ship.equipmentRefs.push_back(EquipmentOnShip{equipmentId, true});
-    return ship;
-}
-
 EnvironmentData makeEnvironment() {
     EnvironmentData environment;
     environment.maxRange = 2000.0;
     environment.ductHeight = 20.0;
     environment.windSpeed = 7.0;
     environment.dx = 5.0;
-    environment.dz = 0.1;
-    environment.nz = 2048;
-    environment.angleStepDeg = 5;
-    return environment;
-}
-
-EnvironmentData makeSchemaDrivenEnvironment() {
-    EnvironmentData environment;
-    environment.maxRange = 4096.0;
-    environment.ductHeight = 32.0;
-    environment.windSpeed = 11.0;
-    environment.dx = 2.5;
-    environment.dz = 0.25;
-    environment.nz = 1024;
+    environment.dz = 0.5;
+    environment.nz = 256;
     environment.angleStepDeg = 15;
     return environment;
 }
@@ -177,12 +93,104 @@ QJsonObject makeEnvironmentJson(const EnvironmentData& environment) {
     return object;
 }
 
+EMCAnalysisConfig makeAnalysisConfig() {
+    EMCAnalysisConfig config;
+    config.fieldPlaneHeightM = 12.0;
+    config.referenceTransmitterId = "TX_SCHEMA_1";
+    config.referenceReceiverId = "RX_SCHEMA_1";
+    config.s3iBaselineWindSpeedMps = 0.5;
+    return config;
+}
+
+QJsonObject makeAnalysisConfigJson(const EMCAnalysisConfig& config) {
+    QJsonObject object;
+    object.insert(schemaKey(SchemaKeys::FieldPlaneHeightM), config.fieldPlaneHeightM);
+    object.insert(schemaKey(SchemaKeys::ReferenceTransmitterId), config.referenceTransmitterId);
+    object.insert(schemaKey(SchemaKeys::ReferenceReceiverId), config.referenceReceiverId);
+    object.insert(schemaKey(SchemaKeys::S3IBaselineWindSpeedMps), config.s3iBaselineWindSpeedMps);
+    return object;
+}
+
+EquipmentData makeReceiver() {
+    EquipmentData equipment;
+    equipment.equipmentId = "RX_SCHEMA_1";
+    equipment.equipmentType = schemaValue(SchemaValues::Receiver);
+    equipment.gainDbi = -3.0;
+    equipment.offsetX = 0.0;
+    equipment.offsetY = 0.0;
+    equipment.offsetZ = 2.0;
+    equipment.receiverCenterFrequencyGHz = 1.0;
+    equipment.receiverBandwidthMHz = 20.0;
+    equipment.receiverSensitivityDbm = -85.0;
+    equipment.receiverInterferenceMarginDb = -10.0;
+    equipment.receiverSinrMarginDb = 0.0;
+    equipment.receiverNoiseFigureDb = 3.0;
+    return equipment;
+}
+
+EquipmentData makeTransmitter() {
+    EquipmentData equipment;
+    equipment.equipmentId = "TX_SCHEMA_1";
+    equipment.equipmentType = schemaValue(SchemaValues::Transmitter);
+    equipment.gainDbi = 8.0;
+    equipment.offsetX = 0.0;
+    equipment.offsetY = 0.0;
+    equipment.offsetZ = 2.0;
+    equipment.transmitterCenterFrequencyGHz = 1.0;
+    equipment.transmitterBandwidthMHz = 25.0;
+    equipment.transmitterPowerDbm = 18.0;
+    equipment.transmitterAntennaPhiDeg = 40.0;
+    equipment.transmitterBeamWidthDeg = 35.0;
+    equipment.transmitterPolarization = schemaValue(SchemaValues::Horizontal);
+    equipment.transmitterAntennaType = schemaValue(SchemaValues::Reflector);
+    return equipment;
+}
+
+EquipmentData makeTransceiver() {
+    EquipmentData equipment;
+    equipment.equipmentId = "TRX_SCHEMA_1";
+    equipment.equipmentType = schemaValue(SchemaValues::Transceiver);
+    equipment.gainDbi = 5.0;
+    equipment.offsetX = 0.0;
+    equipment.offsetY = 0.0;
+    equipment.offsetZ = 2.0;
+    equipment.transmitterCenterFrequencyGHz = 5.8;
+    equipment.transmitterBandwidthMHz = 40.0;
+    equipment.transmitterPowerDbm = 22.0;
+    equipment.transmitterAntennaPhiDeg = 12.0;
+    equipment.transmitterBeamWidthDeg = 60.0;
+    equipment.transmitterPolarization = schemaValue(SchemaValues::Vertical);
+    equipment.transmitterAntennaType = schemaValue(SchemaValues::Directional);
+    equipment.receiverCenterFrequencyGHz = 5.8;
+    equipment.receiverBandwidthMHz = 20.0;
+    equipment.receiverSensitivityDbm = -81.0;
+    equipment.receiverInterferenceMarginDb = -5.0;
+    equipment.receiverSinrMarginDb = 5.5;
+    equipment.receiverNoiseFigureDb = 2.2;
+    return equipment;
+}
+
+ShipData makeShip(
+    const std::string& shipId,
+    double worldX,
+    const std::vector<EquipmentOnShip>& equipmentRefs) {
+    ShipData ship;
+    ship.shipId = shipId;
+    ship.worldX = worldX;
+    ship.worldY = 0.0;
+    ship.worldZ = 0.0;
+    ship.shipSpeedMps = 6.0;
+    ship.shipOrientationDeg = 90.0;
+    ship.equipmentRefs = equipmentRefs;
+    return ship;
+}
+
 QJsonObject makeTransmitterJson(const QString& id) {
     QJsonObject object;
     object.insert(schemaKey(SchemaKeys::ID), id);
     object.insert(schemaKey(SchemaKeys::Type), schemaValue(SchemaValues::Transmitter));
     object.insert(schemaKey(SchemaKeys::GainDbi), 9.5);
-    object.insert(schemaKey(SchemaKeys::LocationOffset), makeVector3(1.0, 2.0, 3.0));
+    object.insert(schemaKey(SchemaKeys::LocationOffset), makeVector3(1.0, 2.0, 2.0));
     object.insert(schemaKey(SchemaKeys::CenterFrequencyGHz), 1.25);
     object.insert(schemaKey(SchemaKeys::BandwidthMHz), 25.0);
     object.insert(schemaKey(SchemaKeys::PowerDbm), 18.0);
@@ -198,11 +206,11 @@ QJsonObject makeReceiverJson(const QString& id) {
     object.insert(schemaKey(SchemaKeys::ID), id);
     object.insert(schemaKey(SchemaKeys::Type), schemaValue(SchemaValues::Receiver));
     object.insert(schemaKey(SchemaKeys::GainDbi), -1.5);
-    object.insert(schemaKey(SchemaKeys::LocationOffset), makeVector3(-1.0, 0.5, 4.0));
+    object.insert(schemaKey(SchemaKeys::LocationOffset), makeVector3(-1.0, 0.5, 2.0));
     object.insert(schemaKey(SchemaKeys::CenterFrequencyGHz), 2.45);
     object.insert(schemaKey(SchemaKeys::BandwidthMHz), 12.5);
     object.insert(schemaKey(SchemaKeys::SensitivityDbm), -88.0);
-    object.insert(schemaKey(SchemaKeys::InterferenceMarginDb), 1.5);
+    object.insert(schemaKey(SchemaKeys::InterferenceMarginDb), -8.0);
     object.insert(schemaKey(SchemaKeys::SinrMarginDb), 4.5);
     object.insert(schemaKey(SchemaKeys::NoiseFigureDb), 2.0);
     return object;
@@ -222,7 +230,7 @@ QJsonObject makeTransceiverJson(const QString& id) {
     receiver.insert(schemaKey(SchemaKeys::CenterFrequencyGHz), 5.8);
     receiver.insert(schemaKey(SchemaKeys::BandwidthMHz), 20.0);
     receiver.insert(schemaKey(SchemaKeys::SensitivityDbm), -81.0);
-    receiver.insert(schemaKey(SchemaKeys::InterferenceMarginDb), 2.0);
+    receiver.insert(schemaKey(SchemaKeys::InterferenceMarginDb), -5.0);
     receiver.insert(schemaKey(SchemaKeys::SinrMarginDb), 5.5);
     receiver.insert(schemaKey(SchemaKeys::NoiseFigureDb), 2.2);
 
@@ -230,39 +238,55 @@ QJsonObject makeTransceiverJson(const QString& id) {
     object.insert(schemaKey(SchemaKeys::ID), id);
     object.insert(schemaKey(SchemaKeys::Type), schemaValue(SchemaValues::Transceiver));
     object.insert(schemaKey(SchemaKeys::GainDbi), 6.5);
-    object.insert(schemaKey(SchemaKeys::LocationOffset), makeVector3(0.0, 0.0, 6.0));
+    object.insert(schemaKey(SchemaKeys::LocationOffset), makeVector3(0.0, 0.0, 2.0));
     object.insert(schemaKey(SchemaKeys::TransmitterConfig), transmitter);
     object.insert(schemaKey(SchemaKeys::ReceiverConfig), receiver);
     return object;
 }
 
 QJsonObject makeSchemaDrivenRootJson() {
-    const EnvironmentData environment = makeSchemaDrivenEnvironment();
+    const EnvironmentData environment = makeEnvironment();
+    const EMCAnalysisConfig analysisConfig = makeAnalysisConfig();
 
-    QJsonArray transmitters;
-    transmitters.append(makeTransmitterJson(QStringLiteral("TX_SCHEMA_1")));
+    QJsonArray ship1Transmitters;
+    ship1Transmitters.append(makeTransmitterJson(QStringLiteral("TX_SCHEMA_1")));
 
-    QJsonArray receivers;
-    receivers.append(makeReceiverJson(QStringLiteral("RX_SCHEMA_1")));
+    QJsonArray ship1Receivers;
 
-    QJsonArray transceivers;
-    transceivers.append(makeTransceiverJson(QStringLiteral("TRX_SCHEMA_1")));
+    QJsonArray ship1Transceivers;
+    ship1Transceivers.append(makeTransceiverJson(QStringLiteral("TRX_SCHEMA_1")));
 
-    QJsonObject ship;
-    ship.insert(schemaKey(SchemaKeys::ID), QStringLiteral("USV_SCHEMA_1"));
-    ship.insert(schemaKey(SchemaKeys::Location), makePoint3D(120.0, 45.0, 3.0));
-    ship.insert(schemaKey(SchemaKeys::Speed), 9.0);
-    ship.insert(schemaKey(SchemaKeys::ShipOrientationDeg), 135.0);
-    ship.insert(schemaKey(SchemaKeys::Transmitters), transmitters);
-    ship.insert(schemaKey(SchemaKeys::Receivers), receivers);
-    ship.insert(schemaKey(SchemaKeys::Transceivers), transceivers);
+    QJsonObject ship1;
+    ship1.insert(schemaKey(SchemaKeys::ID), QStringLiteral("USV_SCHEMA_1"));
+    ship1.insert(schemaKey(SchemaKeys::Location), makePoint3D(120.0, 45.0, 0.0));
+    ship1.insert(schemaKey(SchemaKeys::Speed), 9.0);
+    ship1.insert(schemaKey(SchemaKeys::ShipOrientationDeg), 135.0);
+    ship1.insert(schemaKey(SchemaKeys::Transmitters), ship1Transmitters);
+    ship1.insert(schemaKey(SchemaKeys::Receivers), ship1Receivers);
+    ship1.insert(schemaKey(SchemaKeys::Transceivers), ship1Transceivers);
+
+    QJsonArray ship2Transmitters;
+    QJsonArray ship2Receivers;
+    ship2Receivers.append(makeReceiverJson(QStringLiteral("RX_SCHEMA_1")));
+    QJsonArray ship2Transceivers;
+
+    QJsonObject ship2;
+    ship2.insert(schemaKey(SchemaKeys::ID), QStringLiteral("USV_SCHEMA_2"));
+    ship2.insert(schemaKey(SchemaKeys::Location), makePoint3D(520.0, 45.0, 0.0));
+    ship2.insert(schemaKey(SchemaKeys::Speed), 8.0);
+    ship2.insert(schemaKey(SchemaKeys::ShipOrientationDeg), 180.0);
+    ship2.insert(schemaKey(SchemaKeys::Transmitters), ship2Transmitters);
+    ship2.insert(schemaKey(SchemaKeys::Receivers), ship2Receivers);
+    ship2.insert(schemaKey(SchemaKeys::Transceivers), ship2Transceivers);
 
     QJsonArray usvs;
-    usvs.append(ship);
+    usvs.append(ship1);
+    usvs.append(ship2);
 
     QJsonObject root;
     root.insert(schemaKey(SchemaKeys::SchemaVersion), schemaValue(SchemaValues::SchemaVersion_1_0_0));
     root.insert(schemaKey(SchemaKeys::Environment), makeEnvironmentJson(environment));
+    root.insert(schemaKey(SchemaKeys::EMCAnalysisConfig), makeAnalysisConfigJson(analysisConfig));
     root.insert(schemaKey(SchemaKeys::Usvs), usvs);
     return root;
 }
@@ -279,19 +303,10 @@ bool writeJsonToTempFile(const QJsonObject& rootObject, QTemporaryFile& tempFile
     return written == content.size();
 }
 
-void requireEquipmentBaseFieldsEqual(const EquipmentData& actual, const EquipmentData& expected) {
-    REQUIRE(actual.equipmentId == expected.equipmentId);
-    REQUIRE(actual.equipmentType == expected.equipmentType);
-    requireApprox(actual.gainDbi, expected.gainDbi);
-    requireApprox(actual.offsetX, expected.offsetX);
-    requireApprox(actual.offsetY, expected.offsetY);
-    requireApprox(actual.offsetZ, expected.offsetZ);
-}
-
 }  // namespace
 
 TEST_CASE("Equipment validation follows schema-compatible rules", "[schema][datamodel][equipment]") {
-    SECTION("receiver accepts negative gain and rejects non-negative sensitivity") {
+    SECTION("receiver accepts negative sensitivity and rejects non-negative sensitivity") {
         EquipmentData receiver = makeReceiver();
         requireValid(receiver.validate());
 
@@ -299,12 +314,12 @@ TEST_CASE("Equipment validation follows schema-compatible rules", "[schema][data
         requireInvalid(receiver.validate());
     }
 
-    SECTION("transmitter accepts schema enum values and negative power") {
+    SECTION("transmitter accepts schema enum values") {
         EquipmentData transmitter = makeTransmitter();
         requireValid(transmitter.validate());
     }
 
-    SECTION("transceiver accepts schema enum values and nested tx-rx DTO fields") {
+    SECTION("transceiver accepts nested tx-rx DTO fields") {
         EquipmentData transceiver = makeTransceiver();
         requireValid(transceiver.validate());
     }
@@ -328,28 +343,33 @@ TEST_CASE("Environment validation enforces schema ranges", "[schema][datamodel][
     }
 }
 
-TEST_CASE("Snapshot validation enforces ship and equipment consistency", "[schema][datamodel][snapshot]") {
+TEST_CASE("Snapshot validation enforces EMC analysis config and cross-field consistency", "[schema][datamodel][snapshot]") {
     DataModel::DataSnapshot snapshot;
     snapshot.environmentConfig = makeEnvironment();
-    snapshot.allEquipments.push_back(makeReceiver());
-    snapshot.allShips.push_back(makeShip(QStringLiteral("EQ_RX_1")));
+    snapshot.emcAnalysisConfig = makeAnalysisConfig();
+    snapshot.allEquipments = {makeTransmitter(), makeReceiver()};
+    snapshot.allShips = {
+        makeShip("USV_TX", 0.0, {EquipmentOnShip{"TX_SCHEMA_1", true}}),
+        makeShip("USV_RX", 10.0, {EquipmentOnShip{"RX_SCHEMA_1", true}}),
+    };
 
     SECTION("valid snapshot passes") {
         requireValid(DataModel::validateSnapshot(snapshot));
     }
 
-    SECTION("snapshot requires at least one ship") {
-        snapshot.allShips.clear();
+    SECTION("snapshot requires field plane height within vertical grid") {
+        snapshot.emcAnalysisConfig.fieldPlaneHeightM = 1000.0;
         requireInvalid(DataModel::validateSnapshot(snapshot));
     }
 
-    SECTION("ship orientation must remain within [0, 360]") {
-        snapshot.allShips.front().shipOrientationDeg = 361.0;
+    SECTION("reference transmitter must resolve to enabled transmitter reference") {
+        snapshot.allShips.front().equipmentRefs.front().isEnabled = false;
         requireInvalid(DataModel::validateSnapshot(snapshot));
     }
 
-    SECTION("ship equipment references must point to existing equipment") {
-        snapshot.allShips.front().equipmentRefs.front().equipmentId = QStringLiteral("MISSING_EQ");
+    SECTION("reference receiver must stay cross-platform") {
+        snapshot.allShips.front().equipmentRefs.push_back(EquipmentOnShip{"RX_SCHEMA_1", true});
+        snapshot.allShips.back().equipmentRefs.clear();
         requireInvalid(DataModel::validateSnapshot(snapshot));
     }
 }
@@ -364,28 +384,21 @@ TEST_CASE("JsonLoader maps SchemaConstants-based JSON into DataModel DTOs", "[sc
     DataModel* model = DataModel::instance();
     requireValid(model->validateCurrentModel());
 
-    REQUIRE(model->allShips.size() == 1);
+    REQUIRE(model->allShips.size() == 2);
     REQUIRE(model->allEquipments.size() == 3);
 
-    const auto& loadedShip = model->allShips.front();
-    REQUIRE(loadedShip.shipId == std::string("USV_SCHEMA_1"));
-    requireApprox(loadedShip.worldX, 120.0);
-    requireApprox(loadedShip.worldY, 45.0);
-    requireApprox(loadedShip.worldZ, 3.0);
-    requireApprox(loadedShip.shipSpeedMps, 9.0);
-    requireApprox(loadedShip.shipOrientationDeg, 135.0);
-    REQUIRE(loadedShip.equipmentRefs.size() == 3);
-    REQUIRE(loadedShip.equipmentRefs[0].equipmentId == QStringLiteral("TX_SCHEMA_1"));
-    REQUIRE(loadedShip.equipmentRefs[1].equipmentId == QStringLiteral("RX_SCHEMA_1"));
-    REQUIRE(loadedShip.equipmentRefs[2].equipmentId == QStringLiteral("TRX_SCHEMA_1"));
-
-    requireApprox(model->environmentConfig.maxRange, 4096.0);
-    requireApprox(model->environmentConfig.ductHeight, 32.0);
-    requireApprox(model->environmentConfig.windSpeed, 11.0);
-    requireApprox(model->environmentConfig.dx, 2.5);
-    requireApprox(model->environmentConfig.dz, 0.25);
-    REQUIRE(model->environmentConfig.nz == 1024);
+    requireApprox(model->environmentConfig.maxRange, 2000.0);
+    requireApprox(model->environmentConfig.ductHeight, 20.0);
+    requireApprox(model->environmentConfig.windSpeed, 7.0);
+    requireApprox(model->environmentConfig.dx, 5.0);
+    requireApprox(model->environmentConfig.dz, 0.5);
+    REQUIRE(model->environmentConfig.nz == 256);
     REQUIRE(model->environmentConfig.angleStepDeg == 15);
+
+    requireApprox(model->emcAnalysisConfig.fieldPlaneHeightM, 12.0);
+    REQUIRE(model->emcAnalysisConfig.referenceTransmitterId == QStringLiteral("TX_SCHEMA_1"));
+    REQUIRE(model->emcAnalysisConfig.referenceReceiverId == QStringLiteral("RX_SCHEMA_1"));
+    requireApprox(model->emcAnalysisConfig.s3iBaselineWindSpeedMps, 0.5);
 
     const auto* loadedTransmitter = model->findEquipmentByID(QStringLiteral("TX_SCHEMA_1"));
     REQUIRE(loadedTransmitter != nullptr);
@@ -410,23 +423,28 @@ TEST_CASE("JsonLoader maps SchemaConstants-based JSON into DataModel DTOs", "[sc
     REQUIRE(loadedTransceiver->transmitterAntennaType == schemaValue(SchemaValues::Directional));
 }
 
-TEST_CASE("JsonLoader rejects type values outside SchemaConstants enums", "[schema][loader][negative]") {
+TEST_CASE("JsonLoader rejects missing or invalid EMC analysis config", "[schema][loader][negative]") {
     const ScopedDataModelState dataModelStateGuard;
 
-    QJsonObject rootObject = makeSchemaDrivenRootJson();
-    QJsonArray usvs = rootObject.value(schemaKey(SchemaKeys::Usvs)).toArray();
-    QJsonObject ship = usvs.at(0).toObject();
-    QJsonArray transmitters = ship.value(schemaKey(SchemaKeys::Transmitters)).toArray();
-    QJsonObject transmitter = transmitters.at(0).toObject();
-    transmitter.insert(schemaKey(SchemaKeys::Type), QStringLiteral("transmitter"));
-    transmitters.replace(0, transmitter);
-    ship.insert(schemaKey(SchemaKeys::Transmitters), transmitters);
-    usvs.replace(0, ship);
-    rootObject.insert(schemaKey(SchemaKeys::Usvs), usvs);
+    SECTION("missing emcAnalysisConfig is rejected") {
+        QJsonObject rootObject = makeSchemaDrivenRootJson();
+        rootObject.remove(schemaKey(SchemaKeys::EMCAnalysisConfig));
 
-    QTemporaryFile tempFile(QStringLiteral("SchemaDtoValidation-Invalid-XXXXXX.json"));
-    REQUIRE(writeJsonToTempFile(rootObject, tempFile));
-    REQUIRE_FALSE(JsonLoader::LoadFile(tempFile.fileName()));
+        QTemporaryFile tempFile(QStringLiteral("SchemaDtoValidation-Missing-XXXXXX.json"));
+        REQUIRE(writeJsonToTempFile(rootObject, tempFile));
+        REQUIRE_FALSE(JsonLoader::LoadFile(tempFile.fileName()));
+    }
+
+    SECTION("same-platform reference link is rejected") {
+        QJsonObject rootObject = makeSchemaDrivenRootJson();
+        QJsonObject analysisObject = rootObject.value(schemaKey(SchemaKeys::EMCAnalysisConfig)).toObject();
+        analysisObject.insert(schemaKey(SchemaKeys::ReferenceReceiverId), QStringLiteral("TRX_SCHEMA_1"));
+        rootObject.insert(schemaKey(SchemaKeys::EMCAnalysisConfig), analysisObject);
+
+        QTemporaryFile tempFile(QStringLiteral("SchemaDtoValidation-SamePlatform-XXXXXX.json"));
+        REQUIRE(writeJsonToTempFile(rootObject, tempFile));
+        REQUIRE_FALSE(JsonLoader::LoadFile(tempFile.fileName()));
+    }
 }
 
 TEST_CASE("EMC_Engine keeps the launch snapshot instead of re-reading DataModel", "[schema][simulation][snapshot]") {
@@ -434,15 +452,16 @@ TEST_CASE("EMC_Engine keeps the launch snapshot instead of re-reading DataModel"
 
     DataModel::DataSnapshot snapshot;
     snapshot.environmentConfig = makeEnvironment();
-    snapshot.environmentConfig.maxRange = 1234.0;
+    snapshot.emcAnalysisConfig = makeAnalysisConfig();
 
-    DataModel::instance()->environmentConfig = makeSchemaDrivenEnvironment();
+    DataModel::instance()->environmentConfig = makeEnvironment();
+    DataModel::instance()->emcAnalysisConfig.fieldPlaneHeightM = 99.0;
 
     auto fleet = std::make_unique<Fleet>();
     EMC_Engine engine(ModelType::PE, std::move(fleet), snapshot);
 
-    DataModel::instance()->environmentConfig.maxRange = 9999.0;
-    REQUIRE(engine.inputSnapshot().environmentConfig.maxRange == Catch::Approx(1234.0));
+    DataModel::instance()->emcAnalysisConfig.fieldPlaneHeightM = 200.0;
+    REQUIRE(engine.inputSnapshot().emcAnalysisConfig.fieldPlaneHeightM == Catch::Approx(12.0));
 }
 
 TEST_CASE("JsonLoader loads the canonical schema sample", "[schema][loader]") {
@@ -452,6 +471,8 @@ TEST_CASE("JsonLoader loads the canonical schema sample", "[schema][loader]") {
 
     REQUIRE(DataModel::instance()->allShips.size() == 7);
     REQUIRE(DataModel::instance()->allEquipments.size() == 14);
+    REQUIRE(DataModel::instance()->emcAnalysisConfig.referenceTransmitterId == QStringLiteral("USV1_TX1"));
+    REQUIRE(DataModel::instance()->emcAnalysisConfig.referenceReceiverId == QStringLiteral("USV2_RX1"));
 
     const auto* loadedEquipment = DataModel::instance()->findEquipmentByID(QStringLiteral("USV1_TX1"));
     REQUIRE(loadedEquipment != nullptr);
@@ -463,7 +484,6 @@ TEST_CASE("JsonLoader loads the canonical schema sample", "[schema][loader]") {
     REQUIRE(loadedReceiver->equipmentType == schemaValue(SchemaValues::Receiver));
     REQUIRE(loadedReceiver->receiverCenterFrequencyGHz == 1.0);
     REQUIRE(loadedReceiver->receiverBandwidthMHz == 100.0);
-    REQUIRE(DataModel::instance()->findEquipmentByID(QStringLiteral("USV1_TRX1")) == nullptr);
 
     requireValid(DataModel::instance()->validateCurrentModel());
 }

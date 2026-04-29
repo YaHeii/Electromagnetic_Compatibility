@@ -31,21 +31,50 @@ LineMap PEPropagationSolver::compute1D(
     }
 
     PEModel solver(peData.centralF_Ghz, env.dx, env.dz, env.nz);
-    std::ofstream out("PEmodel_computing1D.csv");
-    writeCSVRow(out, "Range", "Loss");
+    const double txSurfaceHeight = surface.getSurfaceHeight(peData.X_offset, peData.Y_offset, 0.0);
+    solver.initializeGaussian(
+        peData.antenna_height,
+        txSurfaceHeight,
+        peData.beamWidth_deg,
+        peData.antennaPhi_deg);
 
     LineMap lossLine;
     for (double r = env.dx; r < env.maxRange; r += env.dx) {
         solver.step_PLST(r, n_profile, surface, 0);
-
-        if (std::abs(std::fmod(r, 1000.0)) < 0.1) {
-            const int rx_idx = static_cast<int>(receiverAntennaHeight / env.dz);
-            const double loss = solver.getPathLoss(rx_idx, r);
-            writeCSVRow(out, r, loss);
-            lossLine.push_back(loss);
+        const double receiverSurfaceHeight = surface.getSurfaceHeight(r, 0.0, 0.0);
+        const int rx_idx = static_cast<int>((receiverAntennaHeight - receiverSurfaceHeight) / env.dz);
+        if (rx_idx < 0 || rx_idx >= env.nz) {
+            lossLine.push_back(200.0);
+            continue;
         }
+
+        lossLine.push_back(solver.getPathLoss(rx_idx, r));
     }
     return lossLine;
+}
+
+double PEPropagationSolver::computePathLossAtRange(
+    Transmitter_PE_data peData,
+    EnvironmentData env,
+    double receiverAntennaHeight,
+    double targetRangeM) {
+    if (targetRangeM < env.dx) {
+        targetRangeM = env.dx;
+    }
+
+    const double originalMaxRange = env.maxRange;
+    env.maxRange = std::max(originalMaxRange, targetRangeM + env.dx);
+    const LineMap lossLine = compute1D(peData, env, receiverAntennaHeight);
+    if (lossLine.empty()) {
+        return 200.0;
+    }
+
+    const std::size_t index = static_cast<std::size_t>(
+        std::max(0, static_cast<int>(std::ceil(targetRangeM / env.dx)) - 1));
+    if (index >= lossLine.size()) {
+        return lossLine.back();
+    }
+    return lossLine[index];
 }
 
 GridMatrix PEPropagationSolver::compute2D(

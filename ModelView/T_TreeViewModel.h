@@ -29,6 +29,7 @@ public:
     T_TreeItem* appendChild(T_TreeItem* parent, const QString& title, T_TreeItem::ItemType type);
 private:
     void populateEnvironment(T_TreeItem* parent, const EnvironmentData& environment);
+    void populateAnalysisConfig(T_TreeItem* parent, const EMCAnalysisConfig& analysisConfig);
     void populateShips(T_TreeItem* parent, const std::vector<ShipData>& ships);
     void populateEquipments(T_TreeItem* parent, const std::vector<EquipmentData>& equipments);
     int countNodes(const T_TreeItem* item) const;

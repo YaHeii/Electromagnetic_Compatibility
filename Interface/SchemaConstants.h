@@ -7,6 +7,7 @@ namespace SchemaKeys {
 
 inline constexpr char SchemaVersion[] = "schemaVersion";
 inline constexpr char Environment[] = "environment";
+inline constexpr char EMCAnalysisConfig[] = "emcAnalysisConfig";
 inline constexpr char Usvs[] = "usvs";
 
 inline constexpr char ID[] = "ID";
@@ -28,6 +29,10 @@ inline constexpr char Dx[] = "dx";
 inline constexpr char Dz[] = "dz";
 inline constexpr char Nz[] = "nz";
 inline constexpr char AngleStepDeg[] = "angleStepDeg";
+inline constexpr char FieldPlaneHeightM[] = "fieldPlaneHeightM";
+inline constexpr char ReferenceTransmitterId[] = "referenceTransmitterId";
+inline constexpr char ReferenceReceiverId[] = "referenceReceiverId";
+inline constexpr char S3IBaselineWindSpeedMps[] = "s3iBaselineWindSpeedMps";
 
 inline constexpr char GainDbi[] = "gainDbi";
 inline constexpr char LocationOffset[] = "locationOffset";

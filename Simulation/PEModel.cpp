@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "PEModel.h"
+#include <algorithm>
 #include <random>
 #include <chrono>
 #ifndef M_PI
@@ -177,7 +178,8 @@ void PEModel::step_Miller_Brown(double current_range, double wind_speed, const s
     // --- 步骤 A: 空间域处理 (折射 + 吸收 + 边界构建) ---
 
     // 1. 估算掠射角 (简单的几何近似，实际应参考 Paper 2 使用谱估计)
-    double grazing_approx = atan(25.0 / (current_range + 1000.0)); // 假设天线高25m
+    const double sourceHeight = std::max(_sourceHeight, 1e-6);
+    double grazing_approx = atan(sourceHeight / (current_range + 1000.0));
 
     // 2. 计算底部边界参数
     double rho = calculateRoughnessRho(wind_speed, grazing_approx); // 粗糙度 
@@ -258,7 +260,8 @@ void PEModel::step_PLST(double current_range, const std::vector<double>& n_profi
 
     // 2. 修正边界条件 (PLST Modified Impedance/Reflection)
     // 估算基础掠射角 (几何近似)
-    double grazing_geom = std::atan(25.0 / (current_range + 1000.0)); // 假设高度25m
+    const double sourceHeight = std::max(_sourceHeight, 1e-6);
+    double grazing_geom = std::atan(sourceHeight / (current_range + 1000.0));
 
     // [关键] 局部掠射角修正
     // 论文指出 Leontovich 边界条件随 beta 改变 
@@ -375,7 +378,8 @@ void PEModel::step_PLST(double current_range, double azimuth_rad, const Atmosphe
     Map<VectorXcd> u_kspace(reinterpret_cast<Complex*>(_out_ptr), _fft_size);
     // --- 步骤 A: 空间域处理 (修正后的折射项) ---
     // 估算局部掠射角（用于计算反射系数 Gamma）
-    double grazing_geom = std::atan(25.0 / (current_range + 1000.0)); //TODO:优化假设值使用外部参数 假设高度25m
+    const double sourceHeight = std::max(_sourceHeight, 1e-6);
+    double grazing_geom = std::atan(sourceHeight / (current_range + 1000.0));
     double grazing_local = grazing_geom + beta;
     if (grazing_local < 1e-6) grazing_local = 1e-6; // 避免背坡数值异常
 
@@ -442,6 +446,7 @@ void PEModel::step_PLST(double current_range, double azimuth_rad, const Atmosphe
 }
 
 void PEModel::initializeGaussian(double antenna_phys_height, double h_start, double beamWidth_deg, double tilt_deg) {
+    _sourceHeight = antenna_phys_height;
     // 将波束宽度（角度）转换为高斯函数的空间宽度参数 w0
     // 公式推导：高斯波束的半功率波束宽度 (HPBW) 与 w0 的关系近似为 w0 = 2 / (k * sin(HPBW/2))
     double w0 = 2.0 / (_k0 * std::sin(beamWidth_deg * M_PI / 360.0));
@@ -477,6 +482,7 @@ void PEModel::initializeGaussian(double antenna_phys_height, double h_start, dou
 
 
 void PEModel::initializePointSource(double antenna_phys_height, double h_start) {
+    _sourceHeight = antenna_phys_height;
     using Eigen::VectorXcd;
     using Eigen::Map;
     Map<VectorXcd> u_space(reinterpret_cast<Complex*>(_in_ptr), _fft_size);

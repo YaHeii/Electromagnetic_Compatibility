@@ -12,6 +12,13 @@
     "angleStepDeg": 5
   },
 
+  "emcAnalysisConfig": {
+    "fieldPlaneHeightM": 25.0,
+    "referenceTransmitterId": "USV1_TX1",
+    "referenceReceiverId": "USV2_RX1",
+    "s3iBaselineWindSpeedMps": 0.5
+  },
+
   "usvs": [
     {
       "ID": "USV1",

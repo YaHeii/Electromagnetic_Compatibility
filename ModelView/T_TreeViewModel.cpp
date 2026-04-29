@@ -25,13 +25,11 @@ T_TreeViewModel::T_TreeViewModel(QObject* parent)
     : QAbstractItemModel(parent),
       _rootItem(new T_TreeItem(QStringLiteral("root"), T_TreeItem::Root)) {}
 
-T_TreeViewModel::~T_TreeViewModel()
-{
+T_TreeViewModel::~T_TreeViewModel() {
     delete _rootItem;
 }
 
-QModelIndex T_TreeViewModel::parent(const QModelIndex& child) const
-{
+QModelIndex T_TreeViewModel::parent(const QModelIndex& child) const {
     if (!child.isValid()) {
         return QModelIndex();
     }
@@ -45,8 +43,7 @@ QModelIndex T_TreeViewModel::parent(const QModelIndex& child) const
     return createIndex(parentItem->getRow(), 0, parentItem);
 }
 
-QModelIndex T_TreeViewModel::index(int row, int column, const QModelIndex& parent) const
-{
+QModelIndex T_TreeViewModel::index(int row, int column, const QModelIndex& parent) const {
     if (!hasIndex(row, column, parent)) {
         return QModelIndex();
     }
@@ -60,8 +57,7 @@ QModelIndex T_TreeViewModel::index(int row, int column, const QModelIndex& paren
     return childItem ? createIndex(row, column, childItem) : QModelIndex();
 }
 
-int T_TreeViewModel::rowCount(const QModelIndex& parent) const
-{
+int T_TreeViewModel::rowCount(const QModelIndex& parent) const {
     if (parent.column() > 0) {
         return 0;
     }
@@ -70,14 +66,12 @@ int T_TreeViewModel::rowCount(const QModelIndex& parent) const
     return parentItem ? parentItem->getChildrenItems().count() : 0;
 }
 
-int T_TreeViewModel::columnCount(const QModelIndex& parent) const
-{
+int T_TreeViewModel::columnCount(const QModelIndex& parent) const {
     Q_UNUSED(parent)
     return 1;
 }
 
-QVariant T_TreeViewModel::data(const QModelIndex& index, int role) const
-{
+QVariant T_TreeViewModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid()) {
         return QVariant();
     }
@@ -94,50 +88,48 @@ QVariant T_TreeViewModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
-Qt::ItemFlags T_TreeViewModel::flags(const QModelIndex& index) const
-{
+Qt::ItemFlags T_TreeViewModel::flags(const QModelIndex& index) const {
     if (!index.isValid()) {
         return Qt::NoItemFlags;
     }
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
-QVariant T_TreeViewModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
+QVariant T_TreeViewModel::headerData(int section, Qt::Orientation orientation, int role) const {
     if (section == 0 && orientation == Qt::Horizontal && role == Qt::DisplayRole) {
         return QStringLiteral("当前模型总览");
     }
     return QAbstractItemModel::headerData(section, orientation, role);
 }
 
-int T_TreeViewModel::getItemCount() const
-{
+int T_TreeViewModel::getItemCount() const {
     return countNodes(_rootItem);
 }
 
-void T_TreeViewModel::clear()
-{
+void T_TreeViewModel::clear() {
     beginResetModel();
     delete _rootItem;
     _rootItem = new T_TreeItem(QStringLiteral("root"), T_TreeItem::Root);
     endResetModel();
 }
 
-void T_TreeViewModel::reloadFromDataModel()
-{
+void T_TreeViewModel::reloadFromDataModel() {
     beginResetModel();
     delete _rootItem;
     _rootItem = new T_TreeItem(QStringLiteral("root"), T_TreeItem::Root);
 
     const DataModel::DataSnapshot snapshot = DataModel::instance()->createSnapshot();
-    populateEnvironment(appendChild(_rootItem, QStringLiteral("环境参数"), T_TreeItem::Fleet), snapshot.environmentConfig);
+    T_TreeItem* environmentRoot = appendChild(_rootItem, QStringLiteral("环境参数"), T_TreeItem::Fleet);
+    populateEnvironment(environmentRoot, snapshot.environmentConfig);
+    populateAnalysisConfig(
+        appendChild(environmentRoot, QStringLiteral("EMC 分析配置"), T_TreeItem::Device),
+        snapshot.emcAnalysisConfig);
     populateShips(appendChild(_rootItem, QStringLiteral("船只列表"), T_TreeItem::Fleet), snapshot.allShips);
     populateEquipments(appendChild(_rootItem, QStringLiteral("设备库"), T_TreeItem::Fleet), snapshot.allEquipments);
     endResetModel();
 }
 
-QModelIndex T_TreeViewModel::findItemIndex(const QString& keyword) const
-{
+QModelIndex T_TreeViewModel::findItemIndex(const QString& keyword) const {
     const QString trimmedKeyword = keyword.trimmed();
     if (trimmedKeyword.isEmpty()) {
         return QModelIndex();
@@ -151,23 +143,20 @@ QModelIndex T_TreeViewModel::findItemIndex(const QString& keyword) const
     return createIndex(item->getRow(), 0, item);
 }
 
-T_TreeItem* T_TreeViewModel::getItemFromIndex(const QModelIndex& index) const
-{
+T_TreeItem* T_TreeViewModel::getItemFromIndex(const QModelIndex& index) const {
     if (!index.isValid()) {
         return _rootItem;
     }
     return static_cast<T_TreeItem*>(index.internalPointer());
 }
 
-T_TreeItem* T_TreeViewModel::appendChild(T_TreeItem* parent, const QString& title, T_TreeItem::ItemType type)
-{
+T_TreeItem* T_TreeViewModel::appendChild(T_TreeItem* parent, const QString& title, T_TreeItem::ItemType type) {
     auto* item = new T_TreeItem(title, type, parent);
     parent->appendChildItem(item);
     return item;
 }
 
-void T_TreeViewModel::populateEnvironment(T_TreeItem* parent, const EnvironmentData& environment)
-{
+void T_TreeViewModel::populateEnvironment(T_TreeItem* parent, const EnvironmentData& environment) {
     appendChild(parent, QStringLiteral("maxRange: %1 m").arg(QString::number(environment.maxRange)), T_TreeItem::Device);
     appendChild(parent, QStringLiteral("ductHeight: %1 m").arg(QString::number(environment.ductHeight)), T_TreeItem::Device);
     appendChild(parent, QStringLiteral("windSpeed: %1 m/s").arg(QString::number(environment.windSpeed)), T_TreeItem::Device);
@@ -177,8 +166,26 @@ void T_TreeViewModel::populateEnvironment(T_TreeItem* parent, const EnvironmentD
     appendChild(parent, QStringLiteral("angleStepDeg: %1 deg").arg(environment.angleStepDeg), T_TreeItem::Device);
 }
 
-void T_TreeViewModel::populateShips(T_TreeItem* parent, const std::vector<ShipData>& ships)
-{
+void T_TreeViewModel::populateAnalysisConfig(T_TreeItem* parent, const EMCAnalysisConfig& analysisConfig) {
+    appendChild(
+        parent,
+        QStringLiteral("fieldPlaneHeightM: %1 m").arg(QString::number(analysisConfig.fieldPlaneHeightM)),
+        T_TreeItem::Device);
+    appendChild(
+        parent,
+        QStringLiteral("referenceTransmitterId: %1").arg(analysisConfig.referenceTransmitterId),
+        T_TreeItem::Device);
+    appendChild(
+        parent,
+        QStringLiteral("referenceReceiverId: %1").arg(analysisConfig.referenceReceiverId),
+        T_TreeItem::Device);
+    appendChild(
+        parent,
+        QStringLiteral("s3iBaselineWindSpeedMps: %1 m/s").arg(QString::number(analysisConfig.s3iBaselineWindSpeedMps)),
+        T_TreeItem::Device);
+}
+
+void T_TreeViewModel::populateShips(T_TreeItem* parent, const std::vector<ShipData>& ships) {
     for (const auto& ship : ships) {
         auto* shipItem = appendChild(parent, QString::fromStdString(ship.shipId), T_TreeItem::Ship);
         appendChild(shipItem, QStringLiteral("位置: %1").arg(formatTriple(ship.worldX, ship.worldY, ship.worldZ)), T_TreeItem::Device);
@@ -193,8 +200,7 @@ void T_TreeViewModel::populateShips(T_TreeItem* parent, const std::vector<ShipDa
     }
 }
 
-void T_TreeViewModel::populateEquipments(T_TreeItem* parent, const std::vector<EquipmentData>& equipments)
-{
+void T_TreeViewModel::populateEquipments(T_TreeItem* parent, const std::vector<EquipmentData>& equipments) {
     for (const auto& equipment : equipments) {
         T_TreeItem::ItemType itemType = T_TreeItem::Device;
         if (equipment.equipmentType == DataModelSchemaValues::transmitterType()) {
@@ -253,7 +259,7 @@ void T_TreeViewModel::populateEquipments(T_TreeItem* parent, const std::vector<E
                 T_TreeItem::Device);
             appendChild(
                 equipmentItem,
-                QStringLiteral("干扰门限: %1 dB").arg(QString::number(equipment.receiverInterferenceMarginDb)),
+                QStringLiteral("干扰容限: %1 dB").arg(QString::number(equipment.receiverInterferenceMarginDb)),
                 T_TreeItem::Device);
             appendChild(
                 equipmentItem,
@@ -267,8 +273,7 @@ void T_TreeViewModel::populateEquipments(T_TreeItem* parent, const std::vector<E
     }
 }
 
-int T_TreeViewModel::countNodes(const T_TreeItem* item) const
-{
+int T_TreeViewModel::countNodes(const T_TreeItem* item) const {
     if (!item) {
         return 0;
     }
@@ -281,8 +286,7 @@ int T_TreeViewModel::countNodes(const T_TreeItem* item) const
     return total;
 }
 
-T_TreeItem* T_TreeViewModel::findFirstMatch(T_TreeItem* item, const QString& keyword) const
-{
+T_TreeItem* T_TreeViewModel::findFirstMatch(T_TreeItem* item, const QString& keyword) const {
     if (!item) {
         return nullptr;
     }

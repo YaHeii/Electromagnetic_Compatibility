@@ -19,7 +19,11 @@ class EMC_Engine : public QObject {
 public:
     using DataSnapshot = DataModel::DataSnapshot;
 
-    EMC_Engine(ModelType modelType, std::unique_ptr<Fleet> fleet, DataSnapshot dataSnapshot);
+    EMC_Engine(
+        ModelType modelType,
+        std::unique_ptr<Fleet> fleet,
+        DataSnapshot dataSnapshot,
+        std::unique_ptr<PEPropagationSolver> propagationSolver = nullptr);
     ~EMC_Engine();
     //TODO: 改造计算接口,依据Validation_test中experiment3 添加计算
     void do_PE_computing();

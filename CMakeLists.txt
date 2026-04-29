@@ -111,6 +111,8 @@ if(BUILD_TESTING)
         Simulation/EMC_Engine.cpp
         Simulation/EMCComputationResult.h
         Simulation/EMC_Engine.h
+        Simulation/EMCMetricsCalculator.cpp
+        Simulation/EMCMetricsCalculator.h
         Simulation/PEModel.cpp
         Simulation/PEModel.h
         Simulation/PEPropagationSolver.cpp

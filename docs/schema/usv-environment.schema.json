@@ -8,6 +8,7 @@
   "required": [
     "schemaVersion",
     "environment",
+    "emcAnalysisConfig",
     "usvs"
   ],
   "properties": {
@@ -18,6 +19,9 @@
     },
     "environment": {
       "$ref": "#/$defs/environment"
+    },
+    "emcAnalysisConfig": {
+      "$ref": "#/$defs/emcAnalysisConfig"
     },
     "usvs": {
       "type": "array",
@@ -110,6 +114,38 @@
           "minimum": 1,
           "maximum": 360,
           "description": "二维仿真的角度步进，单位 deg"
+        }
+      }
+    },
+    "emcAnalysisConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fieldPlaneHeightM",
+        "referenceTransmitterId",
+        "referenceReceiverId",
+        "s3iBaselineWindSpeedMps"
+      ],
+      "properties": {
+        "fieldPlaneHeightM": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "主结果平面高度，单位 m；需与垂直网格上限相容"
+        },
+        "referenceTransmitterId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "参考发射机 ID，必须解析到启用的发射机或收发一体机发射端"
+        },
+        "referenceReceiverId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "参考接收机 ID，必须解析到启用的接收机或收发一体机接收端"
+        },
+        "s3iBaselineWindSpeedMps": {
+          "type": "number",
+          "minimum": 0,
+          "description": "S3I 基准海况风速，单位 m/s"
         }
       }
     },

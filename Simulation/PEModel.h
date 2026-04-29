@@ -124,6 +124,7 @@ private:
     double _dz; // 步进高度
     int _nz;
     int _fft_size;// FFT 计算网格数 (2 * nz_) 用于镜像法
+    double _sourceHeight = 0.0;
 
     // FFTW  相关
     fftw_complex* _in_ptr

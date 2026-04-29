@@ -17,9 +17,21 @@ using GridMatrix = Eigen::MatrixXd;
 class PEPropagationSolver {
 public:
     PEPropagationSolver(ModelType modelType, const Fleet* fleet);
-    // XXX:compute1D is only to use for experiment
-    LineMap compute1D(Transmitter_PE_data peData, EnvironmentData env, double receiverAntennaHeight);
-    GridMatrix compute2D(Transmitter_PE_data peData, EnvironmentData env, double receiverAntennaHeight);
+    virtual ~PEPropagationSolver() = default;
+
+    virtual LineMap compute1D(
+        Transmitter_PE_data peData,
+        EnvironmentData env,
+        double receiverAntennaHeight);
+    virtual double computePathLossAtRange(
+        Transmitter_PE_data peData,
+        EnvironmentData env,
+        double receiverAntennaHeight,
+        double targetRangeM);
+    virtual GridMatrix compute2D(
+        Transmitter_PE_data peData,
+        EnvironmentData env,
+        double receiverAntennaHeight);
 
 private:
     const Fleet* _fleet{nullptr};

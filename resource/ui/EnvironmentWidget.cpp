@@ -41,8 +41,7 @@ void addRow(QFormLayout* formLayout, const QString& labelText, ElaLineEdit* line
 
 EnvironmentWidget::EnvironmentWidget(QWidget* parent)
     : BasePage(parent) {
-    
-    createCustomWidget("在此页维护环境参数，并统一写入 DataModel 环境快照");
+    createCustomWidget(QStringLiteral("在此页维护环境参数与 EMC 分析配置，并统一写入 DataModel 冻结快照"));
 
     _maxRangeEdit = new ElaLineEdit(this);
     _ductHeightEdit = new ElaLineEdit(this);
@@ -52,13 +51,23 @@ EnvironmentWidget::EnvironmentWidget(QWidget* parent)
     _nzEdit = new ElaLineEdit(this);
     _angleStepEdit = new ElaLineEdit(this);
 
-    _maxRangeEdit->setPlaceholderText("m");
-    _ductHeightEdit->setPlaceholderText("m");
-    _windSpeedEdit->setPlaceholderText("m/s");
-    _dxEdit->setPlaceholderText("m");
-    _dzEdit->setPlaceholderText("m");
-    _nzEdit->setPlaceholderText("整数");
-    _angleStepEdit->setPlaceholderText("1-360");
+    _fieldPlaneHeightEdit = new ElaLineEdit(this);
+    _referenceTransmitterIdEdit = new ElaLineEdit(this);
+    _referenceReceiverIdEdit = new ElaLineEdit(this);
+    _s3iBaselineWindSpeedEdit = new ElaLineEdit(this);
+
+    _maxRangeEdit->setPlaceholderText(QStringLiteral("m"));
+    _ductHeightEdit->setPlaceholderText(QStringLiteral("m"));
+    _windSpeedEdit->setPlaceholderText(QStringLiteral("m/s"));
+    _dxEdit->setPlaceholderText(QStringLiteral("m"));
+    _dzEdit->setPlaceholderText(QStringLiteral("m"));
+    _nzEdit->setPlaceholderText(QStringLiteral("整数"));
+    _angleStepEdit->setPlaceholderText(QStringLiteral("1-360"));
+
+    _fieldPlaneHeightEdit->setPlaceholderText(QStringLiteral("m"));
+    _referenceTransmitterIdEdit->setPlaceholderText(QStringLiteral("发射机 ID"));
+    _referenceReceiverIdEdit->setPlaceholderText(QStringLiteral("接收机 ID"));
+    _s3iBaselineWindSpeedEdit->setPlaceholderText(QStringLiteral("m/s"));
 
     auto* formLayout = new QFormLayout();
     formLayout->setContentsMargins(0, 0, 0, 0);
@@ -70,25 +79,28 @@ EnvironmentWidget::EnvironmentWidget(QWidget* parent)
     addRow(formLayout, QStringLiteral("垂直分辨率 dz"), _dzEdit);
     addRow(formLayout, QStringLiteral("垂直网格数 nz"), _nzEdit);
     addRow(formLayout, QStringLiteral("角度步进"), _angleStepEdit);
+    addRow(formLayout, QStringLiteral("结果平面高度"), _fieldPlaneHeightEdit);
+    addRow(formLayout, QStringLiteral("参考发射机 ID"), _referenceTransmitterIdEdit);
+    addRow(formLayout, QStringLiteral("参考接收机 ID"), _referenceReceiverIdEdit);
+    addRow(formLayout, QStringLiteral("S3I 基准风速"), _s3iBaselineWindSpeedEdit);
 
-    SaveEnvironmentConfigBtn = new ElaPushButton(QStringLiteral("保存环境参数"), this);
-    SaveEnvironmentConfigBtn->setFixedSize(120, 36);
+    SaveEnvironmentConfigBtn = new ElaPushButton(QStringLiteral("保存环境与分析配置"), this);
+    SaveEnvironmentConfigBtn->setFixedSize(160, 36);
 
     auto* buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch();
     buttonLayout->addWidget(SaveEnvironmentConfigBtn);
 
     QWidget* centralWidget = new QWidget(this);
-    QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
-    centralWidget->setWindowTitle("环境属性管理");
-    
+    auto* mainLayout = new QVBoxLayout(centralWidget);
+    centralWidget->setWindowTitle(QStringLiteral("环境与分析配置"));
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->addLayout(formLayout);
     mainLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
     addCentralWidget(centralWidget);
 
-    const std::array<ElaLineEdit*, 7> edits = {
+    const std::array<ElaLineEdit*, 11> edits = {
         _maxRangeEdit,
         _ductHeightEdit,
         _windSpeedEdit,
@@ -96,6 +108,10 @@ EnvironmentWidget::EnvironmentWidget(QWidget* parent)
         _dzEdit,
         _nzEdit,
         _angleStepEdit,
+        _fieldPlaneHeightEdit,
+        _referenceTransmitterIdEdit,
+        _referenceReceiverIdEdit,
+        _s3iBaselineWindSpeedEdit,
     };
     for (ElaLineEdit* edit : edits) {
         connect(edit, &QLineEdit::textChanged, this, &EnvironmentWidget::markDirty);
@@ -143,14 +159,71 @@ bool EnvironmentWidget::tryBuildData(EnvironmentData& data, QString& errorMessag
     return true;
 }
 
+void EnvironmentWidget::setAnalysisConfig(const EMCAnalysisConfig& config) {
+    _isLoading = true;
+    _fieldPlaneHeightEdit->setText(QString::number(config.fieldPlaneHeightM));
+    _referenceTransmitterIdEdit->setText(config.referenceTransmitterId);
+    _referenceReceiverIdEdit->setText(config.referenceReceiverId);
+    _s3iBaselineWindSpeedEdit->setText(QString::number(config.s3iBaselineWindSpeedMps));
+    _isLoading = false;
+    setDirty(false);
+}
+
+EMCAnalysisConfig EnvironmentWidget::getAnalysisConfig() const {
+    EMCAnalysisConfig config;
+    QString errorMessage;
+    if (!tryBuildAnalysisConfig(config, errorMessage)) {
+        spdlog::warn("EMCAnalysisConfig DTO build failed: {}", errorMessage.toStdString());
+    }
+    return config;
+}
+
+bool EnvironmentWidget::tryBuildAnalysisConfig(EMCAnalysisConfig& config, QString& errorMessage) const {
+    config = EMCAnalysisConfig{};
+    if (!readRequiredDouble(_fieldPlaneHeightEdit, QStringLiteral("结果平面高度"), config.fieldPlaneHeightM, errorMessage) ||
+        !readRequiredDouble(_s3iBaselineWindSpeedEdit, QStringLiteral("S3I 基准风速"), config.s3iBaselineWindSpeedMps, errorMessage)) {
+        return false;
+    }
+
+    config.referenceTransmitterId = _referenceTransmitterIdEdit->text().trimmed();
+    if (config.referenceTransmitterId.isEmpty()) {
+        errorMessage = QStringLiteral("参考发射机 ID 不能为空");
+        return false;
+    }
+
+    config.referenceReceiverId = _referenceReceiverIdEdit->text().trimmed();
+    if (config.referenceReceiverId.isEmpty()) {
+        errorMessage = QStringLiteral("参考接收机 ID 不能为空");
+        return false;
+    }
+
+    return true;
+}
+
 void EnvironmentWidget::loadFromModel() {
-    setData(DataModel::instance()->environmentConfig);
+    DataModel* model = DataModel::instance();
+    _isLoading = true;
+    _maxRangeEdit->setText(QString::number(model->environmentConfig.maxRange));
+    _ductHeightEdit->setText(QString::number(model->environmentConfig.ductHeight));
+    _windSpeedEdit->setText(QString::number(model->environmentConfig.windSpeed));
+    _dxEdit->setText(QString::number(model->environmentConfig.dx));
+    _dzEdit->setText(QString::number(model->environmentConfig.dz));
+    _nzEdit->setText(QString::number(model->environmentConfig.nz));
+    _angleStepEdit->setText(QString::number(model->environmentConfig.angleStepDeg));
+    _fieldPlaneHeightEdit->setText(QString::number(model->emcAnalysisConfig.fieldPlaneHeightM));
+    _referenceTransmitterIdEdit->setText(model->emcAnalysisConfig.referenceTransmitterId);
+    _referenceReceiverIdEdit->setText(model->emcAnalysisConfig.referenceReceiverId);
+    _s3iBaselineWindSpeedEdit->setText(QString::number(model->emcAnalysisConfig.s3iBaselineWindSpeedMps));
+    _isLoading = false;
+    setDirty(false);
 }
 
 bool EnvironmentWidget::saveToModel(QString* errorMessage) {
     EnvironmentData environmentData;
+    EMCAnalysisConfig analysisConfig;
     QString localError;
-    if (!tryBuildData(environmentData, localError)) {
+    if (!tryBuildData(environmentData, localError) ||
+        !tryBuildAnalysisConfig(analysisConfig, localError)) {
         if (errorMessage) {
             *errorMessage = localError;
         }
@@ -160,6 +233,7 @@ bool EnvironmentWidget::saveToModel(QString* errorMessage) {
     DataModel* model = DataModel::instance();
     auto snapshot = model->createSnapshot();
     snapshot.environmentConfig = environmentData;
+    snapshot.emcAnalysisConfig = analysisConfig;
 
     const auto validationResult = DataModel::validateSnapshot(snapshot);
     if (!validationResult.first) {
@@ -170,6 +244,7 @@ bool EnvironmentWidget::saveToModel(QString* errorMessage) {
     }
 
     model->environmentConfig = snapshot.environmentConfig;
+    model->emcAnalysisConfig = snapshot.emcAnalysisConfig;
     setDirty(false);
     emit modelCommitted();
     return true;
@@ -177,7 +252,7 @@ bool EnvironmentWidget::saveToModel(QString* errorMessage) {
 
 void EnvironmentWidget::setReadOnly(bool readOnly) {
     _isReadOnly = readOnly;
-    const std::array<ElaLineEdit*, 7> edits = {
+    const std::array<ElaLineEdit*, 11> edits = {
         _maxRangeEdit,
         _ductHeightEdit,
         _windSpeedEdit,
@@ -185,6 +260,10 @@ void EnvironmentWidget::setReadOnly(bool readOnly) {
         _dzEdit,
         _nzEdit,
         _angleStepEdit,
+        _fieldPlaneHeightEdit,
+        _referenceTransmitterIdEdit,
+        _referenceReceiverIdEdit,
+        _s3iBaselineWindSpeedEdit,
     };
     for (ElaLineEdit* edit : edits) {
         edit->setReadOnly(readOnly);
@@ -195,13 +274,18 @@ void EnvironmentWidget::setReadOnly(bool readOnly) {
 void EnvironmentWidget::on_SaveEnvironmentBtn_clicked() {
     QString errorMessage;
     if (!saveToModel(&errorMessage)) {
-        spdlog::error("环境参数保存失败: {}", errorMessage.toStdString());
+        spdlog::error("Environment / EMC analysis config save failed: {}", errorMessage.toStdString());
         ElaMessageBar::error(ElaMessageBarType::BottomRight, QStringLiteral("保存失败"), errorMessage, 2000, this);
         return;
     }
 
-    spdlog::info("环境参数保存成功");
-    ElaMessageBar::success(ElaMessageBarType::BottomRight, QStringLiteral("保存成功"), QStringLiteral("环境参数已写入当前模型"), 1500, this);
+    spdlog::info("Environment and EMC analysis config saved");
+    ElaMessageBar::success(
+        ElaMessageBarType::BottomRight,
+        QStringLiteral("保存成功"),
+        QStringLiteral("环境与分析配置已写入当前模型"),
+        1500,
+        this);
 }
 
 void EnvironmentWidget::markDirty() {
