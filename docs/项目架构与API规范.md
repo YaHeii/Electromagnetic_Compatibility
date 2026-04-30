@@ -376,3 +376,24 @@ JSONC / UI
 ### 建议后续实现
 - 在主程序编译与手动联调确认后，再补结果页交互细节，例如详情统计摘要、阈值图例说明和导出入口。
 - 若后续扩展更多图类，应优先复用 `SimulationResultCatalog + SimulationChartRenderer`，不要把新逻辑重新散回 `Simulation.cpp`。
+## 9. Reportflow Python 工作区
+
+### 当前已实现
+- `Reportflow/` 下已建立独立的 Python 工作区根，当前成员包含 `establishReport` 和 `pythonPlot`。
+- `establishReport` 是当前 `reportflow` CLI 与模板渲染包的目录，Python 导入包名保持为 `reportflow`。
+- `pythonPlot` 预留给后续的 `matplotlib` 和 `pybind11` 绘图子项目。
+
+### 当前边界
+- Python 工作区使用独立虚拟环境 `Reportflow/.venv/`，不进入主程序 `CMake + vcpkg` 构建链路。
+- C++ 主工程不直接依赖 Python 环境，也不把 Python 运行时当作编译期依赖。
+- `reportflow` 负责 bundle 读取、状态更新和模板输出；`pythonPlot` 负责后续可选的绘图与扩展模块。
+
+### 当前接口口径
+- C++ 侧通过 `ReportJobBundle` 约定 `request.json`、`simulation-result.json`、`report-context.json`、`status.json` 和 `assets/*` 的布局。
+- Python 侧只消费 bundle 和上下文，不回写 `simulation-result.json`。
+- 报告输出固定写入 `outputs/report.md` 和 `outputs/report.html`。
+
+### 建议后续实现
+- 若后续要接入 `pybind11`，优先把编译逻辑限制在 `pythonPlot` 子项目内，不要回写到主 C++ 构建流程。
+- 若需要从 C++ 触发 Python 绘图，优先采用外部进程调用或文件输出消费，不要直接把 Python 运行时嵌进主工程。
+- 若后续 `reportflow` 增加 LLM 或多模板能力，先扩展 `report-context.json` 和 `request.json`，不要破坏当前 bundle 约定。
