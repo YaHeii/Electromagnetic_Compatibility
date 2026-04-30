@@ -348,3 +348,31 @@ JSONC / UI
 1. schema 文档
 2. 主程序运行时代码
 3. `PE_validation` 的验证结论
+
+## 7. 2026-04-30 仿真页结果画廊边界
+### 当前已实现
+- 仿真页结果展示层开始从“单图直绘”收敛为“固定结果目录 + 统一绘图器 + 详情视图切换”。
+- UI 只消费 `SimulationTaskResult`，不在页面点击或切换时直接调用 `EMCMetricsCalculator`。
+- 结果目录当前固定为六类主图：
+  - 总场分布
+  - 参考发射机路径损耗
+  - `SCF`
+  - `S3I`
+  - `T_elev`
+  - `D_desense`
+- 详情区按三类载荷切换：
+  - `ScalarField2D`
+  - `Series1D`
+  - `LabeledMatrix2D`
+- `SimulationResultCatalog` 负责从 `SimulationTaskResult` 抽取卡片目录与详情载荷。
+- `SimulationChartRenderer` 负责把三类结果统一渲染到 `QCustomPlot`，并离屏生成卡片缩略图。
+
+### 当前约束
+- 参考发射机卡片只读取 `inputSnapshot.emcAnalysisConfig.referenceTransmitterId` 对应结果，不回退到其他发射机。
+- `SCF` 详情图采用“矩阵式热图 + 文字标注”，不是普通表格控件。
+- `S3I` 详情图采用双曲线 + 差值填充带。
+- `noDataValue` 与 `NaN` 在场图中按透明单元格处理，不压成最低色。
+
+### 建议后续实现
+- 在主程序编译与手动联调确认后，再补结果页交互细节，例如详情统计摘要、阈值图例说明和导出入口。
+- 若后续扩展更多图类，应优先复用 `SimulationResultCatalog + SimulationChartRenderer`，不要把新逻辑重新散回 `Simulation.cpp`。

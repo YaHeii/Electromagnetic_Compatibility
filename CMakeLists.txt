@@ -99,6 +99,7 @@ if(BUILD_TESTING)
     add_executable(SchemaDtoValidationTests
         Tests/SchemaDtoValidationTests.cpp
         Tests/SimulationResultTests.cpp
+        Tests/SimulationResultGalleryTests.cpp
         Tests/SimulationSchedulerTests.cpp
         Tests/UiMainlineTests.cpp
         Tests/TreeViewModelTests.cpp
@@ -129,6 +130,8 @@ if(BUILD_TESTING)
         Resource/ui/DeviceWidget.h
         Resource/ui/EnvironmentWidget.cpp
         Resource/ui/EnvironmentWidget.h
+        Resource/ui/SimulationResultCatalog.cpp
+        Resource/ui/SimulationResultCatalog.h
         Resource/ui/TreeView.cpp
         Resource/ui/TreeView.h
         Resource/ui/deviceonship.cpp

@@ -5,49 +5,20 @@
 #include <QWidget>
 
 #include "Interface/SimulationResult.h"
+#include "Resource/ui/SimulationResultCatalog.h"
 #include "Resource/ui/qcustomplot.h"
+#include "Utils/SimulationChartRenderer.h"
 
 using GridMap = std::vector<std::vector<double>>;
 using Matrix = std::vector<std::vector<double>>;
 using LineMap = std::vector<double>;
 
 inline void PEmodel_Painting2D(const ScalarField2D& field, QCustomPlot* plot) {
-    if (!plot) {
-        return;
-    }
-    if (field.rows <= 0 || field.cols <= 0 || field.values.empty()) {
-        return;
-    }
-
-    plot->clearPlottables();
-    QCPColorMap* colorMap = new QCPColorMap(plot->xAxis, plot->yAxis);
-    colorMap->data()->setSize(field.cols, field.rows);
-    colorMap->data()->setRange(
-        QCPRange(field.originX, field.originX + field.cols * field.stepX),
-        QCPRange(field.originY, field.originY + field.rows * field.stepY));
-
-    for (int row = 0; row < field.rows; ++row) {
-        for (int col = 0; col < field.cols; ++col) {
-            const std::size_t index = static_cast<std::size_t>(row * field.cols + col);
-            colorMap->data()->setCell(col, row, field.values[index]);
-        }
-    }
-
-    QCPColorScale* colorScale = nullptr;
-    if (plot->plotLayout()->elementCount() > 1) {
-        colorScale = qobject_cast<QCPColorScale*>(plot->plotLayout()->element(0, 1));
-    }
-
-    if (!colorScale) {
-        colorScale = new QCPColorScale(plot);
-        plot->plotLayout()->addElement(0, 1, colorScale);
-    }
-
-    colorMap->setColorScale(colorScale);
-    colorMap->setGradient(QCPColorGradient::gpJet);
-    colorMap->setDataRange(QCPRange(-120, 0));
-    colorMap->rescaleAxes();
-    plot->replot();
+    SimulationChartRenderer::renderScalarFieldDetail(
+        field,
+        SimulationChartKey::AggregatedField,
+        plot,
+        false);
 }
 
 inline void PEmodel_Painting2D(const GridMap& loss2D, QCustomPlot* plot) {
