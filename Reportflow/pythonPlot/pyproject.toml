@@ -1,0 +1,16 @@
+[build-system]
+requires = ["scikit-build-core>=0.11", "pybind11>=2.13", "setuptools>=68", "wheel"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pythonplot"
+version = "0.1.0"
+description = "Reportflow plotting helpers for C++ and Python"
+requires-python = ">=3.10"
+dependencies = ["matplotlib>=3.8"]
+
+[tool.scikit-build]
+cmake.minimum-version = "3.20"
+
+[tool.scikit-build.cmake.define]
+PYBIND11_FINDPYTHON = "ON"
