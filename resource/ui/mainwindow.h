@@ -46,6 +46,8 @@ protected:
 
 private:
     void importJsonConfig();
+    bool hasUnsavedInputDrafts() const;
+    bool confirmJsonImportOverwrite();
     void reloadEditorsFromModel();
     void updateSimulationDraftState();
     void setEditorsReadOnly(bool readOnly);

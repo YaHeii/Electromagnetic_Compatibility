@@ -246,11 +246,16 @@ void MainWindow::importJsonConfig() {
         return;
     }
 
+    if (!confirmJsonImportOverwrite()) {
+        return;
+    }
+
     const QString filePath = QFileDialog::getOpenFileName(
         this,
         QStringLiteral("导入 JSON/JSONC"),
         QDir::homePath(),
         QStringLiteral("JSON Files (*.json *.jsonc);;All Files (*.*)"));
+        
     if (filePath.isEmpty()) {
         return;
     }
@@ -264,8 +269,8 @@ void MainWindow::importJsonConfig() {
             2500,
             this);
         return;
-    }
 
+    }
     spdlog::info("JSON imported successfully: {}", filePath.toStdString());
     reloadEditorsFromModel();
     _simulationPage->onInputModelCommitted();
@@ -278,6 +283,47 @@ void MainWindow::importJsonConfig() {
         this);
 }
 
+bool MainWindow::hasUnsavedInputDrafts() const {
+    return (_environmentPage && _environmentPage->isDirty()) ||
+           (_devicePage && _devicePage->isDirty()) ||
+           (_shipPage && _shipPage->isDirty());
+}
+
+bool MainWindow::confirmJsonImportOverwrite() {
+    if (!hasUnsavedInputDrafts()) {
+        return true;
+    }
+
+    bool confirmed = false;
+    ElaContentDialog confirmDialog(this);
+    confirmDialog.setLeftButtonText(QStringLiteral("取消导入"));
+    confirmDialog.setMiddleButtonText(QStringLiteral("继续编辑"));
+    confirmDialog.setRightButtonText(QStringLiteral("确认覆盖"));
+
+    auto* contentWidget = new QWidget(&confirmDialog);
+    auto* contentLayout = new QVBoxLayout(contentWidget);
+    contentLayout->setContentsMargins(15, 25, 15, 10);
+
+    auto* titleText = new ElaText(QStringLiteral("检测到未保存草稿"), contentWidget);
+    titleText->setTextStyle(ElaTextType::Title);
+    auto* bodyText = new ElaText(
+        QStringLiteral("导入 JSON/JSONC 会覆盖当前环境、设备和船只页面中尚未保存的草稿。确认后将继续选择导入文件。"),
+        contentWidget);
+    bodyText->setTextStyle(ElaTextType::Body);
+    bodyText->setWordWrap(true);
+
+    contentLayout->addWidget(titleText);
+    contentLayout->addSpacing(2);
+    contentLayout->addWidget(bodyText);
+    contentLayout->addStretch();
+    confirmDialog.setCentralWidget(contentWidget);
+
+    connect(&confirmDialog, &ElaContentDialog::middleButtonClicked, &confirmDialog, &ElaContentDialog::close);
+    connect(&confirmDialog, &ElaContentDialog::rightButtonClicked, &confirmDialog, [&confirmed]() { confirmed = true; });
+    confirmDialog.exec();
+    return confirmed;
+}
+
 void MainWindow::reloadEditorsFromModel() {
     _environmentPage->loadFromModel();
     _devicePage->loadFromModel();
@@ -286,12 +332,8 @@ void MainWindow::reloadEditorsFromModel() {
 }
 
 void MainWindow::updateSimulationDraftState() {
-    const bool hasDraft =
-        (_environmentPage && _environmentPage->isDirty()) ||
-        (_devicePage && _devicePage->isDirty()) ||
-        (_shipPage && _shipPage->isDirty());
     if (_simulationPage) {
-        _simulationPage->onInputDraftStateChanged(hasDraft);
+        _simulationPage->onInputDraftStateChanged(hasUnsavedInputDrafts());
     }
 }
 
