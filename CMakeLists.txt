@@ -98,11 +98,13 @@ if(BUILD_TESTING)
 
     add_executable(SchemaDtoValidationTests
         Tests/SchemaDtoValidationTests.cpp
+        Tests/ReportflowTests.cpp
         Tests/SimulationResultTests.cpp
         Tests/SimulationResultGalleryTests.cpp
         Tests/SimulationSchedulerTests.cpp
         Tests/UiMainlineTests.cpp
         Tests/TreeViewModelTests.cpp
+        Interface/ReportFlowContract.h
         Interface/DataModel.h
         Interface/SimulationResult.h
         Interface/SchemaConstants.h
@@ -130,6 +132,8 @@ if(BUILD_TESTING)
         Resource/ui/DeviceWidget.h
         Resource/ui/EnvironmentWidget.cpp
         Resource/ui/EnvironmentWidget.h
+        Resource/ui/qcustomplot.cpp
+        Resource/ui/qcustomplot.h
         Resource/ui/SimulationResultCatalog.cpp
         Resource/ui/SimulationResultCatalog.h
         Resource/ui/TreeView.cpp
@@ -138,6 +142,12 @@ if(BUILD_TESTING)
         Resource/ui/deviceonship.h
         Resource/ui/shipwidget.cpp
         Resource/ui/shipwidget.h
+        Utils/Reportflow/ReportContextBuilder.cpp
+        Utils/Reportflow/ReportContextBuilder.h
+        Utils/Reportflow/ReportJobExporter.cpp
+        Utils/Reportflow/ReportJobExporter.h
+        Utils/SimulationChartRenderer.cpp
+        Utils/SimulationChartRenderer.h
     )
 
     target_include_directories(SchemaDtoValidationTests PRIVATE
@@ -152,6 +162,7 @@ if(BUILD_TESTING)
         Catch2::Catch2WithMain
         Qt6::Core
         Qt6::Gui
+        Qt6::PrintSupport
         Qt6::Widgets
         spdlog::spdlog
         ElaWidgetTools

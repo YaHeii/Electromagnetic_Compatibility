@@ -36,4 +36,13 @@ vcpkg_installed
 logs/
 out/
 third_party/
-.clangd.yml
+.cache/
+.clangd/
+.clangd
+Reportflow/workdir/
+Reportflow/python/.pytest_cache/
+Reportflow/python/dist/
+Reportflow/python/build/
+Reportflow/python/*.egg-info/
+Reportflow/python/**/*.egg-info/
+Reportflow/python/**/__pycache__/

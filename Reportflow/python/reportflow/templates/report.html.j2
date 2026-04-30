@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>$title</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 2rem; color: #1f2937; }
+    h1, h2 { color: #0f172a; }
+    code, pre { background: #f3f4f6; border-radius: 4px; }
+    pre { padding: 1rem; overflow: auto; }
+    .meta { padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+    .section { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>$title</h1>
+  <div class="meta">
+    <div>任务 ID：<code>$task_id</code></div>
+    <div>模板：<code>$template_id</code></div>
+    <div>运行模式：<code>$mode</code></div>
+    <div>语言：<code>$language</code></div>
+    <div>报告包版本：<code>$report_bundle_version</code></div>
+    <div>上下文版本：<code>$report_context_version</code></div>
+    <div>结果版本：<code>$result_schema_version</code></div>
+  </div>
+
+  <div class="section">
+    <h2>概要</h2>
+    <p>$summary_text</p>
+  </div>
+
+  <div class="section">
+    <h2>资源文件</h2>
+    $asset_section
+  </div>
+
+  <div class="section">
+    <h2>图表清单</h2>
+    $chart_section
+  </div>
+
+  <div class="section">
+    <h2>派生指标</h2>
+    $metric_section
+  </div>
+
+  <div class="section">
+    <h2>request.json</h2>
+    <pre><code>$request_json</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>simulation-result.json</h2>
+    <pre><code>$simulation_result_json</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>report-context.json</h2>
+    <pre><code>$report_context_json</code></pre>
+  </div>
+</body>
+</html>

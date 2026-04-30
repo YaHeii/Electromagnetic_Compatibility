@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reportflow"
+version = "0.1.0"
+description = "Reportflow MVP Python skeleton"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+reportflow = "reportflow.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["reportflow*"]
+
+[tool.setuptools.package-data]
+reportflow = ["templates/*.j2"]
