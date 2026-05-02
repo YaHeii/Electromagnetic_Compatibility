@@ -1,0 +1,48 @@
+{
+  // Reportflow bundle 协议版本
+  "reportBundleVersion": "1.0.0",
+
+  // 对应一次成功仿真的任务 ID
+  "taskId": "task-reportflow-001",
+
+  // template-only 或 agent-experiment
+  "mode": "agent-experiment",
+  "language": "zh-CN",
+  "templateId": "default-emc-report",
+
+  // 第一版仍固定输出 Markdown + HTML
+  "outputFormats": ["md", "html"],
+
+  "inputFiles": {
+    "simulationResult": "simulation-result.json",
+    "reportContext": "report-context.json",
+    "baselineInput": "baseline-input.jsonc"
+  },
+
+  // 基准任务可携带正式图片资产；批量补充实验可只输出结果 JSON
+  "assetFiles": {
+    "aggregatedField": "assets/aggregated-field.png",
+    "referenceEmitter": "assets/reference-emitter.png",
+    "scf": "assets/scf-matrix.png",
+    "s3i": "assets/s3i-curve.png",
+    "tElev": "assets/t-elev.png",
+    "dDesense": "assets/d-desense.png"
+  },
+
+  // agent-experiment 模式下新增的实验编排配置
+  "agent": {
+    "goalMode": "improvement",
+    "maxExperimentCount": 5,
+    "mutationScopes": [
+      "shipPose",
+      "environment.windSpeed",
+      "environment.ductHeight",
+      "emcAnalysisConfig.referenceLink",
+      "transmitter.powerDbm",
+      "transmitter.antennaPhiDeg",
+      "transmitter.beamWidthDeg"
+    ],
+    "rankingPolicy": "d_desense_then_t_elev",
+    "providerProfile": "default"
+  }
+}

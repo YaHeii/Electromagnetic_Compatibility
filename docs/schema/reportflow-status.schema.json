@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://electromagnetic-compatibility.local/schema/reportflow-status.schema.json",
+  "title": "Reportflow Status Schema",
+  "description": "Reportflow 任务状态文件 status.json 的文档化 schema。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "taskId",
+    "state",
+    "stage",
+    "updatedAtUtcMs",
+    "errors"
+  ],
+  "properties": {
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "validate_bundle",
+        "diagnose_baseline",
+        "plan_experiments",
+        "materialize_inputs",
+        "run_experiments",
+        "rank_candidates",
+        "render_markdown",
+        "render_html",
+        "completed"
+      ]
+    },
+    "updatedAtUtcMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "startedAtUtcMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "finishedAtUtcMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "errorMessage": {
+      "type": "string"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

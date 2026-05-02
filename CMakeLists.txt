@@ -63,6 +63,22 @@ add_executable(${APP_TARGET_NAME}
     ${RESOURCE_IMAGES}
 )
 
+add_executable(EMC_SimRunner
+    entry/EMC_SimRunner.cpp
+    ${MODELS}
+    ${SIMULATION}
+    ${INTERFACEE}
+    Utils/Reportflow/ReportContextBuilder.cpp
+    Utils/Reportflow/ReportContextBuilder.h
+    Utils/Reportflow/ReportFlowJsonIO.cpp
+    Utils/Reportflow/ReportFlowJsonIO.h
+    Utils/Reportflow/ReportflowCliBridge.cpp
+    Utils/Reportflow/ReportflowCliBridge.h
+    Utils/JsonLoader.hpp
+    Resource/ui/SimulationResultCatalog.cpp
+    Resource/ui/SimulationResultCatalog.h
+)
+
 qt_add_resources(${APP_TARGET_NAME} "app_images"
     PREFIX "/"
     BASE "${CMAKE_CURRENT_SOURCE_DIR}/Resource/Image"
@@ -70,6 +86,10 @@ qt_add_resources(${APP_TARGET_NAME} "app_images"
 )
 
 target_include_directories(${APP_TARGET_NAME} PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+target_include_directories(EMC_SimRunner PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
@@ -88,8 +108,17 @@ target_link_libraries(${APP_TARGET_NAME} PRIVATE
     ElaWidgetTools
 )
 
+target_link_libraries(EMC_SimRunner PRIVATE
+    Qt6::Core
+    FFTW3::fftw3
+    Eigen3::Eigen
+    spdlog::spdlog
+    Qt6::Widgets
+)
+
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${APP_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(EMC_SimRunner PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
 if(BUILD_TESTING)
@@ -144,8 +173,14 @@ if(BUILD_TESTING)
         Resource/ui/shipwidget.h
         Utils/Reportflow/ReportContextBuilder.cpp
         Utils/Reportflow/ReportContextBuilder.h
+        Utils/Reportflow/ReportFlowJsonIO.cpp
+        Utils/Reportflow/ReportFlowJsonIO.h
+        Utils/Reportflow/ReportflowCliBridge.cpp
+        Utils/Reportflow/ReportflowCliBridge.h
         Utils/Reportflow/ReportJobExporter.cpp
         Utils/Reportflow/ReportJobExporter.h
+        Utils/Reportflow/StandardInputExporter.cpp
+        Utils/Reportflow/StandardInputExporter.h
         Utils/SimulationChartRenderer.cpp
         Utils/SimulationChartRenderer.h
     )

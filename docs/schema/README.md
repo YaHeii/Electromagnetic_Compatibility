@@ -2,10 +2,12 @@
 
 ## 1. 目的
 
-本目录用于定义主程序当前采用的标准输入格式，覆盖两类数据：
+本目录用于定义主程序与 Reportflow 当前采用的标准 JSON / JSONC 协议，当前覆盖三类数据：
 
 - 无人艇与设备配置
 - `EnvironmentData` 环境参数
+- 仿真结果对象
+- Reportflow request / status 协议
 
 当前主程序 `JsonLoader` 只支持这一套新 schema，不再保留旧格式兼容。
 
@@ -31,6 +33,12 @@
 | --- | --- |
 | `usv-environment.schema.json` | 正式 JSON Schema 文档 |
 | `usv-environment.template.jsonc` | 带中文注释的模板样例 |
+| `simulation-result.schema.json` | 主程序结果对象 schema |
+| `simulation-result.template.jsonc` | 主程序结果对象模板 |
+| `reportflow-request.schema.json` | Reportflow `request.json` schema |
+| `reportflow-request.template.jsonc` | Reportflow `request.json` 模板 |
+| `reportflow-status.schema.json` | Reportflow `status.json` schema |
+| `reportflow-status.template.jsonc` | Reportflow `status.json` 模板 |
 | `README.md` | 本说明文件 |
 
 主程序当前活动样例文件为：
@@ -51,6 +59,7 @@
 {
   "schemaVersion": "1.0.0",
   "environment": {},
+  "emcAnalysisConfig": {},
   "usvs": []
 }
 ```
@@ -62,6 +71,11 @@
 3. 设备集合拆分为 `transmitters`、`receivers`、`transceivers` 三个数组
 4. `location.type` 固定为 `Point3D`
 5. 顶层、环境、船只、设备中的未知字段会被主程序拒绝
+
+补充约定：
+
+- Reportflow bundle 中的 `baseline-input.jsonc` 与这里的标准输入完全同口径
+- 当前 `baseline-input.jsonc` 导出不支持包含禁用设备引用的内部快照；若出现 `equipmentRef.isEnabled = false`，C++ 导出层会直接报错而不是静默丢失语义
 
 ## 5. 关键语义约定
 
@@ -138,5 +152,11 @@
 3. `Tests/Test.jsonc`
 4. `docs/schema/usv-environment.schema.json`
 5. `docs/schema/usv-environment.template.jsonc`
+6. `docs/schema/simulation-result.schema.json`
+7. `docs/schema/simulation-result.template.jsonc`
+8. `docs/schema/reportflow-request.schema.json`
+9. `docs/schema/reportflow-request.template.jsonc`
+10. `docs/schema/reportflow-status.schema.json`
+11. `docs/schema/reportflow-status.template.jsonc`
 
 如果未来需要恢复旧格式兼容，应作为单独需求处理，而不是继续把历史字段混入当前标准文档。

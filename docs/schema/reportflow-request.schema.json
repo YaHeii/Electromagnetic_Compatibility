@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://electromagnetic-compatibility.local/schema/reportflow-request.schema.json",
+  "title": "Reportflow Request Schema",
+  "description": "Reportflow 任务请求文件 request.json 的文档化 schema。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reportBundleVersion",
+    "taskId",
+    "mode",
+    "language",
+    "templateId",
+    "outputFormats",
+    "inputFiles"
+  ],
+  "properties": {
+    "reportBundleVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "template-only",
+        "agent-experiment"
+      ]
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "templateId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outputFormats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "md",
+          "html"
+        ]
+      }
+    },
+    "inputFiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "simulationResult",
+        "reportContext",
+        "baselineInput"
+      ],
+      "properties": {
+        "simulationResult": { "type": "string", "minLength": 1 },
+        "reportContext": { "type": "string", "minLength": 1 },
+        "baselineInput": { "type": "string", "minLength": 1 }
+      }
+    },
+    "assetFiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aggregatedField": { "type": "string", "minLength": 1 },
+        "referenceEmitter": { "type": "string", "minLength": 1 },
+        "scf": { "type": "string", "minLength": 1 },
+        "s3i": { "type": "string", "minLength": 1 },
+        "tElev": { "type": "string", "minLength": 1 },
+        "dDesense": { "type": "string", "minLength": 1 }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "goalMode",
+        "maxExperimentCount"
+      ],
+      "properties": {
+        "goalMode": {
+          "type": "string",
+          "enum": [
+            "improvement"
+          ]
+        },
+        "maxExperimentCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "mutationScopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rankingPolicy": {
+          "type": "string"
+        },
+        "providerProfile": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "agent-experiment"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "agent"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "taskId": "task-reportflow-001",
+  "state": "pending",
+  "stage": "validate_bundle",
+  "updatedAtUtcMs": 1777420800000,
+  "startedAtUtcMs": 1777420800000,
+  "finishedAtUtcMs": 1777420803200,
+  "errorMessage": "",
+  "errors": []
+}

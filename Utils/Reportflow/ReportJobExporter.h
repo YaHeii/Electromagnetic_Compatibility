@@ -4,6 +4,7 @@
 
 #include <QString>
 
+#include "Interface/ReportFlowContract.h"
 #include "Interface/SimulationResult.h"
 
 struct ReportJobExportResult {
@@ -13,7 +14,9 @@ struct ReportJobExportResult {
     QString assetsDirectory;
     QString outputsDirectory;
     QString logsDirectory;
+    QString experimentsDirectory;
     QString requestFilePath;
+    QString baselineInputFilePath;
     QString simulationResultFilePath;
     QString reportContextFilePath;
     QString statusFilePath;
@@ -24,5 +27,6 @@ class ReportJobExporter {
 public:
     static ReportJobExportResult exportBundle(
         const SimulationTaskResult& result,
-        const QString& workRootDir);
+        const QString& workRootDir,
+        ReportFlow::JobMode mode = ReportFlow::JobMode::TemplateOnly);
 };

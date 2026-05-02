@@ -263,6 +263,25 @@ JSONC / UI
 - 在成功仿真后调用 `EMCMetricsCalculator`
 - 组装 `SimulationTaskResult`
 
+### 4.10 Reportflow C++ 兼容层
+
+当前 Reportflow 与主程序之间的 C++ 兼容层固定拆为三部分：
+
+- `Interface/ReportFlowContract.h`
+  - 统一定义 bundle 文件名、目录名、`request/status` 字段、`mode/state/stage` 枚举和 DTO
+- `Utils/Reportflow/`
+  - `ReportFlowJsonIO`：统一序列化 `simulation-result.json`、`request.json`、`status.json`
+  - `StandardInputExporter`：把 `DataModel::DataSnapshot` 导出为外部标准输入 `baseline-input.jsonc`
+  - `ReportflowCliBridge`：把一次 headless 仿真结果落盘为 `simulation-result.json + report-context.json`
+- `entry/EMC_SimRunner.cpp`
+  - 提供独立 CLI 入口，复用 `JsonLoader -> simSchedulerCtx -> SimulationTaskResult` 主链路
+
+边界约束：
+
+- `baseline-input.jsonc` 必须保持与主程序正式输入 schema 同口径
+- 当前外部标准输入不表达 `equipmentRef.isEnabled`，因此若内部快照含禁用设备引用，`StandardInputExporter` 会直接拒绝导出
+- `EMC_SimRunner` 只负责读取标准输入、执行仿真和落盘 JSON，不承担报告编排逻辑
+
 ## 5. 结果对象 API
 
 ### 5.1 `SimulationTaskResult`
@@ -330,7 +349,180 @@ JSONC / UI
 - `DerivedMetrics` 跟随 `resultSchemaVersion` 演进
 - `inputSnapshot` 中已经保留 `emcAnalysisConfig`，结果侧不再重复保存同一份配置
 
-## 6. 一致性维护要求
+## 6. Reportflow Json
+
+### 6.1 收敛结论
+
+当前 C++ 与 Python 之间的通信接口和过程已经**基本收敛**，第一版固定采用：
+
+- `bundle 目录 + JSON/JSONC 文件协议 + headless runner`
+
+不采用：
+
+- 共享内存
+- RPC 服务
+- Qt / Python 直接嵌入式互调
+- 运行时反射内部对象
+
+这意味着当前跨层边界已经明确为：
+
+- C++ 负责导出标准输入、正式结果、报告上下文和任务控制文件
+- Python 负责读取 bundle、编排补充实验、调用 headless runner、更新状态并生成最终报告
+
+当前尚未完全闭环的部分不是“接口未定”，而是 Python `agent-experiment` workflow 仍待继续实现。
+
+### 6.2 契约与实现位置
+
+当前接口实现固定分布如下：
+
+- `Interface/ReportFlowContract.h`
+  - 统一定义 bundle 文件名、目录名、`mode/state/stage` 枚举和 `request/status` DTO
+- `Utils/Reportflow/ReportFlowJsonIO.*`
+  - 统一负责 `simulation-result.json`、`request.json`、`status.json` 的 JSON 落盘
+- `Utils/Reportflow/StandardInputExporter.*`
+  - 负责把 `DataModel::DataSnapshot` 回写为标准输入 `baseline-input.jsonc`
+- `Utils/Reportflow/ReportContextBuilder.*`
+  - 负责从 `SimulationTaskResult` 生成 `report-context.json`
+- `Utils/Reportflow/ReportflowCliBridge.*`
+  - 负责把一次 headless 仿真结果导出为 `simulation-result.json + report-context.json`
+- `Utils/Reportflow/ReportJobExporter.*`
+  - 负责导出基准 bundle、初始化 `request.json / status.json`，并导出正式图片资产
+- `entry/EMC_SimRunner.cpp`
+  - 负责 headless 读取标准输入、执行仿真并输出 JSON
+
+### 6.3 当前 JSON 文件协议
+
+当前 C++ / Python 沟通所需 JSON 文件按职责分为四组。
+
+基准 bundle 根目录：
+
+- `request.json`
+  - 描述任务模式、输入文件、图片资产、输出格式和 `agent` 配置
+- `status.json`
+  - 描述任务状态、当前阶段、时间戳和错误信息
+- `baseline-input.jsonc`
+  - 基准实验对应的标准外部输入 schema
+- `simulation-result.json`
+  - 主程序正式结果对象 `SimulationTaskResult`
+- `report-context.json`
+  - 面向报告与 agent 的摘要上下文
+
+基准图片资产：
+
+- `assets/aggregated-field.png`
+- `assets/reference-emitter.png`
+- `assets/scf-matrix.png`
+- `assets/s3i-curve.png`
+- `assets/t-elev.png`
+- `assets/d-desense.png`
+
+`agent-experiment` 扩展目录：
+
+- `experiments/plan.json`
+  - Python 侧生成的结构化实验计划
+- `experiments/<experimentId>/input.jsonc`
+  - Python 侧 materialize 后交给 `EMC_SimRunner` 的标准输入
+- `experiments/<experimentId>/simulation-result.json`
+  - 单次补充实验的正式结果
+- `experiments/<experimentId>/report-context.json`
+  - 单次补充实验的报告上下文
+
+最终输出目录：
+
+- `outputs/comparison-summary.json`
+  - Python 侧生成的候选对比摘要
+- `outputs/final-report.md`
+- `outputs/final-report.html`
+
+### 6.4 request.json / status.json 关键字段
+
+`request.json` 当前关键字段固定为：
+
+- `reportBundleVersion`
+- `taskId`
+- `mode`
+  - `template-only`
+  - `agent-experiment`
+- `language`
+- `templateId`
+- `outputFormats`
+- `inputFiles`
+  - `simulationResult`
+  - `reportContext`
+  - `baselineInput`
+- `assetFiles`
+- `agent`
+  - `goalMode`
+  - `maxExperimentCount`
+  - `mutationScopes`
+  - `rankingPolicy`
+  - `providerProfile`
+
+`status.json` 当前关键字段固定为：
+
+- `taskId`
+- `state`
+  - `pending`
+  - `running`
+  - `succeeded`
+  - `failed`
+  - `cancelled`
+- `stage`
+  - `validate_bundle`
+  - `diagnose_baseline`
+  - `plan_experiments`
+  - `materialize_inputs`
+  - `run_experiments`
+  - `rank_candidates`
+  - `render_markdown`
+  - `render_html`
+  - `completed`
+- `updatedAtUtcMs`
+- `startedAtUtcMs`
+- `finishedAtUtcMs`
+- `errorMessage`
+- `errors`
+
+### 6.5 当前通信过程
+
+当前标准通信过程固定为：
+
+1. C++ GUI 或主程序结果侧拿到一次成功仿真的 `SimulationTaskResult`
+2. `ReportJobExporter` 导出基准 bundle：
+   - `baseline-input.jsonc`
+   - `simulation-result.json`
+   - `report-context.json`
+   - `request.json`
+   - `status.json`
+   - `assets/*`
+3. Python `reportflow` 读取 bundle，先执行 `validate_bundle`
+4. 若模式为 `template-only`
+   - Python 直接消费 `simulation-result.json + report-context.json + assets/*`
+   - 输出 `outputs/final-report.md/html`
+5. 若模式为 `agent-experiment`
+   - Python 基于 `baseline-input.jsonc` 生成 `experiments/<experimentId>/input.jsonc`
+   - Python 调用：
+     - `EMC_SimRunner --input <input.jsonc> --output-dir <experiment-dir>`
+   - C++ runner 输出：
+     - `simulation-result.json`
+     - `report-context.json`
+   - Python 收集所有候选结果，更新 `status.json`，最终输出：
+     - `outputs/comparison-summary.json`
+     - `outputs/final-report.md`
+     - `outputs/final-report.html`
+
+### 6.6 当前边界与限制
+
+当前已明确的边界如下：
+
+- `baseline-input.jsonc` 必须保持与主程序正式输入 schema 同口径
+- 当前外部标准输入不表达 `equipmentRef.isEnabled`
+  - 若内部快照含禁用设备引用，`StandardInputExporter` 会直接拒绝导出
+- `EMC_SimRunner` 当前只输出 JSON，不负责导出正式图片资产
+- Python 侧当前不回写 `simulation-result.json`，只新增实验目录结果、状态文件和最终报告
+- 当前 bundle 协议已经收敛，但 Python `agent-experiment` 的完整运行时仍在后续落地中
+
+## 7. 一致性维护要求
 
 只要修改以下任一内容，就必须同步更新文档和样例：
 
@@ -349,7 +541,7 @@ JSONC / UI
 2. 主程序运行时代码
 3. `PE_validation` 的验证结论
 
-## 7. 2026-04-30 仿真页结果画廊边界
+## 8. 2026-04-30 仿真页结果画廊边界
 ### 当前已实现
 - 仿真页结果展示层开始从“单图直绘”收敛为“固定结果目录 + 统一绘图器 + 详情视图切换”。
 - UI 只消费 `SimulationTaskResult`，不在页面点击或切换时直接调用 `EMCMetricsCalculator`。
@@ -376,7 +568,7 @@ JSONC / UI
 ### 建议后续实现
 - 在主程序编译与手动联调确认后，再补结果页交互细节，例如详情统计摘要、阈值图例说明和导出入口。
 - 若后续扩展更多图类，应优先复用 `SimulationResultCatalog + SimulationChartRenderer`，不要把新逻辑重新散回 `Simulation.cpp`。
-## 9. Reportflow Python 工作区
+## 10. Reportflow Python 工作区
 
 ### 当前已实现
 - `Reportflow/` 下已建立独立的 Python 工作区根，当前成员包含 `establishReport` 和 `pythonPlot`。
@@ -389,9 +581,9 @@ JSONC / UI
 - `reportflow` 负责 bundle 读取、状态更新和模板输出；`pythonPlot` 负责后续可选的绘图与扩展模块。
 
 ### 当前接口口径
-- C++ 侧通过 `ReportJobBundle` 约定 `request.json`、`simulation-result.json`、`report-context.json`、`status.json` 和 `assets/*` 的布局。
-- Python 侧只消费 bundle 和上下文，不回写 `simulation-result.json`。
-- 报告输出固定写入 `outputs/report.md` 和 `outputs/report.html`。
+- C++ 侧当前通过 `ReportFlowContract + bundle 目录` 约定 `request.json`、`status.json`、`baseline-input.jsonc`、`simulation-result.json`、`report-context.json`、`assets/*`、`experiments/*` 和 `outputs/*` 的布局。
+- Python 侧消费 bundle，补充实验阶段只新增 `experiments/<experimentId>/input.jsonc`、候选结果目录、`status.json` 更新和最终输出，不回写基准 `simulation-result.json`。
+- 最终报告输出固定写入 `outputs/final-report.md` 和 `outputs/final-report.html`。
 
 ### 建议后续实现
 - 若后续要接入 `pybind11`，优先把编译逻辑限制在 `pythonPlot` 子项目内，不要回写到主 C++ 构建流程。

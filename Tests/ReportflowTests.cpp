@@ -8,13 +8,33 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryDir>
+#include <QTemporaryFile>
 
 #include "Interface/ReportFlowContract.h"
 #include "Interface/SimulationResult.h"
+#include "Utils/JsonLoader.hpp"
 #include "Utils/Reportflow/ReportContextBuilder.h"
+#include "Utils/Reportflow/ReportFlowJsonIO.h"
 #include "Utils/Reportflow/ReportJobExporter.h"
+#include "Utils/Reportflow/ReportflowCliBridge.h"
+#include "Utils/Reportflow/StandardInputExporter.h"
 
 namespace {
+
+struct ScopedDataModelState {
+    DataModel::DataSnapshot snapshot;
+
+    ScopedDataModelState()
+        : snapshot(DataModel::instance()->createSnapshot()) {}
+
+    ~ScopedDataModelState() {
+        DataModel* model = DataModel::instance();
+        model->allEquipments = snapshot.allEquipments;
+        model->allShips = snapshot.allShips;
+        model->environmentConfig = snapshot.environmentConfig;
+        model->emcAnalysisConfig = snapshot.emcAnalysisConfig;
+    }
+};
 
 QApplication& ensureApplication() {
     if (auto* existing = qobject_cast<QApplication*>(QCoreApplication::instance())) {
@@ -245,6 +265,8 @@ TEST_CASE("ReportFlowContract exposes stable bundle file names", "[reportflow][c
     REQUIRE(QString::fromLatin1(ReportFlow::kSimulationResultFileName) == QStringLiteral("simulation-result.json"));
     REQUIRE(QString::fromLatin1(ReportFlow::kReportContextFileName) == QStringLiteral("report-context.json"));
     REQUIRE(QString::fromLatin1(ReportFlow::kStatusFileName) == QStringLiteral("status.json"));
+    REQUIRE(QString::fromLatin1(ReportFlow::kBaselineInputFileName) == QStringLiteral("baseline-input.jsonc"));
+    REQUIRE(QString::fromLatin1(ReportFlow::kAgentExperimentMode) == QStringLiteral("agent-experiment"));
 }
 
 TEST_CASE("ReportContextBuilder exposes stable report summary fields", "[reportflow][context]") {
@@ -281,6 +303,7 @@ TEST_CASE("ReportJobExporter writes a complete template-only bundle", "[reportfl
 
     REQUIRE(QFileInfo::exists(exportResult.jobDirectory));
     REQUIRE(QFileInfo::exists(exportResult.requestFilePath));
+    REQUIRE(QFileInfo::exists(exportResult.baselineInputFilePath));
     REQUIRE(QFileInfo::exists(exportResult.simulationResultFilePath));
     REQUIRE(QFileInfo::exists(exportResult.reportContextFilePath));
     REQUIRE(QFileInfo::exists(exportResult.statusFilePath));
@@ -295,6 +318,7 @@ TEST_CASE("ReportJobExporter writes a complete template-only bundle", "[reportfl
     REQUIRE(requestObject.value(QStringLiteral("mode")).toString() == QStringLiteral("template-only"));
     REQUIRE(requestObject.value(QStringLiteral("language")).toString() == QStringLiteral("zh-CN"));
     REQUIRE(requestObject.value(QStringLiteral("outputFormats")).toArray().size() == 2);
+    REQUIRE(requestObject.value(QStringLiteral("inputFiles")).toObject().value(QStringLiteral("baselineInput")).toString() == QStringLiteral("baseline-input.jsonc"));
 
     const QJsonObject resultObject = readJsonObject(exportResult.simulationResultFilePath);
     REQUIRE(resultObject.value(QStringLiteral("taskId")).toString() == result.taskId);
@@ -303,6 +327,78 @@ TEST_CASE("ReportJobExporter writes a complete template-only bundle", "[reportfl
     const QJsonObject statusObject = readJsonObject(exportResult.statusFilePath);
     REQUIRE(statusObject.value(QStringLiteral("state")).toString() == QStringLiteral("pending"));
     REQUIRE(statusObject.value(QStringLiteral("stage")).toString() == QStringLiteral("validate_bundle"));
+}
+
+TEST_CASE("ReportJobExporter writes agent-experiment request fields", "[reportflow][export]") {
+    ensureApplication();
+    const SimulationTaskResult result = makeSuccessfulResultForReportflow();
+    QTemporaryDir tempDir;
+    REQUIRE(tempDir.isValid());
+
+    const ReportJobExportResult exportResult = ReportJobExporter::exportBundle(
+        result,
+        tempDir.path(),
+        ReportFlow::JobMode::AgentExperiment);
+    INFO(exportResult.errorMessage.toStdString());
+    REQUIRE(exportResult.success);
+
+    const QJsonObject requestObject = readJsonObject(exportResult.requestFilePath);
+    REQUIRE(requestObject.value(QStringLiteral("mode")).toString() == QStringLiteral("agent-experiment"));
+    REQUIRE(requestObject.contains(QStringLiteral("agent")));
+
+    const QJsonObject agentObject = requestObject.value(QStringLiteral("agent")).toObject();
+    REQUIRE(agentObject.value(QStringLiteral("goalMode")).toString() == QStringLiteral("improvement"));
+    REQUIRE(agentObject.value(QStringLiteral("maxExperimentCount")).toInt() == 5);
+}
+
+TEST_CASE("StandardInputExporter emits schema input loadable by JsonLoader", "[reportflow][export][input]") {
+    const ScopedDataModelState stateGuard;
+    const DataModel::DataSnapshot snapshot = makeSnapshot("TX-1");
+    QTemporaryDir tempDir;
+    REQUIRE(tempDir.isValid());
+    const QString filePath = QDir(tempDir.path()).filePath(QStringLiteral("baseline-input.jsonc"));
+
+    QString errorMessage;
+    INFO(errorMessage.toStdString());
+    const bool writeOk = StandardInputExporter::writeJsoncFile(filePath, snapshot, &errorMessage);
+    REQUIRE(writeOk);
+    REQUIRE(JsonLoader::LoadFile(filePath));
+
+    DataModel* model = DataModel::instance();
+    const auto validation = model->validateCurrentModel();
+    INFO(validation.second.toStdString());
+    REQUIRE(validation.first);
+    REQUIRE(model->allShips.size() == snapshot.allShips.size());
+    REQUIRE(model->allEquipments.size() == snapshot.allEquipments.size());
+    REQUIRE(model->emcAnalysisConfig.referenceTransmitterId == snapshot.emcAnalysisConfig.referenceTransmitterId);
+}
+
+TEST_CASE("StandardInputExporter rejects snapshots with disabled equipment refs", "[reportflow][export][input]") {
+    DataModel::DataSnapshot snapshot = makeSnapshot("TX-1");
+    REQUIRE(snapshot.allShips.size() >= 2);
+    REQUIRE_FALSE(snapshot.allShips[1].equipmentRefs.empty());
+    snapshot.allShips[1].equipmentRefs.front().isEnabled = false;
+
+    QTemporaryDir tempDir;
+    REQUIRE(tempDir.isValid());
+    const QString filePath = QDir(tempDir.path()).filePath(QStringLiteral("baseline-input-disabled.jsonc"));
+
+    QString errorMessage;
+    REQUIRE_FALSE(StandardInputExporter::writeJsoncFile(filePath, snapshot, &errorMessage));
+    REQUIRE(errorMessage.contains(QStringLiteral("禁用设备引用")));
+}
+
+TEST_CASE("ReportflowCliBridge exports simulation outputs without GUI page dependency", "[reportflow][cli]") {
+    const SimulationTaskResult result = makeSuccessfulResultForReportflow();
+    QTemporaryDir tempDir;
+    REQUIRE(tempDir.isValid());
+
+    const ReportflowCliRunResult exportResult =
+        ReportflowCliBridge::exportSimulationOutputs(result, tempDir.path(), true);
+    INFO(exportResult.errorMessage.toStdString());
+    REQUIRE(exportResult.success);
+    REQUIRE(QFileInfo::exists(exportResult.simulationResultFilePath));
+    REQUIRE(QFileInfo::exists(exportResult.reportContextFilePath));
 }
 
 TEST_CASE("ReportJobExporter rejects non-succeeded result", "[reportflow][export]") {
